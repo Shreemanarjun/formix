@@ -67,3 +67,6 @@ goldens/*.png
 **/goldens/*.png
 goldens/*
 extension/devtools/build/*
+.agents/skills/*
+.claude/*
+.gitignore
