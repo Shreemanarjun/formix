@@ -8,29 +8,27 @@ void main() {
       const arrayId = FormixArrayID<String>('tags');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [
-                  FormixFieldConfig(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [
+                FormixFieldConfig(
+                  id: arrayId,
+                  initialValue: ['Flutter', 'Dart', 'React'],
+                ),
+              ],
+              child: CustomScrollView(
+                slivers: [
+                  SliverFormixArray<String>(
                     id: arrayId,
-                    initialValue: ['Flutter', 'Dart', 'React'],
+                    itemBuilder: (context, index, itemId, scope) {
+                      return ListTile(
+                        title: Text('Item $index'),
+                        subtitle: FormixTextFormField(fieldId: itemId),
+                      );
+                    },
                   ),
                 ],
-                child: CustomScrollView(
-                  slivers: [
-                    SliverFormixArray<String>(
-                      id: arrayId,
-                      itemBuilder: (context, index, itemId, scope) {
-                        return ListTile(
-                          title: Text('Item $index'),
-                          subtitle: FormixTextFormField(fieldId: itemId),
-                        );
-                      },
-                    ),
-                  ],
-                ),
               ),
             ),
           ),
@@ -49,36 +47,34 @@ void main() {
       const arrayId = FormixArrayID<String>('tags');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [
-                  FormixFieldConfig(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [
+                FormixFieldConfig(
+                  id: arrayId,
+                  initialValue: ['A', 'B'],
+                ),
+              ],
+              child: CustomScrollView(
+                slivers: [
+                  SliverFormixArray<String>(
                     id: arrayId,
-                    initialValue: ['A', 'B'],
+                    itemBuilder: (context, index, itemId, scope) {
+                      return ListTile(
+                        title: Text('Item $index'),
+                      );
+                    },
                   ),
-                ],
-                child: CustomScrollView(
-                  slivers: [
-                    SliverFormixArray<String>(
-                      id: arrayId,
-                      itemBuilder: (context, index, itemId, scope) {
-                        return ListTile(
-                          title: Text('Item $index'),
-                        );
-                      },
-                    ),
-                    SliverToBoxAdapter(
-                      child: FormixBuilder(
-                        builder: (context, scope) => ElevatedButton(
-                          onPressed: () => scope.addArrayItem(arrayId, 'C'),
-                          child: const Text('Add'),
-                        ),
+                  SliverToBoxAdapter(
+                    child: FormixBuilder(
+                      builder: (context, scope) => ElevatedButton(
+                        onPressed: () => scope.addArrayItem(arrayId, 'C'),
+                        child: const Text('Add'),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -104,32 +100,30 @@ void main() {
       const arrayId = FormixArrayID<String>('tags');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [
-                  FormixFieldConfig(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [
+                FormixFieldConfig(
+                  id: arrayId,
+                  initialValue: ['A', 'B', 'C'],
+                ),
+              ],
+              child: CustomScrollView(
+                slivers: [
+                  SliverFormixArray<String>(
                     id: arrayId,
-                    initialValue: ['A', 'B', 'C'],
+                    itemBuilder: (context, index, itemId, scope) {
+                      return ListTile(
+                        title: Text('Item $index'),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () => scope.removeArrayItemAt(arrayId, index),
+                        ),
+                      );
+                    },
                   ),
                 ],
-                child: CustomScrollView(
-                  slivers: [
-                    SliverFormixArray<String>(
-                      id: arrayId,
-                      itemBuilder: (context, index, itemId, scope) {
-                        return ListTile(
-                          title: Text('Item $index'),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () => scope.removeArrayItemAt(arrayId, index),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
               ),
             ),
           ),
@@ -156,31 +150,29 @@ void main() {
       const arrayId = FormixArrayID<String>('tags');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [
-                  FormixFieldConfig(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [
+                FormixFieldConfig(
+                  id: arrayId,
+                  initialValue: <String>[],
+                ),
+              ],
+              child: CustomScrollView(
+                slivers: [
+                  SliverFormixArray<String>(
                     id: arrayId,
-                    initialValue: <String>[],
+                    itemBuilder: (context, index, itemId, scope) {
+                      return ListTile(title: Text('Item $index'));
+                    },
+                    emptyBuilder: (context, scope) {
+                      return const Center(
+                        child: Text('No items'),
+                      );
+                    },
                   ),
                 ],
-                child: CustomScrollView(
-                  slivers: [
-                    SliverFormixArray<String>(
-                      id: arrayId,
-                      itemBuilder: (context, index, itemId, scope) {
-                        return ListTile(title: Text('Item $index'));
-                      },
-                      emptyBuilder: (context, scope) {
-                        return const Center(
-                          child: Text('No items'),
-                        );
-                      },
-                    ),
-                  ],
-                ),
               ),
             ),
           ),
@@ -197,29 +189,27 @@ void main() {
       const arrayId = FormixArrayID<String>('tags');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [
-                  FormixFieldConfig(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [
+                FormixFieldConfig(
+                  id: arrayId,
+                  initialValue: <String>[],
+                ),
+              ],
+              child: CustomScrollView(
+                slivers: [
+                  SliverFormixArray<String>(
                     id: arrayId,
-                    initialValue: <String>[],
+                    itemBuilder: (context, index, itemId, scope) {
+                      return ListTile(title: Text('Item $index'));
+                    },
+                    emptyBuilder: (context, scope) {
+                      return const Text('Empty');
+                    },
                   ),
                 ],
-                child: CustomScrollView(
-                  slivers: [
-                    SliverFormixArray<String>(
-                      id: arrayId,
-                      itemBuilder: (context, index, itemId, scope) {
-                        return ListTile(title: Text('Item $index'));
-                      },
-                      emptyBuilder: (context, scope) {
-                        return const Text('Empty');
-                      },
-                    ),
-                  ],
-                ),
               ),
             ),
           ),
@@ -236,37 +226,35 @@ void main() {
       const arrayId = FormixArrayID<String>('tags');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [
-                  FormixFieldConfig(
-                    id: FormixArrayID<String>('user.tags'),
-                    initialValue: ['A', 'B'],
-                  ),
-                ],
-                child: CustomScrollView(
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: FormixGroup(
-                        prefix: 'user',
-                        child: CustomScrollView(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          slivers: [
-                            SliverFormixArray<String>(
-                              id: arrayId,
-                              itemBuilder: (context, index, itemId, scope) {
-                                return ListTile(title: Text('Item $index'));
-                              },
-                            ),
-                          ],
-                        ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [
+                FormixFieldConfig(
+                  id: FormixArrayID<String>('user.tags'),
+                  initialValue: ['A', 'B'],
+                ),
+              ],
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: FormixGroup(
+                      prefix: 'user',
+                      child: CustomScrollView(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        slivers: [
+                          SliverFormixArray<String>(
+                            id: arrayId,
+                            itemBuilder: (context, index, itemId, scope) {
+                              return ListTile(title: Text('Item $index'));
+                            },
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -283,38 +271,36 @@ void main() {
       const arrayId = FormixArrayID<String>('tags');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [
-                  FormixFieldConfig(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [
+                FormixFieldConfig(
+                  id: arrayId,
+                  initialValue: ['A'],
+                ),
+              ],
+              child: CustomScrollView(
+                slivers: [
+                  SliverFormixArray<String>(
                     id: arrayId,
-                    initialValue: ['A'],
+                    itemBuilder: (context, index, itemId, scope) {
+                      return ListTile(
+                        title: FormixTextFormField(fieldId: itemId),
+                      );
+                    },
                   ),
-                ],
-                child: CustomScrollView(
-                  slivers: [
-                    SliverFormixArray<String>(
-                      id: arrayId,
-                      itemBuilder: (context, index, itemId, scope) {
-                        return ListTile(
-                          title: FormixTextFormField(fieldId: itemId),
-                        );
-                      },
-                    ),
-                    SliverToBoxAdapter(
-                      child: FormixBuilder(
-                        builder: (context, scope) => ElevatedButton(
-                          onPressed: () {
-                            scope.setValue(arrayId, ['A', 'B', 'C']);
-                          },
-                          child: const Text('Set Values'),
-                        ),
+                  SliverToBoxAdapter(
+                    child: FormixBuilder(
+                      builder: (context, scope) => ElevatedButton(
+                        onPressed: () {
+                          scope.setValue(arrayId, ['A', 'B', 'C']);
+                        },
+                        child: const Text('Set Values'),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -336,45 +322,43 @@ void main() {
       const arrayId = FormixArrayID<String>('tags');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [
-                  FormixFieldConfig(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [
+                FormixFieldConfig(
+                  id: arrayId,
+                  initialValue: ['Flutter', 'Dart'],
+                ),
+              ],
+              child: CustomScrollView(
+                slivers: [
+                  SliverFormixArray<String>(
                     id: arrayId,
-                    initialValue: ['Flutter', 'Dart'],
-                  ),
-                ],
-                child: CustomScrollView(
-                  slivers: [
-                    SliverFormixArray<String>(
-                      id: arrayId,
-                      itemBuilder: (context, index, itemId, scope) {
-                        return Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              children: [
-                                Text('Tag ${index + 1}'),
-                                FormixTextFormField(
-                                  fieldId: itemId,
-                                  decoration: InputDecoration(
-                                    labelText: 'Value',
-                                    suffixIcon: IconButton(
-                                      icon: const Icon(Icons.delete),
-                                      onPressed: () => scope.removeArrayItemAt(arrayId, index),
-                                    ),
+                    itemBuilder: (context, index, itemId, scope) {
+                      return Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              Text('Tag ${index + 1}'),
+                              FormixTextFormField(
+                                fieldId: itemId,
+                                decoration: InputDecoration(
+                                  labelText: 'Value',
+                                  suffixIcon: IconButton(
+                                    icon: const Icon(Icons.delete),
+                                    onPressed: () => scope.removeArrayItemAt(arrayId, index),
                                   ),
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ),
@@ -393,36 +377,34 @@ void main() {
       const arrayId = FormixArrayID<String>('tags');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [
-                  FormixFieldConfig(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [
+                FormixFieldConfig(
+                  id: arrayId,
+                  initialValue: ['A', 'B'],
+                ),
+              ],
+              child: CustomScrollView(
+                slivers: [
+                  const SliverAppBar(
+                    title: Text('My Form'),
+                    floating: true,
+                  ),
+                  SliverFormixArray<String>(
                     id: arrayId,
-                    initialValue: ['A', 'B'],
+                    itemBuilder: (context, index, itemId, scope) {
+                      return ListTile(title: Text('Item $index'));
+                    },
+                  ),
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: Text('Footer'),
+                    ),
                   ),
                 ],
-                child: CustomScrollView(
-                  slivers: [
-                    const SliverAppBar(
-                      title: Text('My Form'),
-                      floating: true,
-                    ),
-                    SliverFormixArray<String>(
-                      id: arrayId,
-                      itemBuilder: (context, index, itemId, scope) {
-                        return ListTile(title: Text('Item $index'));
-                      },
-                    ),
-                    const SliverToBoxAdapter(
-                      child: Padding(
-                        padding: EdgeInsets.all(16),
-                        child: Text('Footer'),
-                      ),
-                    ),
-                  ],
-                ),
               ),
             ),
           ),
@@ -443,35 +425,33 @@ void main() {
       int buildCount = 0;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [
-                  FormixFieldConfig(id: arrayId, initialValue: ['A']),
-                  FormixFieldConfig(id: otherFieldId, initialValue: 'test'),
-                ],
-                child: CustomScrollView(
-                  slivers: [
-                    SliverFormixArray<String>(
-                      id: arrayId,
-                      itemBuilder: (context, index, itemId, scope) {
-                        buildCount++;
-                        return ListTile(title: Text('Item $index'));
-                      },
-                    ),
-                    SliverToBoxAdapter(
-                      child: FormixBuilder(
-                        builder: (context, scope) => ElevatedButton(
-                          onPressed: () {
-                            scope.setValue(otherFieldId, 'changed');
-                          },
-                          child: const Text('Change Other'),
-                        ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [
+                FormixFieldConfig(id: arrayId, initialValue: ['A']),
+                FormixFieldConfig(id: otherFieldId, initialValue: 'test'),
+              ],
+              child: CustomScrollView(
+                slivers: [
+                  SliverFormixArray<String>(
+                    id: arrayId,
+                    itemBuilder: (context, index, itemId, scope) {
+                      buildCount++;
+                      return ListTile(title: Text('Item $index'));
+                    },
+                  ),
+                  SliverToBoxAdapter(
+                    child: FormixBuilder(
+                      builder: (context, scope) => ElevatedButton(
+                        onPressed: () {
+                          scope.setValue(otherFieldId, 'changed');
+                        },
+                        child: const Text('Change Other'),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),

@@ -4,25 +4,23 @@ import '../../constants/field_ids.dart';
 import 'advanced_fields.dart';
 
 // Advanced Example
-class AdvancedExample extends ConsumerWidget {
+class AdvancedExample extends StatelessWidget {
   const AdvancedExample({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return const AdvancedExampleContent();
   }
 }
 
-class AdvancedExampleContent extends ConsumerStatefulWidget {
+class AdvancedExampleContent extends StatefulWidget {
   const AdvancedExampleContent({super.key});
 
   @override
-  ConsumerState<AdvancedExampleContent> createState() =>
-      _AdvancedExampleContentState();
+  State<AdvancedExampleContent> createState() => _AdvancedExampleContentState();
 }
 
-class _AdvancedExampleContentState
-    extends ConsumerState<AdvancedExampleContent> {
+class _AdvancedExampleContentState extends State<AdvancedExampleContent> {
   @override
   Widget build(BuildContext context) {
     return Formix(
@@ -229,9 +227,7 @@ class _AdvancedExampleContentState
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     mainAxisSize: MainAxisSize.min,
-                                    children: formValues.entries.map((
-                                      entry,
-                                    ) {
+                                    children: formValues.entries.map((entry) {
                                       return Padding(
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 4,

@@ -4,7 +4,7 @@ import '../ancestor_validator.dart';
 
 /// A highly optimized, declarative widget that rebuilds only when a specific field changes
 /// Provides granular performance and detailed change information
-class FormixFieldSelector<T> extends ConsumerStatefulWidget {
+class FormixFieldSelector<T> extends StatefulWidget {
   /// Creates a [FormixFieldSelector].
   const FormixFieldSelector({
     super.key,
@@ -50,10 +50,10 @@ class FormixFieldSelector<T> extends ConsumerStatefulWidget {
   final Widget? child;
 
   @override
-  ConsumerState<FormixFieldSelector<T>> createState() => _FormixFieldSelectorState<T>();
+  State<FormixFieldSelector<T>> createState() => _FormixFieldSelectorState<T>();
 }
 
-class _FormixFieldSelectorState<T> extends ConsumerState<FormixFieldSelector<T>> {
+class _FormixFieldSelectorState<T> extends State<FormixFieldSelector<T>> {
   FormixController? _controller;
   late T? _currentValue;
   late ValidationResult _currentValidation;
@@ -158,29 +158,7 @@ class _FormixFieldSelectorState<T> extends ConsumerState<FormixFieldSelector<T>>
 
   @override
   Widget build(BuildContext context) {
-    FormixController? effectiveController = widget.controller;
-
-    if (effectiveController == null) {
-      // Try to find the provider from the nearest Formix ancestor.
-      final formixProvider = Formix.of(context);
-
-      if (formixProvider != null) {
-        // KEY FIX: Use ref.watch (not ref.read) so this widget is registered as
-        // a Riverpod listener. This prevents the autoDispose provider from being
-        // disposed between pump() calls.
-        ref.watch(formixProvider.notifier);
-        effectiveController = ref.read(formixProvider.notifier);
-      } else {
-        // Fallback: no Formix ancestor; try currentControllerProvider.
-        try {
-          final provider = ref.watch(currentControllerProvider);
-          ref.watch(provider.notifier);
-          effectiveController = ref.read(provider.notifier);
-        } catch (_) {
-          // Not in a Riverpod context. effectiveController stays null.
-        }
-      }
-    }
+    final FormixController? effectiveController = widget.controller ?? Formix.controllerOf(context);
 
     // Update the internal _controller (registers/unregisters field listeners).
     _updateController(effectiveController);

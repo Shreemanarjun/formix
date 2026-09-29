@@ -6,7 +6,9 @@
 
 **An elite, type-safe, and ultra-reactive form engine for Flutter.**
 
-Powered by **Riverpod**, Formix delivers lightning-fast performance, zero boilerplate, and effortless state management. Whether it's a simple login screen or a complex multi-step wizard, Formix scales with you.
+Powered by **[Signals](https://pub.dev/packages/signals_flutter)**, Formix delivers lightning-fast surgical rebuilds, zero boilerplate, and effortless state management — with **no `ProviderScope` or other setup required**. Whether it's a simple login screen or a complex multi-step wizard, Formix scales with you.
+
+> **Upgrading from 0.1.x (Riverpod)?** See [`MIGRATION.md`](MIGRATION.md).
 
 
 
@@ -56,19 +58,6 @@ flutter pub add formix
 ---
 
 ## ⚡ Quick Start
-
-### 0. Requirement: ProviderScope
-Formix is powered by Riverpod for its high-performance state management. You **must** wrap your application (or at least your form) in a `ProviderScope`.
-
-```dart
-void main() {
-  runApp(
-    ProviderScope( // Required for Formix to function
-      child: MyApp(),
-    ),
-  );
-}
-```
 
 ### 1. Define Fields
 Always use `FormixFieldID<T>` for type-safe field identification.
@@ -284,7 +273,7 @@ FormixFieldAsyncTransformer<String, String>(
 | Pattern | Best For | Usage |
 | :--- | :--- | :--- |
 | **Reactive UI** | Updating buttons, labels, or visibility. | `FormixBuilder(builder: (c, scope) => ...)` |
-| **External Control** | Logic outside the widget tree (AppBar buttons). | `ref.read(formControllerProvider(...).notifier)` |
+| **External Control** | Logic outside the widget tree (AppBar buttons). | `Formix.controllerOf(context)` or a `GlobalKey<FormixState>` |
 | **Side Effects** | Navigation, Snackbars, Logging. | `FormixListener` |
 
 ### Side Effects (`FormixListener`)
@@ -528,14 +517,17 @@ void submitFromAppBar() {
 }
 ```
 
-#### 3. Using Riverpod (`WidgetRef`)
-Best for complex logic, side effects, or extracting logic to separate providers.
+#### 3. Using Signals directly
+Best for complex logic or extracting reactive reads outside a `FormixBuilder`. Every
+controller exposes memoized signal slices — read `.value` inside a `SignalBuilder`.
 ```dart
-// Reading properties
-final isValid = ref.watch(formControllerProvider(param).select((s) => s.isValid));
+final controller = Formix.controllerOf(context)!;
+
+// Reading properties reactively (rebuilds only when validity changes)
+SignalBuilder(builder: (context) => Text('${controller.isValidSignal.value}'));
 
 // Executing actions
-ref.read(formControllerProvider(param).notifier).reset();
+controller.reset();
 ```
 
 ### 🎮 Controller API Reference
@@ -1143,7 +1135,7 @@ Formix is engineered for massive scale with continuous performance optimizations
 
 #### 3. Optimized Controller Subscription
 - **What**: Early return optimization for explicit controllers
-- **Impact**: Avoids unnecessary Riverpod subscription setup
+- **Impact**: Surgical signal-driven rebuilds — a field change only rebuilds widgets that read that field
 - **Benefit**: Cleaner, more efficient code path for common use cases
 
 ### Benchmark Results (M1 Pro, Averaged over 3 runs × 1000 iterations)

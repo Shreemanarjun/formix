@@ -27,7 +27,7 @@ import 'ancestor_validator.dart';
 ///   ),
 /// )
 /// ```
-class FormixSection extends ConsumerStatefulWidget {
+class FormixSection extends StatefulWidget {
   /// Creates a [FormixSection].
   const FormixSection({
     super.key,
@@ -49,10 +49,10 @@ class FormixSection extends ConsumerStatefulWidget {
   final bool keepAlive;
 
   @override
-  ConsumerState<FormixSection> createState() => _FormixSectionState();
+  State<FormixSection> createState() => _FormixSectionState();
 }
 
-class _FormixSectionState extends ConsumerState<FormixSection> {
+class _FormixSectionState extends State<FormixSection> {
   FormixController? _controller;
   Object? _initializationError;
 
@@ -72,26 +72,12 @@ class _FormixSectionState extends ConsumerState<FormixSection> {
   }
 
   void _initController() {
-    final provider = Formix.of(context);
-
-    if (provider == null) {
+    final controller = Formix.controllerOf(context);
+    if (controller == null) {
       return;
     }
-
-    // Keep provider alive efficiently without watching state changes.
-    // This only triggers a rebuild if the controller instance itself changes.
-    ref.watch(provider.notifier);
-
-    try {
-      _controller = ref.read(provider.notifier);
-      _initializationError = null;
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _initializationError = e;
-        });
-      }
-    }
+    _controller = controller;
+    _initializationError = null;
   }
 
   void _registerFields() {

@@ -24,26 +24,24 @@ void main() {
     const field1 = FormixFieldID<String>('field1');
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              initialValue: const {'field1': 'initial'},
-              fields: const [FormixFieldConfig(id: field1)],
-              child: FormixBuilder(
-                builder: (context, scope) {
-                  final value = scope.watchValue(field1);
-                  return Column(
-                    children: [
-                      Text('Value: $value'),
-                      ElevatedButton(
-                        onPressed: () => scope.setValue(field1, 'changed'),
-                        child: const Text('Change'),
-                      ),
-                    ],
-                  );
-                },
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            initialValue: const {'field1': 'initial'},
+            fields: const [FormixFieldConfig(id: field1)],
+            child: FormixBuilder(
+              builder: (context, scope) {
+                final value = scope.watchValue(field1);
+                return Column(
+                  children: [
+                    Text('Value: $value'),
+                    ElevatedButton(
+                      onPressed: () => scope.setValue(field1, 'changed'),
+                      child: const Text('Change'),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -64,14 +62,12 @@ void main() {
     const field1 = FormixFieldID<String>('field1');
 
     await tester.pumpWidget(
-      const ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              initialValue: {'field1': 'initial'},
-              fields: [FormixFieldConfig(id: field1)],
-              child: CustomStatusDisplay(),
-            ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            initialValue: {'field1': 'initial'},
+            fields: [FormixFieldConfig(id: field1)],
+            child: CustomStatusDisplay(),
           ),
         ),
       ),
@@ -81,13 +77,10 @@ void main() {
     expect(find.text('Valid: true'), findsOneWidget);
 
     // Trigger a change
-    final provider = Formix.of(
+    final controller = Formix.of(
       tester.element(find.byType(CustomStatusDisplay)),
     )!;
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(CustomStatusDisplay)),
-    );
-    container.read(provider.notifier).setValue(field1, 'dirty');
+    controller.setValue(field1, 'dirty');
 
     await tester.pump();
 
@@ -100,31 +93,29 @@ void main() {
     Map<String, dynamic>? submittedValues;
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              fields: [
-                FormixFieldConfig(
-                  id: field1,
-                  validator: (v) => (v?.isEmpty ?? true) ? 'Error' : null,
-                ),
-              ],
-              child: FormixBuilder(
-                builder: (context, scope) {
-                  return ElevatedButton(
-                    onPressed: () => scope.submit(
-                      onValid: (values) async {
-                        submitted = true;
-                        submittedValues = values;
-                      },
-                    ),
-                    child: Text(
-                      scope.watchIsSubmitting ? 'Submitting' : 'Submit',
-                    ),
-                  );
-                },
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            fields: [
+              FormixFieldConfig(
+                id: field1,
+                validator: (v) => (v?.isEmpty ?? true) ? 'Error' : null,
               ),
+            ],
+            child: FormixBuilder(
+              builder: (context, scope) {
+                return ElevatedButton(
+                  onPressed: () => scope.submit(
+                    onValid: (values) async {
+                      submitted = true;
+                      submittedValues = values;
+                    },
+                  ),
+                  child: Text(
+                    scope.watchIsSubmitting ? 'Submitting' : 'Submit',
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -137,11 +128,8 @@ void main() {
     expect(submitted, isFalse);
 
     // Set valid value
-    final provider = Formix.of(tester.element(find.text('Submit')))!;
-    final container = ProviderScope.containerOf(
-      tester.element(find.text('Submit')),
-    );
-    container.read(provider.notifier).setValue(field1, 'valid');
+    final controller = Formix.of(tester.element(find.text('Submit')))!;
+    controller.setValue(field1, 'valid');
     await tester.pump();
 
     // Click again
@@ -158,23 +146,21 @@ void main() {
     const field1 = FormixFieldID<String>('field1');
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              initialValue: const {'field1': ''}, // Start with empty string
-              fields: [
-                FormixFieldConfig(
-                  id: field1,
-                  validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
-                ),
-              ],
-              child: FormixBuilder(
-                builder: (context, scope) {
-                  final validation = scope.watchValidation(field1);
-                  return Text('Validation: ${validation.isValid}');
-                },
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            initialValue: const {'field1': ''}, // Start with empty string
+            fields: [
+              FormixFieldConfig(
+                id: field1,
+                validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
               ),
+            ],
+            child: FormixBuilder(
+              builder: (context, scope) {
+                final validation = scope.watchValidation(field1);
+                return Text('Validation: ${validation.isValid}');
+              },
             ),
           ),
         ),
@@ -185,11 +171,10 @@ void main() {
     expect(find.text('Validation: false'), findsOneWidget);
 
     // Set valid value
-    final provider = Formix.of(tester.element(find.text('Validation: false')))!;
-    final container = ProviderScope.containerOf(
+    final controller = Formix.of(
       tester.element(find.text('Validation: false')),
-    );
-    container.read(provider.notifier).setValue(field1, 'valid');
+    )!;
+    controller.setValue(field1, 'valid');
     await tester.pump();
 
     expect(find.text('Validation: true'), findsOneWidget);
@@ -199,18 +184,16 @@ void main() {
     const field1 = FormixFieldID<String>('field1');
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              initialValue: const {'field1': 'initial'},
-              fields: const [FormixFieldConfig(id: field1)],
-              child: FormixBuilder(
-                builder: (context, scope) {
-                  final isDirty = scope.watchIsDirty(field1);
-                  return Text('Dirty: $isDirty');
-                },
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            initialValue: const {'field1': 'initial'},
+            fields: const [FormixFieldConfig(id: field1)],
+            child: FormixBuilder(
+              builder: (context, scope) {
+                final isDirty = scope.watchIsDirty(field1);
+                return Text('Dirty: $isDirty');
+              },
             ),
           ),
         ),
@@ -220,11 +203,8 @@ void main() {
     expect(find.text('Dirty: false'), findsOneWidget);
 
     // Change value
-    final provider = Formix.of(tester.element(find.text('Dirty: false')))!;
-    final container = ProviderScope.containerOf(
-      tester.element(find.text('Dirty: false')),
-    );
-    container.read(provider.notifier).setValue(field1, 'changed');
+    final controller = Formix.of(tester.element(find.text('Dirty: false')))!;
+    controller.setValue(field1, 'changed');
     await tester.pump();
 
     expect(find.text('Dirty: true'), findsOneWidget);
@@ -234,17 +214,15 @@ void main() {
     const field1 = FormixFieldID<String>('field1');
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              fields: const [FormixFieldConfig(id: field1)],
-              child: FormixBuilder(
-                builder: (context, scope) {
-                  final isTouched = scope.watchIsTouched(field1);
-                  return Text('Touched: $isTouched');
-                },
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            fields: const [FormixFieldConfig(id: field1)],
+            child: FormixBuilder(
+              builder: (context, scope) {
+                final isTouched = scope.watchIsTouched(field1);
+                return Text('Touched: $isTouched');
+              },
             ),
           ),
         ),
@@ -254,11 +232,8 @@ void main() {
     expect(find.text('Touched: false'), findsOneWidget);
 
     // Mark as touched
-    final provider = Formix.of(tester.element(find.text('Touched: false')))!;
-    final container = ProviderScope.containerOf(
-      tester.element(find.text('Touched: false')),
-    );
-    (container.read(provider.notifier)).markAsTouched(field1);
+    final controller = Formix.of(tester.element(find.text('Touched: false')))!;
+    controller.markAsTouched(field1);
     await tester.pump();
 
     expect(find.text('Touched: true'), findsOneWidget);
@@ -268,18 +243,16 @@ void main() {
     const field1 = FormixFieldID<String>('field1');
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              initialValue: const {'field1': 'initial'},
-              fields: const [FormixFieldConfig(id: field1)],
-              child: FormixBuilder(
-                builder: (context, scope) {
-                  final isFormDirty = scope.watchIsFormDirty;
-                  return Text('Form Dirty: $isFormDirty');
-                },
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            initialValue: const {'field1': 'initial'},
+            fields: const [FormixFieldConfig(id: field1)],
+            child: FormixBuilder(
+              builder: (context, scope) {
+                final isFormDirty = scope.watchIsFormDirty;
+                return Text('Form Dirty: $isFormDirty');
+              },
             ),
           ),
         ),
@@ -289,11 +262,10 @@ void main() {
     expect(find.text('Form Dirty: false'), findsOneWidget);
 
     // Change value
-    final provider = Formix.of(tester.element(find.text('Form Dirty: false')))!;
-    final container = ProviderScope.containerOf(
+    final controller = Formix.of(
       tester.element(find.text('Form Dirty: false')),
-    );
-    container.read(provider.notifier).setValue(field1, 'changed');
+    )!;
+    controller.setValue(field1, 'changed');
     await tester.pump();
 
     expect(find.text('Form Dirty: true'), findsOneWidget);
@@ -301,16 +273,14 @@ void main() {
 
   testWidgets('FormixScope.watchIsSubmitting works correctly', (tester) async {
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              child: FormixBuilder(
-                builder: (context, scope) {
-                  final isSubmitting = scope.watchIsSubmitting;
-                  return Text('Submitting: $isSubmitting');
-                },
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            child: FormixBuilder(
+              builder: (context, scope) {
+                final isSubmitting = scope.watchIsSubmitting;
+                return Text('Submitting: $isSubmitting');
+              },
             ),
           ),
         ),
@@ -320,11 +290,10 @@ void main() {
     expect(find.text('Submitting: false'), findsOneWidget);
 
     // Set submitting
-    final provider = Formix.of(tester.element(find.text('Submitting: false')))!;
-    final container = ProviderScope.containerOf(
+    final controller = Formix.of(
       tester.element(find.text('Submitting: false')),
-    );
-    (container.read(provider.notifier)).setSubmitting(true);
+    )!;
+    controller.setSubmitting(true);
     await tester.pump();
 
     expect(find.text('Submitting: true'), findsOneWidget);
@@ -334,18 +303,16 @@ void main() {
     const field1 = FormixFieldID<String>('field1');
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              initialValue: const {'field1': 'initial'},
-              fields: const [FormixFieldConfig(id: field1)],
-              child: FormixBuilder(
-                builder: (context, scope) {
-                  final state = scope.watchState;
-                  return Text('State Values: ${state.values.length}');
-                },
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            initialValue: const {'field1': 'initial'},
+            fields: const [FormixFieldConfig(id: field1)],
+            child: FormixBuilder(
+              builder: (context, scope) {
+                final state = scope.watchState;
+                return Text('State Values: ${state.values.length}');
+              },
             ),
           ),
         ),
@@ -359,19 +326,17 @@ void main() {
     const field1 = FormixFieldID<String>('field1');
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              fields: const [FormixFieldConfig(id: field1)],
-              child: FormixBuilder(
-                builder: (context, scope) {
-                  return ElevatedButton(
-                    onPressed: () => scope.markAsTouched(field1),
-                    child: const Text('Mark Touched'),
-                  );
-                },
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            fields: const [FormixFieldConfig(id: field1)],
+            child: FormixBuilder(
+              builder: (context, scope) {
+                return ElevatedButton(
+                  onPressed: () => scope.markAsTouched(field1),
+                  child: const Text('Mark Touched'),
+                );
+              },
             ),
           ),
         ),
@@ -379,11 +344,7 @@ void main() {
     );
 
     // Initially not touched
-    final provider = Formix.of(tester.element(find.text('Mark Touched')))!;
-    final container = ProviderScope.containerOf(
-      tester.element(find.text('Mark Touched')),
-    );
-    final controller = container.read(provider.notifier);
+    final controller = Formix.of(tester.element(find.text('Mark Touched')))!;
     expect(controller.isFieldTouched(field1), false);
 
     // Mark as touched
@@ -398,26 +359,24 @@ void main() {
     bool? validationResult;
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              fields: [
-                FormixFieldConfig(
-                  id: field1,
-                  validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
-                ),
-              ],
-              child: FormixBuilder(
-                builder: (context, scope) {
-                  return ElevatedButton(
-                    onPressed: () {
-                      validationResult = scope.validate();
-                    },
-                    child: const Text('Validate'),
-                  );
-                },
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            fields: [
+              FormixFieldConfig(
+                id: field1,
+                validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
               ),
+            ],
+            child: FormixBuilder(
+              builder: (context, scope) {
+                return ElevatedButton(
+                  onPressed: () {
+                    validationResult = scope.validate();
+                  },
+                  child: const Text('Validate'),
+                );
+              },
             ),
           ),
         ),
@@ -430,11 +389,8 @@ void main() {
     expect(validationResult, false);
 
     // Set valid value
-    final provider = Formix.of(tester.element(find.text('Validate')))!;
-    final container = ProviderScope.containerOf(
-      tester.element(find.text('Validate')),
-    );
-    container.read(provider.notifier).setValue(field1, 'valid');
+    final controller = Formix.of(tester.element(find.text('Validate')))!;
+    controller.setValue(field1, 'valid');
     await tester.pump();
 
     // Validate again
@@ -447,25 +403,23 @@ void main() {
     const field1 = FormixFieldID<String>('field1');
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              initialValue: const {'field1': 'initial'},
-              fields: const [FormixFieldConfig(id: field1)],
-              child: FormixBuilder(
-                builder: (context, scope) {
-                  return Column(
-                    children: [
-                      Text('Value: ${scope.watchValue(field1)}'),
-                      ElevatedButton(
-                        onPressed: () => scope.reset(),
-                        child: const Text('Reset'),
-                      ),
-                    ],
-                  );
-                },
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            initialValue: const {'field1': 'initial'},
+            fields: const [FormixFieldConfig(id: field1)],
+            child: FormixBuilder(
+              builder: (context, scope) {
+                return Column(
+                  children: [
+                    Text('Value: ${scope.watchValue(field1)}'),
+                    ElevatedButton(
+                      onPressed: () => scope.reset(),
+                      child: const Text('Reset'),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -475,11 +429,8 @@ void main() {
     expect(find.text('Value: initial'), findsOneWidget);
 
     // Change value
-    final provider = Formix.of(tester.element(find.text('Value: initial')))!;
-    final container = ProviderScope.containerOf(
-      tester.element(find.text('Value: initial')),
-    );
-    container.read(provider.notifier).setValue(field1, 'changed');
+    final controller = Formix.of(tester.element(find.text('Value: initial')))!;
+    controller.setValue(field1, 'changed');
     await tester.pump();
 
     expect(find.text('Value: changed'), findsOneWidget);
@@ -497,32 +448,30 @@ void main() {
     Map<String, ValidationResult>? errorResults;
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              fields: [
-                FormixFieldConfig(
-                  id: field1,
-                  validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
-                ),
-              ],
-              child: FormixBuilder(
-                builder: (context, scope) {
-                  return ElevatedButton(
-                    onPressed: () => scope.submit(
-                      onValid: (values) async {
-                        // Should not be called
-                      },
-                      onError: (errors) {
-                        errorCalled = true;
-                        errorResults = errors;
-                      },
-                    ),
-                    child: const Text('Submit'),
-                  );
-                },
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            fields: [
+              FormixFieldConfig(
+                id: field1,
+                validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
               ),
+            ],
+            child: FormixBuilder(
+              builder: (context, scope) {
+                return ElevatedButton(
+                  onPressed: () => scope.submit(
+                    onValid: (values) async {
+                      // Should not be called
+                    },
+                    onError: (errors) {
+                      errorCalled = true;
+                      errorResults = errors;
+                    },
+                  ),
+                  child: const Text('Submit'),
+                );
+              },
             ),
           ),
         ),
@@ -542,12 +491,10 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: FormixBuilder(
-              builder: (context, scope) => const Text('Should not render'),
-            ),
+      MaterialApp(
+        home: Scaffold(
+          body: FormixBuilder(
+            builder: (context, scope) => const Text('Should not render'),
           ),
         ),
       ),
@@ -560,9 +507,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const ProviderScope(
-        child: MaterialApp(home: Scaffold(body: CustomStatusDisplay())),
-      ),
+      MaterialApp(home: Scaffold(body: CustomStatusDisplay())),
     );
 
     expect(find.byType(FormixConfigurationErrorWidget), findsOneWidget);

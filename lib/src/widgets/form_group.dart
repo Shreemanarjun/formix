@@ -22,7 +22,7 @@ import '../../formix.dart';
 ///   ),
 /// )
 /// ```
-class FormixGroup extends ConsumerStatefulWidget {
+class FormixGroup extends StatefulWidget {
   /// Creates a form group.
   const FormixGroup({super.key, required this.prefix, required this.child});
 
@@ -33,7 +33,7 @@ class FormixGroup extends ConsumerStatefulWidget {
   final Widget child;
 
   @override
-  ConsumerState<FormixGroup> createState() => _FormixGroupState();
+  State<FormixGroup> createState() => _FormixGroupState();
 
   /// Get the current combined prefix for the given [context].
   static String? prefixOf(BuildContext context) {
@@ -52,7 +52,7 @@ class FormixGroup extends ConsumerStatefulWidget {
   }
 }
 
-class _FormixGroupState extends ConsumerState<FormixGroup> {
+class _FormixGroupState extends State<FormixGroup> {
   @override
   Widget build(BuildContext context) {
     final parent = context.dependOnInheritedWidgetOfExactType<_FormixGroupScope>();

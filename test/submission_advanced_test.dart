@@ -7,23 +7,21 @@ void main() {
     int callCount = 0;
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              child: FormixBuilder(
-                builder: (context, scope) {
-                  return ElevatedButton(
-                    onPressed: () => scope.submit(
-                      throttle: const Duration(milliseconds: 100),
-                      onValid: (values) async {
-                        callCount++;
-                      },
-                    ),
-                    child: const Text('Submit'),
-                  );
-                },
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            child: FormixBuilder(
+              builder: (context, scope) {
+                return ElevatedButton(
+                  onPressed: () => scope.submit(
+                    throttle: const Duration(milliseconds: 100),
+                    onValid: (values) async {
+                      callCount++;
+                    },
+                  ),
+                  child: const Text('Submit'),
+                );
+              },
             ),
           ),
         ),
@@ -56,45 +54,43 @@ void main() {
     bool shouldFail = false;
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              initialValue: const {'name': 'Initial'},
-              child: FormixBuilder(
-                builder: (context, scope) {
-                  final isDirty = scope.watchIsFormDirty;
-                  return SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        Text('Dirty: $isDirty'),
-                        const FormixSection(
-                          fields: [FormixFieldConfig(id: nameField)],
-                          child: FormixTextFormField(fieldId: nameField),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            scope
-                                .submit(
-                                  optimistic: true,
-                                  onValid: (values) async {
-                                    if (shouldFail) {
-                                      await Future.delayed(
-                                        const Duration(milliseconds: 50),
-                                      );
-                                      throw Exception('API Error');
-                                    }
-                                  },
-                                )
-                                .catchError((_) {});
-                          },
-                          child: const Text('Submit'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            initialValue: const {'name': 'Initial'},
+            child: FormixBuilder(
+              builder: (context, scope) {
+                final isDirty = scope.watchIsFormDirty;
+                return SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      Text('Dirty: $isDirty'),
+                      const FormixSection(
+                        fields: [FormixFieldConfig(id: nameField)],
+                        child: FormixTextFormField(fieldId: nameField),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          scope
+                              .submit(
+                                optimistic: true,
+                                onValid: (values) async {
+                                  if (shouldFail) {
+                                    await Future.delayed(
+                                      const Duration(milliseconds: 50),
+                                    );
+                                    throw Exception('API Error');
+                                  }
+                                },
+                              )
+                              .catchError((_) {});
+                        },
+                        child: const Text('Submit'),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
         ),

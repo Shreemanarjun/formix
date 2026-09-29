@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/foundation.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 
 import '../../formix.dart';
 
@@ -8,7 +8,7 @@ import '../../formix.dart';
 /// registration and value synchronization.
 ///
 /// Most built-in fields like [FormixTextFormField] extend this.
-abstract class FormixFieldWidget<T> extends ConsumerStatefulWidget {
+abstract class FormixFieldWidget<T> extends StatefulWidget {
   /// Creates a [FormixFieldWidget].
   const FormixFieldWidget({
     super.key,
@@ -80,14 +80,13 @@ abstract class FormixFieldWidget<T> extends ConsumerStatefulWidget {
 }
 
 /// State class that provides simplified APIs for form field management
-abstract class FormixFieldWidgetState<T> extends ConsumerState<FormixFieldWidget<T>> {
+abstract class FormixFieldWidgetState<T> extends State<FormixFieldWidget<T>> {
   FormixController? _controller;
   FormixFieldID<T>? _currentAttachedFieldId;
   T? _currentValue;
   late FocusNode _focusNode;
   bool _isMounted = false;
   bool _createdOwnFocusNode = false;
-  ProviderSubscription? _controllerSub;
   bool _wasDirty = false;
 
   /// The current value of this field from the controller.
@@ -138,65 +137,20 @@ abstract class FormixFieldWidgetState<T> extends ConsumerState<FormixFieldWidget
   @override
   bool get mounted => _isMounted;
 
-  ProviderSubscription? _innerProviderSub;
-
   @override
   void initState() {
     super.initState();
     _isMounted = true;
     _initFocusNode();
-    _setupControllerSubscription();
   }
 
-  void _setupControllerSubscription() {
-    // Early return if explicit controller is provided (optimization)
-    if (widget.controller != null) {
-      // Close any existing subscriptions first
-      _controllerSub?.close();
-      _innerProviderSub?.close();
-      _setupController(widget.controller);
-      return;
-    }
-
-    // Close existing subscriptions
-    _controllerSub?.close();
-    _innerProviderSub?.close();
-
-    try {
-      _controllerSub = ref.listenManual(
-        currentControllerProvider,
-        (
-          previous,
-          next,
-        ) {
-          // Close inner subscription before creating new one
-          _innerProviderSub?.close();
-
-          // Listen to the inner provider to keep the controller alive
-          if (widget.controller == null) {
-            _innerProviderSub = ref.listenManual(next, (_, __) {});
-          }
-
-          final newController = widget.controller ?? ref.read(next.notifier);
-          _setupController(newController);
-          if (mounted) {
-            setState(() {});
-          }
-        },
-        fireImmediately: true,
-      );
-    } catch (e, stack) {
-      if (kDebugMode) {
-        debugPrint(
-          'Formix Error: Failed to setup controller subscription in ${widget.runtimeType} '
-          '(field: ${widget.fieldId}). This usually happens if '
-          'FormixAncestorValidator.validate() failed to find a ProviderScope or '
-          'if the field is used in a standalone context without Riverpod. '
-          '_controller remained uninitialized. '
-          'Error: $e\n$stack',
-        );
-      }
-    }
+  /// Resolves the effective controller: an explicit one if provided, otherwise
+  /// the nearest [Formix] ancestor via [Formix.controllerOf]. Called from
+  /// [didChangeDependencies] so it re-resolves if the ancestor controller changes.
+  void _resolveController() {
+    final newController = widget.controller ?? Formix.controllerOf(context);
+    _setupController(newController);
+    if (_isMounted) setState(() {});
   }
 
   void _initFocusNode() {
@@ -213,6 +167,7 @@ abstract class FormixFieldWidgetState<T> extends ConsumerState<FormixFieldWidget
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _resolveController();
   }
 
   void _setupController(FormixController? newController) {
@@ -329,7 +284,7 @@ abstract class FormixFieldWidgetState<T> extends ConsumerState<FormixFieldWidget
     }
 
     if (widget.controller != oldWidget.controller || widget.fieldId != oldWidget.fieldId) {
-      _setupControllerSubscription();
+      _resolveController();
     } else {
       // Check for configuration changes that require re-registration
       if (widget.initialValue != oldWidget.initialValue ||
@@ -345,8 +300,6 @@ abstract class FormixFieldWidgetState<T> extends ConsumerState<FormixFieldWidget
   @override
   void dispose() {
     _isMounted = false;
-    _controllerSub?.close();
-    _innerProviderSub?.close();
     _controller?.removeFieldListener(widget.fieldId, _onFieldChanged);
     _focusNode.removeListener(_onFocusChanged);
     if (_createdOwnFocusNode) {
@@ -550,37 +503,19 @@ abstract class FormixTextFormFieldWidgetState extends FormixFieldWidgetState<Str
   @override
   Widget build(BuildContext context) {
     final fieldWidget = widget as FormixTextFormFieldWidget;
+    if (!hasController) return const SizedBox.shrink();
 
-    // Use Riverpod watches for optimized rebuilds when using implicit controller
-    if (widget.controller == null) {
-      // Use Consumer to avoid nested selector issues
-      return Consumer(
-        builder: (context, ref, _) {
-          final validation = ref.watch(fieldValidationProvider(fieldWidget.fieldId));
-          final isTouched = ref.watch(fieldTouchedProvider(fieldWidget.fieldId));
-          final isDirty = ref.watch(fieldDirtyProvider(fieldWidget.fieldId));
-          final isSubmitting = ref.watch(formSubmittingProvider);
+    return SignalBuilder(
+      builder: (context) {
+        final validationResult = widget.forceErrorText != null
+            ? ValidationResult(isValid: false, errorMessage: widget.forceErrorText)
+            : controller.validationSignal(fieldWidget.fieldId).value;
+        final isTouched = controller.touchedSignal(fieldWidget.fieldId).value;
+        final isDirty = controller.dirtySignal(fieldWidget.fieldId).value;
+        final isSubmitting = controller.isSubmittingSignal.value;
 
-          return _buildTextField(fieldWidget, validation, isTouched, isDirty, isSubmitting);
-        },
-      );
-    }
-
-    // Fallback for explicit controller usage
-    return AnimatedBuilder(
-      animation: Listenable.merge([
-        controller.fieldValidationNotifier(fieldWidget.fieldId),
-        controller.fieldTouchedNotifier(fieldWidget.fieldId),
-        controller.fieldDirtyNotifier(fieldWidget.fieldId),
-        controller.isSubmittingNotifier,
-      ]),
-      builder: (context, _) => _buildTextField(
-        fieldWidget,
-        validation,
-        isTouched,
-        isDirty,
-        controller.isSubmitting,
-      ),
+        return _buildTextField(fieldWidget, validationResult, isTouched, isDirty, isSubmitting);
+      },
     );
   }
 
@@ -654,37 +589,18 @@ abstract class FormixNumberFormFieldWidgetState extends FormixFieldWidgetState<i
   @override
   Widget build(BuildContext context) {
     final fieldWidget = widget as FormixNumberFormFieldWidget;
+    if (!hasController) return const SizedBox.shrink();
 
-    if (widget.controller == null) {
-      // Use Consumer to avoid nested selector issues
-      return Consumer(
-        builder: (context, ref, _) {
-          final validation = ref.watch(fieldValidationProvider(fieldWidget.fieldId));
-          final isDirty = ref.watch(fieldDirtyProvider(fieldWidget.fieldId));
-          final isTouched = ref.watch(fieldTouchedProvider(fieldWidget.fieldId));
-          final isSubmitting = ref.watch(formSubmittingProvider);
+    return SignalBuilder(
+      builder: (context) {
+        final validationResult = widget.forceErrorText != null
+            ? ValidationResult(isValid: false, errorMessage: widget.forceErrorText)
+            : controller.validationSignal(fieldWidget.fieldId).value;
+        final isDirty = controller.dirtySignal(fieldWidget.fieldId).value;
+        final isTouched = controller.touchedSignal(fieldWidget.fieldId).value;
+        final isSubmitting = controller.isSubmittingSignal.value;
 
-          return _buildNumberField(fieldWidget, validation, isDirty, isTouched, isSubmitting);
-        },
-      );
-    }
-
-    // Fallback for explicit controller
-    return ValueListenableBuilder<ValidationResult>(
-      valueListenable: controller.fieldValidationNotifier(fieldWidget.fieldId),
-      builder: (context, validation, child) {
-        return ValueListenableBuilder<bool>(
-          valueListenable: controller.fieldDirtyNotifier(fieldWidget.fieldId),
-          builder: (context, isDirty, child) {
-            return _buildNumberField(
-              fieldWidget,
-              validation,
-              isDirty,
-              controller.isFieldTouched(fieldWidget.fieldId),
-              controller.isSubmitting,
-            );
-          },
-        );
+        return _buildNumberField(fieldWidget, validationResult, isDirty, isTouched, isSubmitting);
       },
     );
   }

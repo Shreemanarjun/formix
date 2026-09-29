@@ -19,97 +19,95 @@ void main() {
       final currentStep = ValueNotifier<int>(0);
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = Formix.controllerOf(context)!;
-                    return ValueListenableBuilder<int>(
-                      valueListenable: currentStep,
-                      builder: (context, step, _) {
-                        return Column(
-                          children: [
-                            if (step == 0)
-                              const FormixSection(
-                                keepAlive: true,
-                                fields: [
-                                  FormixFieldConfig<String>(
-                                    id: nameField,
-                                    initialValue: '',
-                                  ),
-                                  FormixFieldConfig<String>(
-                                    id: ageField,
-                                    initialValue: '0',
-                                  ),
-                                ],
-                                child: Column(
-                                  children: [
-                                    FormixTextFormField(
-                                      fieldId: nameField,
-                                      decoration: InputDecoration(
-                                        labelText: 'Name',
-                                      ),
-                                    ),
-                                    FormixTextFormField(
-                                      fieldId: ageField,
-                                      decoration: InputDecoration(
-                                        labelText: 'Age',
-                                      ),
-                                    ),
-                                  ],
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = Formix.controllerOf(context)!;
+                  return ValueListenableBuilder<int>(
+                    valueListenable: currentStep,
+                    builder: (context, step, _) {
+                      return Column(
+                        children: [
+                          if (step == 0)
+                            const FormixSection(
+                              keepAlive: true,
+                              fields: [
+                                FormixFieldConfig<String>(
+                                  id: nameField,
+                                  initialValue: '',
                                 ),
-                              ),
-                            if (step == 1)
-                              const FormixSection(
-                                keepAlive: true,
-                                fields: [
-                                  FormixFieldConfig<String>(
-                                    id: streetField,
-                                    initialValue: '',
-                                  ),
-                                  FormixFieldConfig<String>(
-                                    id: cityField,
-                                    initialValue: '',
-                                  ),
-                                ],
-                                child: Column(
-                                  children: [
-                                    FormixTextFormField(
-                                      fieldId: streetField,
-                                      decoration: InputDecoration(
-                                        labelText: 'Street',
-                                      ),
-                                    ),
-                                    FormixTextFormField(
-                                      fieldId: cityField,
-                                      decoration: InputDecoration(
-                                        labelText: 'City',
-                                      ),
-                                    ),
-                                  ],
+                                FormixFieldConfig<String>(
+                                  id: ageField,
+                                  initialValue: '0',
                                 ),
-                              ),
-                            if (step == 2)
-                              // Summary step - no registry needed as we just read data
-                              Column(
+                              ],
+                              child: Column(
                                 children: [
-                                  const Text('Summary:'),
-                                  Text(
-                                    'Name: ${controller.values[nameField.key]}',
+                                  FormixTextFormField(
+                                    fieldId: nameField,
+                                    decoration: InputDecoration(
+                                      labelText: 'Name',
+                                    ),
                                   ),
-                                  Text(
-                                    'Street: ${controller.values[streetField.key]}',
+                                  FormixTextFormField(
+                                    fieldId: ageField,
+                                    decoration: InputDecoration(
+                                      labelText: 'Age',
+                                    ),
                                   ),
                                 ],
                               ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                ),
+                            ),
+                          if (step == 1)
+                            const FormixSection(
+                              keepAlive: true,
+                              fields: [
+                                FormixFieldConfig<String>(
+                                  id: streetField,
+                                  initialValue: '',
+                                ),
+                                FormixFieldConfig<String>(
+                                  id: cityField,
+                                  initialValue: '',
+                                ),
+                              ],
+                              child: Column(
+                                children: [
+                                  FormixTextFormField(
+                                    fieldId: streetField,
+                                    decoration: InputDecoration(
+                                      labelText: 'Street',
+                                    ),
+                                  ),
+                                  FormixTextFormField(
+                                    fieldId: cityField,
+                                    decoration: InputDecoration(
+                                      labelText: 'City',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          if (step == 2)
+                            // Summary step - no registry needed as we just read data
+                            Column(
+                              children: [
+                                const Text('Summary:'),
+                                Text(
+                                  'Name: ${controller.values[nameField.key]}',
+                                ),
+                                Text(
+                                  'Street: ${controller.values[streetField.key]}',
+                                ),
+                              ],
+                            ),
+                        ],
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ),

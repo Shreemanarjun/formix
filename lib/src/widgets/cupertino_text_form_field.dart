@@ -1,10 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 import '../enums.dart';
 import 'base_form_field.dart';
 import 'form_theme.dart';
-import '../controllers/riverpod_controller.dart';
 import '../controllers/validation.dart';
 
 /// A Formix-based text form field that uses Cupertino styling.
@@ -104,34 +103,15 @@ class FormixCupertinoTextFormFieldState extends FormixFieldWidgetState<String> w
   Widget build(BuildContext context) {
     final fieldWidget = widget as FormixCupertinoTextFormField;
 
-    if (widget.controller == null) {
-      // Use Consumer to avoid nested selector issues
-      return Consumer(
-        builder: (context, ref, _) {
-          final validation = ref.watch(fieldValidationProvider(widget.fieldId));
-          final isTouched = ref.watch(fieldTouchedProvider(widget.fieldId));
-          final isDirty = ref.watch(fieldDirtyProvider(widget.fieldId));
-          final isSubmitting = ref.watch(formSubmittingProvider);
-          final validationMode = ref.watch(fieldValidationModeProvider(widget.fieldId));
-
-          return _buildCupertinoField(fieldWidget, validation, isTouched, isDirty, isSubmitting, validationMode);
-        },
-      );
-    }
-
-    return AnimatedBuilder(
-      animation: Listenable.merge([
-        controller.fieldValidationNotifier(widget.fieldId),
-        controller.fieldTouchedNotifier(widget.fieldId),
-        controller.fieldDirtyNotifier(widget.fieldId),
-        controller.isSubmittingNotifier,
-      ]),
-      builder: (context, _) => _buildCupertinoField(
+    // Read the controller's signal slices inside a SignalBuilder so this field
+    // rebuilds only when one of the slices it reads changes.
+    return SignalBuilder(
+      builder: (context) => _buildCupertinoField(
         fieldWidget,
-        validation,
-        isTouched,
-        isDirty,
-        controller.isSubmitting,
+        controller.validationSignal(widget.fieldId).value,
+        controller.touchedSignal(widget.fieldId).value,
+        controller.dirtySignal(widget.fieldId).value,
+        controller.isSubmittingSignal.value,
         controller.getValidationMode(widget.fieldId),
       ),
     );

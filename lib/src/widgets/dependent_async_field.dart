@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 
 import '../../formix.dart';
 import 'ancestor_validator.dart';
@@ -26,7 +27,7 @@ import 'ancestor_validator.dart';
 ///   },
 /// )
 /// ```
-class FormixDependentAsyncField<T, D> extends ConsumerStatefulWidget {
+class FormixDependentAsyncField<T, D> extends StatefulWidget {
   /// Creates a [FormixDependentAsyncField].
   const FormixDependentAsyncField({
     super.key,
@@ -91,10 +92,10 @@ class FormixDependentAsyncField<T, D> extends ConsumerStatefulWidget {
   final void Function(BuildContext context, FormixController controller, T data)? onData;
 
   @override
-  ConsumerState<FormixDependentAsyncField<T, D>> createState() => _FormixDependentAsyncFieldState<T, D>();
+  State<FormixDependentAsyncField<T, D>> createState() => _FormixDependentAsyncFieldState<T, D>();
 }
 
-class _FormixDependentAsyncFieldState<T, D> extends ConsumerState<FormixDependentAsyncField<T, D>> {
+class _FormixDependentAsyncFieldState<T, D> extends State<FormixDependentAsyncField<T, D>> {
   D? _lastDependencyValue;
   Future<T>? _currentFuture;
   bool _initialized = false;
@@ -109,98 +110,73 @@ class _FormixDependentAsyncFieldState<T, D> extends ConsumerState<FormixDependen
 
     if (errorWidget != null) return errorWidget;
 
-    final activeProvider = (Formix.of(context) ?? ref.watch(currentControllerProvider))!;
-
-    try {
-      // Use fieldValueProvider for granular dependency tracking
-      final provider = fieldValueProvider(widget.dependency);
-      final D? dependencyValue;
-
-      if (widget.select != null) {
-        // Watch only the selected part
-        ref.watch(provider.select((v) => widget.select!(v as D?)));
-        dependencyValue = ref.read(provider) as D?;
-      } else {
-        dependencyValue = ref.watch(provider) as D?;
-      }
-
-      // Only recreate the future if the dependency value has changed or it's the first build
-      if (!_initialized || dependencyValue != _lastDependencyValue) {
-        _lastDependencyValue = dependencyValue;
-        _currentFuture = widget.future(dependencyValue);
-        _initialized = true;
-      }
-
-      // Listen for dependency changes to reset the related field
-      if (widget.resetField != null) {
-        if (widget.select != null) {
-          ref.listen(provider.select((v) => widget.select!(v as D?)), (
-            previous,
-            next,
-          ) {
-            if (previous != next) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  ref.read(activeProvider.notifier).resetFields(
-                    [widget.resetField!],
-                    strategy: ResetStrategy.clear,
-                  );
-                }
-              });
-            }
-          });
-        } else {
-          ref.listen(provider, (
-            previous,
-            next,
-          ) {
-            if (previous != next) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) {
-                  ref.read(activeProvider.notifier).resetFields(
-                    [widget.resetField!],
-                    strategy: ResetStrategy.clear,
-                  );
-                }
-              });
-            }
-          });
-        }
-      }
-
-      return FormixAsyncField<T>(
-        fieldId: widget.fieldId,
-        // Pass the cached future
-        future: _currentFuture,
-        // Use the dependency value as the 'dependencies' list for FormixAsyncField
-        // This tells FormixAsyncField to re-execute the future when this value changes
-        dependencies: [dependencyValue],
-        // Define retry logic (same as initial fetch)
-        onRetry: () {
-          // Force update the current future on retry
-          final future = widget.future(dependencyValue);
-          setState(() {
-            _currentFuture = future;
-          });
-          return future;
-        },
-        builder: widget.builder,
-        loadingBuilder: widget.loadingBuilder,
-        asyncErrorBuilder: widget.asyncErrorBuilder,
-        keepPreviousData: widget.keepPreviousData,
-        debounce: widget.debounce,
-        initialValue: widget.initialValue,
-        initialValueStrategy: widget.initialValueStrategy,
-        manual: widget.manual,
-        onData: widget.onData,
-      );
-    } catch (e) {
-      return FormixConfigurationErrorWidget(
+    final controller = Formix.controllerOf(context);
+    if (controller == null) {
+      return const FormixConfigurationErrorWidget(
         message: 'Failed to initialize FormixDependentAsyncField',
-        details: e.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.\n\nExample:\nvoid main() {\n  runApp(ProviderScope(child: MyApp()));\n}'
-            : 'Error: $e',
+        details: 'FormixDependentAsyncField must be used inside a Formix widget.',
       );
     }
+
+    // Rebuild reactively whenever the dependency value changes.
+    return SignalBuilder(
+      builder: (context) {
+        final D? dependencyValue = controller.valueSignal(widget.dependency).value;
+
+        // Detect a change (respecting the optional selector) to recreate the
+        // future and reset the related field.
+        final bool changed = !_initialized ||
+            (widget.select != null
+                ? widget.select!(dependencyValue) != widget.select!(_lastDependencyValue)
+                : dependencyValue != _lastDependencyValue);
+
+        if (changed) {
+          final bool wasInitialized = _initialized;
+          _lastDependencyValue = dependencyValue;
+          _currentFuture = widget.future(dependencyValue);
+          _initialized = true;
+
+          // Reset the dependent field when the dependency actually changes
+          // (not on the first build).
+          if (wasInitialized && widget.resetField != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && controller.mounted) {
+                controller.resetFields(
+                  [widget.resetField!],
+                  strategy: ResetStrategy.clear,
+                );
+              }
+            });
+          }
+        }
+
+        return FormixAsyncField<T>(
+          fieldId: widget.fieldId,
+          // Pass the cached future
+          future: _currentFuture,
+          // Use the dependency value as the 'dependencies' list for FormixAsyncField
+          // This tells FormixAsyncField to re-execute the future when this value changes
+          dependencies: [dependencyValue],
+          // Define retry logic (same as initial fetch)
+          onRetry: () {
+            // Force update the current future on retry
+            final future = widget.future(dependencyValue);
+            setState(() {
+              _currentFuture = future;
+            });
+            return future;
+          },
+          builder: widget.builder,
+          loadingBuilder: widget.loadingBuilder,
+          asyncErrorBuilder: widget.asyncErrorBuilder,
+          keepPreviousData: widget.keepPreviousData,
+          debounce: widget.debounce,
+          initialValue: widget.initialValue,
+          initialValueStrategy: widget.initialValueStrategy,
+          manual: widget.manual,
+          onData: widget.onData,
+        );
+      },
+    );
   }
 }

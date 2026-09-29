@@ -22,24 +22,22 @@ void main() {
     }
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              child: FormixAsyncField<String>(
-                fieldId: fieldId,
-                future: initialFuture,
-                asyncValidator: checkAvailability,
-                builder: (context, state) {
-                  return Column(
-                    children: [
-                      Text('Current Value: ${state.value}'),
-                      if (state.validation.isValidating) const Text('Validating...'),
-                      if (state.validation.errorMessage != null) Text('Error: ${state.validation.errorMessage}'),
-                    ],
-                  );
-                },
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            child: FormixAsyncField<String>(
+              fieldId: fieldId,
+              future: initialFuture,
+              asyncValidator: checkAvailability,
+              builder: (context, state) {
+                return Column(
+                  children: [
+                    Text('Current Value: ${state.value}'),
+                    if (state.validation.isValidating) const Text('Validating...'),
+                    if (state.validation.errorMessage != null) Text('Error: ${state.validation.errorMessage}'),
+                  ],
+                );
+              },
             ),
           ),
         ),

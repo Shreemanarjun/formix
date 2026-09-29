@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 
 import '../../formix.dart';
 import 'ancestor_validator.dart';
@@ -21,14 +22,14 @@ import 'ancestor_validator.dart';
 ///   },
 /// )
 /// ```
-class FormixDependentField<T> extends ConsumerStatefulWidget {
+class FormixDependentField<T> extends StatefulWidget {
   /// Creates a dependent field widget.
   const FormixDependentField({
     super.key,
     required this.fieldId,
     required this.builder,
     this.select,
-    this.controllerProvider,
+    this.controller,
   });
 
   /// The ID of the field to watch for changes.
@@ -42,56 +43,63 @@ class FormixDependentField<T> extends ConsumerStatefulWidget {
   /// a complex object change.
   final Object? Function(T? value)? select;
 
-  /// Optional explicit controller provider. If null, it looks up the nearest [Formix].
-  final NotifierProvider<FormixController, FormixData>? controllerProvider;
+  /// Optional explicit controller. If null, it looks up the nearest [Formix].
+  final FormixController? controller;
 
   @override
-  ConsumerState<FormixDependentField<T>> createState() => _FormixDependentFieldState<T>();
+  State<FormixDependentField<T>> createState() => _FormixDependentFieldState<T>();
 }
 
-class _FormixDependentFieldState<T> extends ConsumerState<FormixDependentField<T>> {
+class _FormixDependentFieldState<T> extends State<FormixDependentField<T>> {
+  Computed<Object?>? _selected;
+  FormixController? _computedController;
+
+  @override
+  void dispose() {
+    _selected?.dispose();
+    super.dispose();
+  }
+
+  Computed<Object?> _selectComputed(FormixController controller) {
+    if (_selected == null || _computedController != controller) {
+      _selected?.dispose();
+      _computedController = controller;
+      _selected = computed(() => widget.select!(controller.valueSignal(widget.fieldId).value));
+    }
+    return _selected!;
+  }
+
   @override
   Widget build(BuildContext context) {
     final errorWidget = FormixAncestorValidator.validate(
       context,
       widgetName: 'FormixDependentField',
-      explicitProvider: widget.controllerProvider,
+      explicitController: widget.controller,
       requireFormix: false,
     );
 
     if (errorWidget != null) return errorWidget;
 
-    final provider = widget.controllerProvider ?? Formix.of(context) ?? ref.watch(currentControllerProvider);
+    final controller = widget.controller ?? Formix.controllerOf(context);
+    if (controller == null) {
+      return const FormixConfigurationErrorWidget(
+        message: 'Failed to initialize FormixDependentField',
+        details: 'FormixDependentField must be used inside a Formix widget or given an explicit controller.',
+      );
+    }
 
-    // We use ProviderScope override to ensure we are watching the correct controller
-    // if we are using the global fieldValueProvider
-    return ProviderScope(
-      overrides: [currentControllerProvider.overrideWithValue(provider!)],
-      child: Consumer(
-        builder: (context, ref, _) {
-          try {
-            final provider = fieldValueProvider(widget.fieldId);
-            final T? value;
-
-            if (widget.select != null) {
-              // Watch only the selected part but still provide the whole value to the builder
-              ref.watch(provider.select((v) => widget.select!(v as T?)));
-              value = ref.read(provider) as T?;
-            } else {
-              value = ref.watch(provider) as T?;
-            }
-
-            return widget.builder(context, value);
-          } catch (e) {
-            return FormixConfigurationErrorWidget(
-              message: 'Failed to initialize FormixDependentField',
-              details: e.toString().contains('No ProviderScope found')
-                  ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.'
-                  : 'Error: $e',
-            );
-          }
-        },
-      ),
+    return SignalBuilder(
+      builder: (context) {
+        final T? value;
+        if (widget.select != null) {
+          // Subscribe only to the selected part, but pass the whole value to the builder.
+          _selectComputed(controller).value;
+          value = controller.valueSignal(widget.fieldId).peek();
+        } else {
+          value = controller.valueSignal(widget.fieldId).value;
+        }
+        return widget.builder(context, value);
+      },
     );
   }
 }

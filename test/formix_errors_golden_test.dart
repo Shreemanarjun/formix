@@ -6,14 +6,12 @@ void main() {
   group('FormixConfigurationErrorWidget Golden Tests', () {
     testWidgets('Golden Test - Missing Formix Ancestor', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            debugShowCheckedModeBanner: false,
-            home: Scaffold(
-              body: Center(
-                child: FormixTextFormField(
-                  fieldId: FormixFieldID('test'),
-                ),
+        MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: Scaffold(
+            body: Center(
+              child: FormixTextFormField(
+                fieldId: FormixFieldID('test'),
               ),
             ),
           ),

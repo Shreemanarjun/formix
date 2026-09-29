@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:formix/formix.dart';
 
 // Conditional Fields Example
-class ConditionalFormExample extends ConsumerWidget {
+class ConditionalFormExample extends StatelessWidget {
   const ConditionalFormExample({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Conditional Form Example')),
       body: const ConditionalFormExampleContent(),
@@ -14,16 +14,16 @@ class ConditionalFormExample extends ConsumerWidget {
   }
 }
 
-class ConditionalFormExampleContent extends ConsumerStatefulWidget {
+class ConditionalFormExampleContent extends StatefulWidget {
   const ConditionalFormExampleContent({super.key});
 
   @override
-  ConsumerState<ConditionalFormExampleContent> createState() =>
+  State<ConditionalFormExampleContent> createState() =>
       _ConditionalFormExampleContentState();
 }
 
 class _ConditionalFormExampleContentState
-    extends ConsumerState<ConditionalFormExampleContent> {
+    extends State<ConditionalFormExampleContent> {
   static const accountTypeField = FormixFieldID<String>('accountType');
   static const companyNameField = FormixFieldID<String>('companyName');
   static const taxIdField = FormixFieldID<String>('taxId');
@@ -113,11 +113,9 @@ class _ConditionalFormExampleContentState
             const SizedBox(height: 16),
 
             // Conditional Business Fields using FormixSection
-            Consumer(
-              builder: (context, ref, child) {
-                final accountType = ref.watch(
-                  fieldValueProvider(accountTypeField),
-                );
+            FormixBuilder(
+              builder: (context, scope) {
+                final accountType = scope.watchValue(accountTypeField);
                 if (accountType == 'business') {
                   return FormixSection(
                     key: const ValueKey('business_section'),
@@ -210,11 +208,9 @@ class _ConditionalFormExampleContentState
             const SizedBox(height: 16),
 
             // Conditional Newsletter Frequency
-            Consumer(
-              builder: (context, ref, child) {
-                final hasNewsletter = ref.watch(
-                  fieldValueProvider(hasNewsletterField),
-                );
+            FormixBuilder(
+              builder: (context, scope) {
+                final hasNewsletter = scope.watchValue(hasNewsletterField);
                 if (hasNewsletter == true) {
                   return FormixSection(
                     key: const ValueKey('newsletter_section'),
@@ -275,11 +271,9 @@ class _ConditionalFormExampleContentState
             const SizedBox(height: 16),
 
             // Conditional Phone Number
-            Consumer(
-              builder: (context, ref, child) {
-                final contactMethod = ref.watch(
-                  fieldValueProvider(contactMethodField),
-                );
+            FormixBuilder(
+              builder: (context, scope) {
+                final contactMethod = scope.watchValue(contactMethodField);
                 if (contactMethod == 'phone' || contactMethod == 'sms') {
                   // Dynamic fields dependent on contact method
                   final phoneFields = [
@@ -359,12 +353,11 @@ class _ConditionalFormExampleContentState
             const FormixFormStatus(),
             const SizedBox(height: 16),
 
-            Consumer(
-              builder: (context, ref, child) {
-                final provider = Formix.of(context)!;
-                final controller = ref.read(provider.notifier);
-                // Watch state to trigger rebuilds
-                ref.watch(provider);
+            FormixBuilder(
+              builder: (context, scope) {
+                final controller = scope.controller;
+                // Watch validity to trigger rebuilds
+                scope.watchIsValid;
 
                 return ElevatedButton(
                   onPressed: () {

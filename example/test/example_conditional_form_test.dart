@@ -9,7 +9,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: ConditionalFormExample())),
+        const MaterialApp(home: ConditionalFormExample()),
       );
 
       await tester.pumpAndSettle();
@@ -52,7 +52,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: ConditionalFormExample())),
+        const MaterialApp(home: ConditionalFormExample()),
       );
 
       await tester.pumpAndSettle();
@@ -91,9 +91,7 @@ void main() {
       'Shows Phone dependent fields when Phone contact method is selected',
       (tester) async {
         await tester.pumpWidget(
-          const ProviderScope(
-            child: MaterialApp(home: ConditionalFormExample()),
-          ),
+          const MaterialApp(home: ConditionalFormExample()),
         );
 
         await tester.pumpAndSettle();
@@ -145,9 +143,7 @@ void main() {
         ); // Ensure visibility
 
         await tester.pumpWidget(
-          const ProviderScope(
-            child: MaterialApp(home: ConditionalFormExample()),
-          ),
+          const MaterialApp(home: ConditionalFormExample()),
         );
 
         await tester.pumpAndSettle();

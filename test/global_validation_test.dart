@@ -194,21 +194,19 @@ void main() {
       const fieldId = FormixFieldID<String>('test');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                autovalidateMode: FormixAutovalidateMode.disabled,
-                fields: [
-                  FormixFieldConfig<String>(
-                    id: fieldId,
-                    initialValue: '',
-                    validator: (v) => v!.isEmpty ? 'Error' : null,
-                  ),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) => Text(scope.watchError(fieldId) ?? 'Valid'),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              autovalidateMode: FormixAutovalidateMode.disabled,
+              fields: [
+                FormixFieldConfig<String>(
+                  id: fieldId,
+                  initialValue: '',
+                  validator: (v) => v!.isEmpty ? 'Error' : null,
                 ),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) => Text(scope.watchError(fieldId) ?? 'Valid'),
               ),
             ),
           ),

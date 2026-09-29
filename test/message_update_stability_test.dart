@@ -8,46 +8,31 @@ class SpanishMessages extends DefaultFormixMessages {
   String required(String label) => '$label es requerido';
 }
 
-class MessagesNotifier extends Notifier<FormixMessages> {
-  @override
-  FormixMessages build() => const DefaultFormixMessages();
-
-  void setMessages(FormixMessages next) => state = next;
-}
-
 void main() {
   group('Formix Message Update Stability', () {
     testWidgets('updating global messages updates error strings without resetting values', (tester) async {
       const nameField = FormixFieldID<String>('name');
 
-      final messagesProvider = NotifierProvider<MessagesNotifier, FormixMessages>(() => MessagesNotifier());
+      addTearDown(() => formixGlobalMessages.value = const DefaultFormixMessages());
+      formixGlobalMessages.value = const DefaultFormixMessages();
 
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            formixMessagesProvider.overrideWith((ref) => ref.watch(messagesProvider)),
-          ],
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                autovalidateMode: FormixAutovalidateMode.always,
-                fields: const [
-                  FormixFieldConfig(
-                    id: nameField,
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              autovalidateMode: FormixAutovalidateMode.always,
+              fields: const [
+                FormixFieldConfig(
+                  id: nameField,
+                ),
+              ],
+              child: Column(
+                children: [
+                  FormixTextFormField(
+                    fieldId: nameField,
+                    validator: (v) => (v == null || v.isEmpty) ? FormixValidationKeys.required : null,
                   ),
                 ],
-                child: Consumer(
-                  builder: (context, ref, _) {
-                    return Column(
-                      children: [
-                        FormixTextFormField(
-                          fieldId: nameField,
-                          validator: (v) => (v == null || v.isEmpty) ? FormixValidationKeys.required : null,
-                        ),
-                      ],
-                    );
-                  },
-                ),
               ),
             ),
           ),
@@ -68,9 +53,8 @@ void main() {
       // Need to mark as touched OR wait for autovalidation
       expect(find.text('name is required'), findsOneWidget);
 
-      // 3. Change language via the provider
-      final container = ProviderScope.containerOf(tester.element(find.byType(Formix)));
-      container.read(messagesProvider.notifier).setMessages(const SpanishMessages());
+      // 3. Change language via the global messages signal
+      formixGlobalMessages.value = const SpanishMessages();
 
       // Pump several times to handle microtasks and rebuilds
       await tester.pump();
@@ -86,7 +70,7 @@ void main() {
       expect(controller.getValue(nameField), 'Jane Doe');
 
       // Now change language back and see if value stays 'Jane Doe'
-      container.read(messagesProvider.notifier).setMessages(const DefaultFormixMessages());
+      formixGlobalMessages.value = const DefaultFormixMessages();
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
 
@@ -99,29 +83,27 @@ void main() {
 
       bool isSpanish = false;
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: StatefulBuilder(
-                builder: (context, setState) {
-                  return Column(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () => setState(() => isSpanish = !isSpanish),
-                        child: const Text('Toggle'),
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                return Column(
+                  children: [
+                    ElevatedButton(
+                      onPressed: () => setState(() => isSpanish = !isSpanish),
+                      child: const Text('Toggle'),
+                    ),
+                    Formix(
+                      autovalidateMode: FormixAutovalidateMode.always,
+                      messages: isSpanish ? const SpanishMessages() : const DefaultFormixMessages(),
+                      child: FormixTextFormField(
+                        fieldId: nameField,
+                        validator: (v) => (v == null || v.isEmpty) ? FormixValidationKeys.required : null,
                       ),
-                      Formix(
-                        autovalidateMode: FormixAutovalidateMode.always,
-                        messages: isSpanish ? const SpanishMessages() : const DefaultFormixMessages(),
-                        child: FormixTextFormField(
-                          fieldId: nameField,
-                          validator: (v) => (v == null || v.isEmpty) ? FormixValidationKeys.required : null,
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),

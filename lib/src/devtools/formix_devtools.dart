@@ -7,14 +7,14 @@ import '../controllers/field_id.dart';
 
 /// Service for interacting with DevTools extension.
 class FormixDevToolsService {
-  static final Map<String, RiverpodFormController> _activeControllers = {};
+  static final Map<String, FormixBaseController> _activeControllers = {};
   static final Set<String> _allFormHistory = <String>{};
   static String? _latestActiveId; // Added
 
   static bool _extensionsRegistered = false;
 
   /// Register a controller for DevTools monitoring.
-  static void registerController(String id, RiverpodFormController controller) {
+  static void registerController(String id, FormixBaseController controller) {
     _activeControllers[id] = controller;
 
     // Refresh history order: move to end

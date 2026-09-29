@@ -16,17 +16,15 @@ void main() {
     testWidgets('Stream emits state changes (Sync)', (tester) async {
       await tester.runAsync(() async {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Formix(
-                  key: formKey,
-                  initialValue: const {'name': ''},
-                  fields: const [
-                    FormixFieldConfig<String>(id: nameField, initialValue: ''),
-                  ],
-                  child: const SizedBox(),
-                ),
+          MaterialApp(
+            home: Scaffold(
+              body: Formix(
+                key: formKey,
+                initialValue: const {'name': ''},
+                fields: const [
+                  FormixFieldConfig<String>(id: nameField, initialValue: ''),
+                ],
+                child: const SizedBox(),
               ),
             ),
           ),
@@ -55,25 +53,23 @@ void main() {
         final receivedStates = <FormixData>[];
 
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: FormixListener(
-                  formKey: formKey,
-                  listener: (context, state) {
-                    receivedStates.add(state);
-                  },
-                  child: Formix(
-                    key: formKey,
-                    initialValue: const {'name': ''},
-                    fields: const [
-                      FormixFieldConfig<String>(
-                        id: nameField,
-                        initialValue: '',
-                      ),
-                    ],
-                    child: const SizedBox(),
-                  ),
+          MaterialApp(
+            home: Scaffold(
+              body: FormixListener(
+                formKey: formKey,
+                listener: (context, state) {
+                  receivedStates.add(state);
+                },
+                child: Formix(
+                  key: formKey,
+                  initialValue: const {'name': ''},
+                  fields: const [
+                    FormixFieldConfig<String>(
+                      id: nameField,
+                      initialValue: '',
+                    ),
+                  ],
+                  child: const SizedBox(),
                 ),
               ),
             ),
@@ -93,17 +89,15 @@ void main() {
     testWidgets('Performance Check (Many Listeners)', (tester) async {
       await tester.runAsync(() async {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Formix(
-                  key: formKey,
-                  initialValue: const {'name': ''},
-                  fields: const [
-                    FormixFieldConfig<String>(id: nameField, initialValue: ''),
-                  ],
-                  child: const SizedBox(),
-                ),
+          MaterialApp(
+            home: Scaffold(
+              body: Formix(
+                key: formKey,
+                initialValue: const {'name': ''},
+                fields: const [
+                  FormixFieldConfig<String>(id: nameField, initialValue: ''),
+                ],
+                child: const SizedBox(),
               ),
             ),
           ),
@@ -148,15 +142,13 @@ void main() {
     testWidgets('Stream closes on dispose (Memory Leak Check)', (tester) async {
       await tester.runAsync(() async {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Formix(
-                  key: formKey,
-                  initialValue: const {'name': ''},
-                  fields: const [],
-                  child: const SizedBox(),
-                ),
+          MaterialApp(
+            home: Scaffold(
+              body: Formix(
+                key: formKey,
+                initialValue: const {'name': ''},
+                fields: const [],
+                child: const SizedBox(),
               ),
             ),
           ),

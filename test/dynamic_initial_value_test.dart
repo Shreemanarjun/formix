@@ -10,31 +10,29 @@ void main() {
       String? currentInitialValue;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: StatefulBuilder(
-                  builder: (context, setState) {
-                    return Column(
-                      children: [
-                        FormixRawFormField<String>(
-                          fieldId: fieldId,
-                          initialValue: currentInitialValue,
-                          builder: (context, state) => Text('Value: ${state.value ?? 'null'}'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              currentInitialValue = 'Updated Value';
-                            });
-                          },
-                          child: const Text('Load Data'),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    children: [
+                      FormixRawFormField<String>(
+                        fieldId: fieldId,
+                        initialValue: currentInitialValue,
+                        builder: (context, state) => Text('Value: ${state.value ?? 'null'}'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            currentInitialValue = 'Updated Value';
+                          });
+                        },
+                        child: const Text('Load Data'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -56,39 +54,37 @@ void main() {
       String? currentInitialValue;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: StatefulBuilder(
-                  builder: (context, setState) {
-                    return Column(
-                      children: [
-                        FormixRawFormField<String>(
-                          fieldId: fieldId,
-                          initialValue: currentInitialValue,
-                          builder: (context, state) => Column(
-                            children: [
-                              Text('Value: ${state.value ?? 'null'}'),
-                              ElevatedButton(
-                                onPressed: () => state.didChange('User Modified'),
-                                child: const Text('Modify Value'),
-                              ),
-                            ],
-                          ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    children: [
+                      FormixRawFormField<String>(
+                        fieldId: fieldId,
+                        initialValue: currentInitialValue,
+                        builder: (context, state) => Column(
+                          children: [
+                            Text('Value: ${state.value ?? 'null'}'),
+                            ElevatedButton(
+                              onPressed: () => state.didChange('User Modified'),
+                              child: const Text('Modify Value'),
+                            ),
+                          ],
                         ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              currentInitialValue = 'Server Value';
-                            });
-                          },
-                          child: const Text('Load Data'),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            currentInitialValue = 'Server Value';
+                          });
+                        },
+                        child: const Text('Load Data'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -115,32 +111,30 @@ void main() {
       String? currentInitialValue = 'Initial';
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: StatefulBuilder(
-                  builder: (context, setState) {
-                    return Column(
-                      children: [
-                        FormixRawFormField<String>(
-                          fieldId: fieldId,
-                          initialValue: currentInitialValue,
-                          initialValueStrategy: FormixInitialValueStrategy.preferGlobal,
-                          builder: (context, state) => Text('Value: ${state.value ?? 'null'}'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              currentInitialValue = 'Try Update';
-                            });
-                          },
-                          child: const Text('Try Load'),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    children: [
+                      FormixRawFormField<String>(
+                        fieldId: fieldId,
+                        initialValue: currentInitialValue,
+                        initialValueStrategy: FormixInitialValueStrategy.preferGlobal,
+                        builder: (context, state) => Text('Value: ${state.value ?? 'null'}'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            currentInitialValue = 'Try Update';
+                          });
+                        },
+                        child: const Text('Try Load'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -164,33 +158,31 @@ void main() {
       FormixInitialValueStrategy currentStrategy = FormixInitialValueStrategy.preferGlobal;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: StatefulBuilder(
-                  builder: (context, setState) {
-                    return Column(
-                      children: [
-                        FormixRawFormField<String>(
-                          fieldId: fieldId,
-                          initialValue: currentInitialValue,
-                          initialValueStrategy: currentStrategy,
-                          builder: (context, state) => Text('Value: ${state.value ?? 'null'}'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              currentInitialValue = 'Strategy Changed';
-                              currentStrategy = FormixInitialValueStrategy.preferLocal;
-                            });
-                          },
-                          child: const Text('Update Both'),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    children: [
+                      FormixRawFormField<String>(
+                        fieldId: fieldId,
+                        initialValue: currentInitialValue,
+                        initialValueStrategy: currentStrategy,
+                        builder: (context, state) => Text('Value: ${state.value ?? 'null'}'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            currentInitialValue = 'Strategy Changed';
+                            currentStrategy = FormixInitialValueStrategy.preferLocal;
+                          });
+                        },
+                        child: const Text('Update Both'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -213,42 +205,40 @@ void main() {
       String? currentInitialValue;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: StatefulBuilder(
-                  builder: (context, setState) {
-                    return Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(20),
-                        color: Colors.white,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            FormixRawFormField<String>(
-                              fieldId: fieldId,
-                              initialValue: currentInitialValue,
-                              builder: (context, state) => Text(
-                                'Current Value: ${state.value ?? 'Loading...'}',
-                                style: const TextStyle(fontSize: 24),
-                              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      color: Colors.white,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FormixRawFormField<String>(
+                            fieldId: fieldId,
+                            initialValue: currentInitialValue,
+                            builder: (context, state) => Text(
+                              'Current Value: ${state.value ?? 'Loading...'}',
+                              style: const TextStyle(fontSize: 24),
                             ),
-                            const SizedBox(height: 20),
-                            ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  currentInitialValue = 'Loaded Successfully!';
-                                });
-                              },
-                              child: const Text('Simulate Load'),
-                            ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: () {
+                              setState(() {
+                                currentInitialValue = 'Loaded Successfully!';
+                              });
+                            },
+                            child: const Text('Simulate Load'),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
               ),
             ),
           ),

@@ -10,23 +10,21 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig<int>.chain(
-                    id: ageField,
-                    label: 'User Age',
-                    rules: FormixValidators.number<int>().min(18),
-                  ),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = Formix.controllerOf(context)!;
-                    return const SizedBox.shrink();
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig<int>.chain(
+                  id: ageField,
+                  label: 'User Age',
+                  rules: FormixValidators.number<int>().min(18),
                 ),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = Formix.controllerOf(context)!;
+                  return const SizedBox.shrink();
+                },
               ),
             ),
           ),
@@ -48,23 +46,21 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig<int>(
-                    id: ageField,
-                    label: 'Age',
-                    validator: (v) => (v ?? 0) < 18 ? 'Too young! {value} < 18' : null,
-                  ),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = Formix.controllerOf(context)!;
-                    return const SizedBox.shrink();
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig<int>(
+                  id: ageField,
+                  label: 'Age',
+                  validator: (v) => (v ?? 0) < 18 ? 'Too young! {value} < 18' : null,
                 ),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = Formix.controllerOf(context)!;
+                  return const SizedBox.shrink();
+                },
               ),
             ),
           ),

@@ -5,15 +5,14 @@ const usernameField = FormixFieldID<String>('username');
 const passwordField = FormixFieldID<String>('password');
 
 /// Test page demonstrating proper FormixBuilder usage without infinite loops
-class FormixBuilderTestPage extends ConsumerStatefulWidget {
+class FormixBuilderTestPage extends StatefulWidget {
   const FormixBuilderTestPage({super.key});
 
   @override
-  ConsumerState<FormixBuilderTestPage> createState() =>
-      _FormixBuilderTestPageState();
+  State<FormixBuilderTestPage> createState() => _FormixBuilderTestPageState();
 }
 
-class _FormixBuilderTestPageState extends ConsumerState<FormixBuilderTestPage> {
+class _FormixBuilderTestPageState extends State<FormixBuilderTestPage> {
   final formKey = GlobalKey<FormixState>();
   bool _isPasswordVisible = false;
 

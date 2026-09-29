@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 import 'formix.dart';
 import 'formix_errors.dart';
-import '../controllers/riverpod_controller.dart';
 
 /// A widget that prevents navigation if the form is dirty.
 ///
 /// This widget wraps [PopScope] and checks the form's dirty state before allowing
 /// a pop action. If the form is dirty, it can show a confirmation dialog.
-class FormixNavigationGuard extends ConsumerStatefulWidget {
+class FormixNavigationGuard extends StatefulWidget {
   /// The child widget.
   final Widget child;
 
@@ -37,57 +36,49 @@ class FormixNavigationGuard extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<FormixNavigationGuard> createState() => _FormixNavigationGuardState();
+  State<FormixNavigationGuard> createState() => _FormixNavigationGuardState();
 }
 
-class _FormixNavigationGuardState extends ConsumerState<FormixNavigationGuard> {
+class _FormixNavigationGuardState extends State<FormixNavigationGuard> {
   bool _isExiting = false;
 
   @override
   Widget build(BuildContext context) {
     if (!widget.enabled) return widget.child;
 
-    var controllerProvider = Formix.of(context);
-    if (controllerProvider == null) {
-      try {
-        controllerProvider = ref.watch(currentControllerProvider);
-      } catch (_) {
-        // ProviderScope missing
-      }
-    }
-
-    if (controllerProvider == null) {
+    final controller = Formix.controllerOf(context);
+    if (controller == null) {
       return const FormixConfigurationErrorWidget(
-        message: 'FormixNavigationGuard used without ProviderScope',
-        details:
-            'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.\n\nExample:\nvoid main() {\n  runApp(ProviderScope(child: MyApp()));\n}',
+        message: 'FormixNavigationGuard used without a Formix ancestor',
+        details: 'FormixNavigationGuard must be used inside a Formix widget.',
       );
     }
 
-    final isDirty = ref.watch(
-      controllerProvider.select((state) => state.isDirty),
-    );
+    // Rebuild the PopScope only when the form's dirty state changes.
+    return SignalBuilder(
+      builder: (context) {
+        final isDirty = controller.isDirtySignal.value;
+        return PopScope(
+          canPop: _isExiting || !isDirty,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
 
-    return PopScope(
-      canPop: _isExiting || !isDirty,
-      onPopInvokedWithResult: (didPop, result) async {
-        // debugPrint('onPopInvokedWithResult: didPop=$didPop, isDirty=$isDirty, isExiting=$_isExiting');
-        if (didPop) return;
-
-        final shouldPop = await _handleDirtyPop(context);
-        if (shouldPop && context.mounted) {
-          setState(() {
-            _isExiting = true;
-          });
-          // Use a microtask to ensure the state update is processed before the next pop
-          Future.microtask(() {
-            if (context.mounted) {
-              Navigator.of(context).pop(result);
+            final shouldPop = await _handleDirtyPop(context);
+            if (shouldPop && context.mounted) {
+              setState(() {
+                _isExiting = true;
+              });
+              // Use a microtask to ensure the state update is processed before the next pop
+              Future.microtask(() {
+                if (context.mounted) {
+                  Navigator.of(context).pop(result);
+                }
+              });
             }
-          });
-        }
+          },
+          child: widget.child,
+        );
       },
-      child: widget.child,
     );
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/semantics.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 import 'riverpod_controller.dart';
 import 'field_id.dart';
 import 'field.dart';
@@ -12,17 +13,14 @@ import '../i18n.dart';
 import 'batch.dart';
 
 
-/// A controller for managing form state that is compatible with vanilla Flutter.
+/// The form controller: the object you hold to drive a form.
 ///
-/// While [RiverpodFormController] is pure Riverpod, [FormixController] adds
-/// a compatibility layer that exposes [ValueNotifier]s and [ValueListenable]s.
-/// This allows non-Riverpod widgets within your app to react to form changes
-/// without needing access to [WidgetRef].
-class FormixController extends RiverpodFormController {
+/// State lives in a single [Signal] (see [FormixBaseController]); this class adds
+/// fine-grained [Computed] slices ([valueSignal], [validationSignal], …) for
+/// surgical widget rebuilds, plus focus/scroll/accessibility helpers and a
+/// [ValueNotifier]/[ValueListenable] compatibility layer for non-signal widgets.
+class FormixController extends FormixBaseController {
   /// Creates a [FormixController] with optional configuration.
-  ///
-  /// This constructor supports named parameters for compatibility with tests
-  /// and non-Riverpod usage.
   FormixController({
     Map<String, dynamic> initialValue = const {},
     List<dynamic> fields = const [],
@@ -51,14 +49,78 @@ class FormixController extends RiverpodFormController {
           namespace: namespace,
           autovalidateMode: autovalidateMode,
           initialData: initialData,
-        )) {
-    // For standalone usage, we must manually trigger build to initialize the state.
-    // In Riverpod context, state setter will fallback to _standaloneState until ref is ready.
-    state = build();
+        ));
+
+  /// Creates a [FormixController] directly from a [FormixParameter].
+  FormixController.fromParameter(super.parameter);
+
+  // --- Reactive slices (surgical rebuilds) ---
+  // Each is a memoized `computed` over the state signal, so a widget reading one
+  // inside a `SignalBuilder` only rebuilds when THAT slice's value changes.
+
+  final Map<String, ReadonlySignal<dynamic>> _valueSignals = {};
+  final Map<String, ReadonlySignal<ValidationResult>> _validationSignals = {};
+  final Map<String, ReadonlySignal<bool>> _dirtySignals = {};
+  final Map<String, ReadonlySignal<bool>> _touchedSignals = {};
+  final Map<String, ReadonlySignal<bool>> _pendingSignals = {};
+  final Map<String, ReadonlySignal<bool>> _groupValidSignals = {};
+  final Map<String, ReadonlySignal<bool>> _groupDirtySignals = {};
+  ReadonlySignal<bool>? _isValidSignal;
+  ReadonlySignal<bool>? _isDirtySignal;
+  ReadonlySignal<bool>? _isSubmittingSignal;
+  ReadonlySignal<bool>? _isPendingSignal;
+  ReadonlySignal<int>? _currentStepSignal;
+
+  /// Reactive value of a field. Read `.value` inside a [SignalBuilder] for a
+  /// rebuild that fires only when this field's value changes.
+  ReadonlySignal<T?> valueSignal<T>(FormixFieldID<T> id) {
+    final existing = _valueSignals[id.key];
+    if (existing != null) return existing as ReadonlySignal<T?>;
+    // Build the computed with an explicit type argument so the stored signal is
+    // `ReadonlySignal<T?>` (not `<dynamic>`) and the retrieval cast succeeds.
+    final created = computed<T?>(() => state.getValue<T>(id));
+    _valueSignals[id.key] = created;
+    return created;
   }
 
-  /// Internal constructor used by Riverpod families.
-  FormixController.family(FormixParameter parameter) : super(parameter, false);
+  /// Reactive validation result of a field.
+  ReadonlySignal<ValidationResult> validationSignal<T>(FormixFieldID<T> id) =>
+      _validationSignals.putIfAbsent(id.key, () => computed(() => state.getValidation(id)));
+
+  /// Reactive dirty flag of a field.
+  ReadonlySignal<bool> dirtySignal<T>(FormixFieldID<T> id) =>
+      _dirtySignals.putIfAbsent(id.key, () => computed(() => state.isFieldDirty(id)));
+
+  /// Reactive touched flag of a field.
+  ReadonlySignal<bool> touchedSignal<T>(FormixFieldID<T> id) =>
+      _touchedSignals.putIfAbsent(id.key, () => computed(() => state.isFieldTouched(id)));
+
+  /// Reactive pending (async) flag of a field.
+  ReadonlySignal<bool> pendingSignal<T>(FormixFieldID<T> id) =>
+      _pendingSignals.putIfAbsent(id.key, () => computed(() => state.isFieldPending(id)));
+
+  /// Reactive validity of a field-name group (e.g. `'user'`).
+  ReadonlySignal<bool> groupValidSignal(String prefix) =>
+      _groupValidSignals.putIfAbsent(prefix, () => computed(() => state.isGroupValid(prefix)));
+
+  /// Reactive dirtiness of a field-name group.
+  ReadonlySignal<bool> groupDirtySignal(String prefix) =>
+      _groupDirtySignals.putIfAbsent(prefix, () => computed(() => state.isGroupDirty(prefix)));
+
+  /// Reactive form validity.
+  ReadonlySignal<bool> get isValidSignal => _isValidSignal ??= computed(() => state.isValid);
+
+  /// Reactive form dirtiness.
+  ReadonlySignal<bool> get isDirtySignal => _isDirtySignal ??= computed(() => state.isDirty);
+
+  /// Reactive submitting flag.
+  ReadonlySignal<bool> get isSubmittingSignal => _isSubmittingSignal ??= computed(() => state.isSubmitting);
+
+  /// Reactive pending (any async in-flight) flag.
+  ReadonlySignal<bool> get isPendingSignal => _isPendingSignal ??= computed(() => state.isPending);
+
+  /// Reactive current step (multi-step forms).
+  ReadonlySignal<int> get currentStepSignal => _currentStepSignal ??= computed(() => state.currentStep);
 
 
   /// Adds a listener to be notified when the form state changes.
@@ -253,6 +315,24 @@ class FormixController extends RiverpodFormController {
     _isValidNotifier?.dispose();
     _isSubmittingNotifier?.dispose();
     _isPendingNotifier?.dispose();
+
+    // Dispose reactive computed slices.
+    for (final c in [
+      ..._valueSignals.values,
+      ..._validationSignals.values,
+      ..._dirtySignals.values,
+      ..._touchedSignals.values,
+      ..._pendingSignals.values,
+      ..._groupValidSignals.values,
+      ..._groupDirtySignals.values,
+      _isValidSignal,
+      _isDirtySignal,
+      _isSubmittingSignal,
+      _isPendingSignal,
+      _currentStepSignal,
+    ]) {
+      c?.dispose();
+    }
 
     _focusNodes.clear();
     _contexts.clear();

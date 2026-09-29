@@ -15,7 +15,6 @@ void main() {
     });
 
     test('setValue enforces strict nullability for non-nullable IDs', () {
-      final container = ProviderContainer();
       const param = FormixParameter(
         formId: 'test_form',
         namespace: 'test',
@@ -23,14 +22,15 @@ void main() {
           FormixFieldConfig<String>(id: FormixFieldID<String>('name')),
         ],
       );
-      final controller = container.read(formControllerProvider(param).notifier);
+      final controller = FormixController.fromParameter(param);
+      addTearDown(controller.dispose);
 
       // Should succeed with valid String
       controller.setValue(const FormixFieldID<String>('name'), 'John');
       expect(controller.getValue(const FormixFieldID<String>('name')), 'John');
 
       // Should throw or fail depending on how strict mode works in the version
-      // RiverpodFormController.setValue calls _batchUpdate(strict: true)
+      // FormixController.setValue calls _batchUpdate(strict: true)
 
       expect(
         () => controller.setValue(const FormixFieldID<String>('name'), null as dynamic),
@@ -39,7 +39,6 @@ void main() {
     });
 
     test('setValue allows null for nullable IDs', () {
-      final container = ProviderContainer();
       const param = FormixParameter(
         formId: 'test_form',
         namespace: 'test',
@@ -47,7 +46,8 @@ void main() {
           FormixFieldConfig<String?>(id: FormixFieldID<String?>('name')),
         ],
       );
-      final controller = container.read(formControllerProvider(param).notifier);
+      final controller = FormixController.fromParameter(param);
+      addTearDown(controller.dispose);
 
       controller.setValue(const FormixFieldID<String?>('name'), 'John');
       expect(controller.getValue(const FormixFieldID<String?>('name')), 'John');
@@ -58,7 +58,6 @@ void main() {
     });
 
     test('re-registering field with different type preserves value but might cause inconsistencies', () {
-      final container = ProviderContainer();
       const nameStrId = FormixFieldID<String>('name');
       const nameIntId = FormixFieldID<int>('name');
 
@@ -69,7 +68,8 @@ void main() {
           FormixFieldConfig<String>(id: nameStrId),
         ],
       );
-      final controller = container.read(formControllerProvider(param).notifier);
+      final controller = FormixController.fromParameter(param);
+      addTearDown(controller.dispose);
 
       controller.setValue(nameStrId, 'John');
       expect(controller.getValue(nameStrId), 'John');

@@ -3,11 +3,11 @@ import 'package:formix/formix.dart';
 import '../../constants/field_ids.dart';
 
 // Basic Form Example with Declarative API
-class BasicFormExample extends ConsumerWidget {
+class BasicFormExample extends StatelessWidget {
   const BasicFormExample({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Formix(
       formId: 'basic_form_example',
       initialValue: {'name': '', 'email': '', 'age': 18, 'newsletter': false},
@@ -81,11 +81,10 @@ class BasicFormExample extends ConsumerWidget {
             const SizedBox(height: 24),
             const FormixFormStatus(),
             const SizedBox(height: 16),
-            Consumer(
-              builder: (context, ref, child) {
-                final controllerProvider = Formix.of(context)!;
-                final controller = ref.read(controllerProvider.notifier);
-                final formState = ref.watch(controllerProvider);
+            FormixBuilder(
+              builder: (context, scope) {
+                final controller = scope.controller;
+                final formState = scope.watchState;
 
                 return Row(
                   children: [

@@ -9,21 +9,19 @@ void main() {
       int buildCount = 0;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'watched_field': 'initial'},
-                fields: const [
-                  FormixFieldConfig(id: watchedField, initialValue: 'initial'),
-                ],
-                child: FormixDependentField<String>(
-                  fieldId: watchedField,
-                  builder: (context, value) {
-                    buildCount++;
-                    return Text('Value: $value');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'watched_field': 'initial'},
+              fields: const [
+                FormixFieldConfig(id: watchedField, initialValue: 'initial'),
+              ],
+              child: FormixDependentField<String>(
+                fieldId: watchedField,
+                builder: (context, value) {
+                  buildCount++;
+                  return Text('Value: $value');
+                },
               ),
             ),
           ),
@@ -34,17 +32,16 @@ void main() {
       expect(buildCount, 1);
 
       // Change the watched field value
-      final provider = Formix.of(tester.element(find.text('Value: initial')))!;
-      final container = ProviderScope.containerOf(
+      final controller = Formix.of(
         tester.element(find.text('Value: initial')),
-      );
-      container.read(provider.notifier).setValue(watchedField, 'updated');
+      )!;
+      controller.setValue(watchedField, 'updated');
 
       await tester.pump();
 
       expect(find.text('Value: updated'), findsOneWidget);
       expect(buildCount, 2); // Should have rebuilt
-      container.read(provider.notifier).setValue(watchedField, 'updated');
+      controller.setValue(watchedField, 'updated');
       await tester.pump();
       await tester.pump();
       expect(
@@ -61,25 +58,23 @@ void main() {
       int buildCount = 0;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {
-                  'watched_field': 'initial',
-                  'other_field': 'other',
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {
+                'watched_field': 'initial',
+                'other_field': 'other',
+              },
+              fields: const [
+                FormixFieldConfig(id: watchedField, initialValue: 'initial'),
+                FormixFieldConfig(id: otherField, initialValue: 'other'),
+              ],
+              child: FormixDependentField<String>(
+                fieldId: watchedField,
+                builder: (context, value) {
+                  buildCount++;
+                  return Text('Watched: $value');
                 },
-                fields: const [
-                  FormixFieldConfig(id: watchedField, initialValue: 'initial'),
-                  FormixFieldConfig(id: otherField, initialValue: 'other'),
-                ],
-                child: FormixDependentField<String>(
-                  fieldId: watchedField,
-                  builder: (context, value) {
-                    buildCount++;
-                    return Text('Watched: $value');
-                  },
-                ),
               ),
             ),
           ),
@@ -90,13 +85,10 @@ void main() {
       expect(buildCount, 1);
 
       // Change the unwatched field
-      final provider = Formix.of(
+      final controller = Formix.of(
         tester.element(find.text('Watched: initial')),
       )!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.text('Watched: initial')),
-      );
-      container.read(provider.notifier).setValue(otherField, 'changed');
+      controller.setValue(otherField, 'changed');
 
       await tester.pump();
 
@@ -109,18 +101,16 @@ void main() {
       const intField = FormixFieldID<int>('int_field');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'int_field': 42},
-                fields: const [FormixFieldConfig(id: intField, initialValue: 42)],
-                child: FormixDependentField<int>(
-                  fieldId: intField,
-                  builder: (context, value) {
-                    return Text('Number: $value');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'int_field': 42},
+              fields: const [FormixFieldConfig(id: intField, initialValue: 42)],
+              child: FormixDependentField<int>(
+                fieldId: intField,
+                builder: (context, value) {
+                  return Text('Number: $value');
+                },
               ),
             ),
           ),
@@ -130,11 +120,8 @@ void main() {
       expect(find.text('Number: 42'), findsOneWidget);
 
       // Change value
-      final provider = Formix.of(tester.element(find.text('Number: 42')))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.text('Number: 42')),
-      );
-      container.read(provider.notifier).setValue(intField, 99);
+      final controller = Formix.of(tester.element(find.text('Number: 42')))!;
+      controller.setValue(intField, 99);
 
       await tester.pump();
 
@@ -145,18 +132,16 @@ void main() {
       const boolField = FormixFieldID<bool>('bool_field');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'bool_field': true},
-                fields: const [FormixFieldConfig(id: boolField, initialValue: true)],
-                child: FormixDependentField<bool>(
-                  fieldId: boolField,
-                  builder: (context, value) {
-                    return Text('Boolean: $value');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'bool_field': true},
+              fields: const [FormixFieldConfig(id: boolField, initialValue: true)],
+              child: FormixDependentField<bool>(
+                fieldId: boolField,
+                builder: (context, value) {
+                  return Text('Boolean: $value');
+                },
               ),
             ),
           ),
@@ -166,11 +151,8 @@ void main() {
       expect(find.text('Boolean: true'), findsOneWidget);
 
       // Change value
-      final provider = Formix.of(tester.element(find.text('Boolean: true')))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.text('Boolean: true')),
-      );
-      container.read(provider.notifier).setValue(boolField, false);
+      final controller = Formix.of(tester.element(find.text('Boolean: true')))!;
+      controller.setValue(boolField, false);
 
       await tester.pump();
 
@@ -181,20 +163,18 @@ void main() {
       const doubleField = FormixFieldID<double>('double_field');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'double_field': 3.14},
-                fields: const [
-                  FormixFieldConfig(id: doubleField, initialValue: 3.14),
-                ],
-                child: FormixDependentField<double>(
-                  fieldId: doubleField,
-                  builder: (context, value) {
-                    return Text('Double: $value');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'double_field': 3.14},
+              fields: const [
+                FormixFieldConfig(id: doubleField, initialValue: 3.14),
+              ],
+              child: FormixDependentField<double>(
+                fieldId: doubleField,
+                builder: (context, value) {
+                  return Text('Double: $value');
+                },
               ),
             ),
           ),
@@ -204,11 +184,8 @@ void main() {
       expect(find.text('Double: 3.14'), findsOneWidget);
 
       // Change value
-      final provider = Formix.of(tester.element(find.text('Double: 3.14')))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.text('Double: 3.14')),
-      );
-      container.read(provider.notifier).setValue(doubleField, 2.71);
+      final controller = Formix.of(tester.element(find.text('Double: 3.14')))!;
+      controller.setValue(doubleField, 2.71);
 
       await tester.pump();
 
@@ -219,17 +196,15 @@ void main() {
       const nullableField = FormixFieldID<String>('nullable_field');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [FormixFieldConfig(id: nullableField)],
-                child: FormixDependentField<String>(
-                  fieldId: nullableField,
-                  builder: (context, value) {
-                    return Text('Value: ${value ?? "null"}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [FormixFieldConfig(id: nullableField)],
+              child: FormixDependentField<String>(
+                fieldId: nullableField,
+                builder: (context, value) {
+                  return Text('Value: ${value ?? "null"}');
+                },
               ),
             ),
           ),
@@ -239,18 +214,15 @@ void main() {
       expect(find.text('Value: null'), findsOneWidget);
 
       // Set a value
-      final provider = Formix.of(tester.element(find.text('Value: null')))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.text('Value: null')),
-      );
-      container.read(provider.notifier).setValue(nullableField, 'not null');
+      final controller = Formix.of(tester.element(find.text('Value: null')))!;
+      controller.setValue(nullableField, 'not null');
 
       await tester.pump();
 
       expect(find.text('Value: not null'), findsOneWidget);
 
       // Set back to null
-      container.read(provider.notifier).setValue(nullableField, null);
+      controller.setValue(nullableField, null);
 
       await tester.pump();
 
@@ -261,23 +233,20 @@ void main() {
       tester,
     ) async {
       const customField = FormixFieldID<String>('custom_field');
-      final customProvider = NotifierProvider.autoDispose<FormixController, FormixData>(() {
-        return FormixController(
-          initialValue: {'custom_field': 'custom_value'},
-        );
-      });
+      final customController = FormixController(
+        initialValue: {'custom_field': 'custom_value'},
+      );
+      addTearDown(customController.dispose);
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: FormixDependentField<String>(
-                fieldId: customField,
-                controllerProvider: customProvider,
-                builder: (context, value) {
-                  return Text('Custom: $value');
-                },
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: FormixDependentField<String>(
+              fieldId: customField,
+              controller: customController,
+              builder: (context, value) {
+                return Text('Custom: $value');
+              },
             ),
           ),
         ),
@@ -292,23 +261,21 @@ void main() {
         const contextField = FormixFieldID<String>('context_field');
 
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Formix(
-                  initialValue: const {'context_field': 'from_context'},
-                  fields: const [
-                    FormixFieldConfig(
-                      id: contextField,
-                      initialValue: 'from_context',
-                    ),
-                  ],
-                  child: FormixDependentField<String>(
-                    fieldId: contextField,
-                    builder: (context, value) {
-                      return Text('Context: $value');
-                    },
+          MaterialApp(
+            home: Scaffold(
+              body: Formix(
+                initialValue: const {'context_field': 'from_context'},
+                fields: const [
+                  FormixFieldConfig(
+                    id: contextField,
+                    initialValue: 'from_context',
                   ),
+                ],
+                child: FormixDependentField<String>(
+                  fieldId: contextField,
+                  builder: (context, value) {
+                    return Text('Context: $value');
+                  },
                 ),
               ),
             ),
@@ -323,26 +290,20 @@ void main() {
       'falls back to default provider when no context or custom provider',
       (tester) async {
         const defaultField = FormixFieldID<String>('default_field');
+        final defaultController = FormixController(
+          initialValue: {'default_field': 'from_default'},
+        );
+        addTearDown(defaultController.dispose);
 
         await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              formControllerProvider(
-                const FormixParameter(initialValue: {}),
-              ).overrideWith(() {
-                return FormixController(
-                  initialValue: {'default_field': 'from_default'},
-                );
-              }),
-            ],
-            child: MaterialApp(
-              home: Scaffold(
-                body: FormixDependentField<String>(
-                  fieldId: defaultField,
-                  builder: (context, value) {
-                    return Text('Default: $value');
-                  },
-                ),
+          MaterialApp(
+            home: Scaffold(
+              body: FormixDependentField<String>(
+                fieldId: defaultField,
+                controller: defaultController,
+                builder: (context, value) {
+                  return Text('Default: $value');
+                },
               ),
             ),
           ),
@@ -356,25 +317,23 @@ void main() {
       const contextField = FormixFieldID<String>('context_field');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'context_field': 'test'},
-                fields: const [
-                  FormixFieldConfig(id: contextField, initialValue: 'test'),
-                ],
-                child: FormixDependentField<String>(
-                  fieldId: contextField,
-                  builder: (context, value) {
-                    final mediaQuery = MediaQuery.maybeOf(context);
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'context_field': 'test'},
+              fields: const [
+                FormixFieldConfig(id: contextField, initialValue: 'test'),
+              ],
+              child: FormixDependentField<String>(
+                fieldId: contextField,
+                builder: (context, value) {
+                  final mediaQuery = MediaQuery.maybeOf(context);
 
-                    final hasMediaQuery = mediaQuery != null;
-                    return Text(
-                      'Has MediaQuery: $hasMediaQuery, Value: $value',
-                    );
-                  },
-                ),
+                  final hasMediaQuery = mediaQuery != null;
+                  return Text(
+                    'Has MediaQuery: $hasMediaQuery, Value: $value',
+                  );
+                },
               ),
             ),
           ),
@@ -388,25 +347,23 @@ void main() {
       const listField = FormixFieldID<List<String>>('list_field');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {
-                  'list_field': ['a', 'b', 'c'],
-                },
-                fields: const [
-                  FormixFieldConfig(
-                    id: listField,
-                    initialValue: ['a', 'b', 'c'],
-                  ),
-                ],
-                child: FormixDependentField<List<String>>(
-                  fieldId: listField,
-                  builder: (context, value) {
-                    return Text('List length: ${value?.length ?? 0}');
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {
+                'list_field': ['a', 'b', 'c'],
+              },
+              fields: const [
+                FormixFieldConfig(
+                  id: listField,
+                  initialValue: ['a', 'b', 'c'],
                 ),
+              ],
+              child: FormixDependentField<List<String>>(
+                fieldId: listField,
+                builder: (context, value) {
+                  return Text('List length: ${value?.length ?? 0}');
+                },
               ),
             ),
           ),
@@ -416,11 +373,10 @@ void main() {
       expect(find.text('List length: 3'), findsOneWidget);
 
       // Change the list
-      final provider = Formix.of(tester.element(find.text('List length: 3')))!;
-      final container = ProviderScope.containerOf(
+      final controller = Formix.of(
         tester.element(find.text('List length: 3')),
-      );
-      container.read(provider.notifier).setValue(listField, ['x', 'y']);
+      )!;
+      controller.setValue(listField, ['x', 'y']);
 
       await tester.pump();
 
@@ -431,20 +387,18 @@ void main() {
       const statusField = FormixFieldID<String>('status');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'status': 'active'},
-                fields: const [
-                  FormixFieldConfig(id: statusField, initialValue: 'active'),
-                ],
-                child: FormixDependentField<String>(
-                  fieldId: statusField,
-                  builder: (context, value) {
-                    return Text('Status: ${value?.toUpperCase()}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'status': 'active'},
+              fields: const [
+                FormixFieldConfig(id: statusField, initialValue: 'active'),
+              ],
+              child: FormixDependentField<String>(
+                fieldId: statusField,
+                builder: (context, value) {
+                  return Text('Status: ${value?.toUpperCase()}');
+                },
               ),
             ),
           ),
@@ -454,11 +408,10 @@ void main() {
       expect(find.text('Status: ACTIVE'), findsOneWidget);
 
       // Change status
-      final provider = Formix.of(tester.element(find.text('Status: ACTIVE')))!;
-      final container = ProviderScope.containerOf(
+      final controller = Formix.of(
         tester.element(find.text('Status: ACTIVE')),
-      );
-      container.read(provider.notifier).setValue(statusField, 'inactive');
+      )!;
+      controller.setValue(statusField, 'inactive');
 
       await tester.pump();
 
@@ -470,19 +423,17 @@ void main() {
       int buildCount = 0;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'counter': 0},
-                fields: const [FormixFieldConfig(id: counterField, initialValue: 0)],
-                child: FormixDependentField<int>(
-                  fieldId: counterField,
-                  builder: (context, value) {
-                    buildCount++;
-                    return Text('Count: $value');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'counter': 0},
+              fields: const [FormixFieldConfig(id: counterField, initialValue: 0)],
+              child: FormixDependentField<int>(
+                fieldId: counterField,
+                builder: (context, value) {
+                  buildCount++;
+                  return Text('Count: $value');
+                },
               ),
             ),
           ),
@@ -493,11 +444,7 @@ void main() {
       expect(buildCount, 1);
 
       // Make rapid changes
-      final provider = Formix.of(tester.element(find.text('Count: 0')))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.text('Count: 0')),
-      );
-      final controller = container.read(provider.notifier);
+      final controller = Formix.of(tester.element(find.text('Count: 0')))!;
 
       controller.setValue(counterField, 1);
       await tester.pump();
@@ -517,22 +464,20 @@ void main() {
       const validatedField = FormixFieldID<String>('validated_field');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(
-                    id: validatedField,
-                    validator: (v) => (v?.length ?? 0) < 3 ? 'Too short' : null,
-                  ),
-                ],
-                child: FormixDependentField<String>(
-                  fieldId: validatedField,
-                  builder: (context, value) {
-                    return Text('Value: ${value ?? "null"}');
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(
+                  id: validatedField,
+                  validator: (v) => (v?.length ?? 0) < 3 ? 'Too short' : null,
                 ),
+              ],
+              child: FormixDependentField<String>(
+                fieldId: validatedField,
+                builder: (context, value) {
+                  return Text('Value: ${value ?? "null"}');
+                },
               ),
             ),
           ),
@@ -542,18 +487,15 @@ void main() {
       expect(find.text('Value: null'), findsOneWidget);
 
       // Set invalid value
-      final provider = Formix.of(tester.element(find.text('Value: null')))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.text('Value: null')),
-      );
-      container.read(provider.notifier).setValue(validatedField, 'ab');
+      final controller = Formix.of(tester.element(find.text('Value: null')))!;
+      controller.setValue(validatedField, 'ab');
 
       await tester.pump();
 
       expect(find.text('Value: ab'), findsOneWidget);
 
       // Set valid value
-      container.read(provider.notifier).setValue(validatedField, 'valid');
+      controller.setValue(validatedField, 'valid');
 
       await tester.pump();
 
@@ -570,33 +512,31 @@ void main() {
         int buildCount2 = 0;
 
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Formix(
-                  initialValue: const {'field1': 'value1', 'field2': 'value2'},
-                  fields: const [
-                    FormixFieldConfig(id: field1, initialValue: 'value1'),
-                    FormixFieldConfig(id: field2, initialValue: 'value2'),
+          MaterialApp(
+            home: Scaffold(
+              body: Formix(
+                initialValue: const {'field1': 'value1', 'field2': 'value2'},
+                fields: const [
+                  FormixFieldConfig(id: field1, initialValue: 'value1'),
+                  FormixFieldConfig(id: field2, initialValue: 'value2'),
+                ],
+                child: Column(
+                  children: [
+                    FormixDependentField<String>(
+                      fieldId: field1,
+                      builder: (context, value) {
+                        buildCount1++;
+                        return Text('Field1: $value');
+                      },
+                    ),
+                    FormixDependentField<String>(
+                      fieldId: field2,
+                      builder: (context, value) {
+                        buildCount2++;
+                        return Text('Field2: $value');
+                      },
+                    ),
                   ],
-                  child: Column(
-                    children: [
-                      FormixDependentField<String>(
-                        fieldId: field1,
-                        builder: (context, value) {
-                          buildCount1++;
-                          return Text('Field1: $value');
-                        },
-                      ),
-                      FormixDependentField<String>(
-                        fieldId: field2,
-                        builder: (context, value) {
-                          buildCount2++;
-                          return Text('Field2: $value');
-                        },
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ),
@@ -609,13 +549,10 @@ void main() {
         expect(buildCount2, 1);
 
         // Change field1
-        final provider = Formix.of(
+        final controller = Formix.of(
           tester.element(find.text('Field1: value1')),
         )!;
-        final container = ProviderScope.containerOf(
-          tester.element(find.text('Field1: value1')),
-        );
-        container.read(provider.notifier).setValue(field1, 'changed1');
+        controller.setValue(field1, 'changed1');
 
         await tester.pump();
 
@@ -630,20 +567,18 @@ void main() {
       const tempField = FormixFieldID<String>('temp_field');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'temp_field': 'exists'},
-                fields: const [
-                  FormixFieldConfig(id: tempField, initialValue: 'exists'),
-                ],
-                child: FormixDependentField<String>(
-                  fieldId: tempField,
-                  builder: (context, value) {
-                    return Text('Temp: ${value ?? "gone"}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'temp_field': 'exists'},
+              fields: const [
+                FormixFieldConfig(id: tempField, initialValue: 'exists'),
+              ],
+              child: FormixDependentField<String>(
+                fieldId: tempField,
+                builder: (context, value) {
+                  return Text('Temp: ${value ?? "gone"}');
+                },
               ),
             ),
           ),
@@ -653,11 +588,8 @@ void main() {
       expect(find.text('Temp: exists'), findsOneWidget);
 
       // Remove the field
-      final provider = Formix.of(tester.element(find.text('Temp: exists')))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.text('Temp: exists')),
-      );
-      (container.read(provider.notifier)).unregisterField(tempField);
+      final controller = Formix.of(tester.element(find.text('Temp: exists')))!;
+      controller.unregisterField(tempField);
 
       await tester.pump();
 

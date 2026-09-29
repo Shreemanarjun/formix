@@ -3,25 +3,24 @@ import 'package:formix/formix.dart';
 import 'validation_fields.dart';
 
 // Validation Examples
-class ValidationExamples extends ConsumerWidget {
+class ValidationExamples extends StatelessWidget {
   const ValidationExamples({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return const ValidationExamplesContent();
   }
 }
 
-class ValidationExamplesContent extends ConsumerStatefulWidget {
+class ValidationExamplesContent extends StatefulWidget {
   const ValidationExamplesContent({super.key});
 
   @override
-  ConsumerState<ValidationExamplesContent> createState() =>
+  State<ValidationExamplesContent> createState() =>
       _ValidationExamplesContentState();
 }
 
-class _ValidationExamplesContentState
-    extends ConsumerState<ValidationExamplesContent> {
+class _ValidationExamplesContentState extends State<ValidationExamplesContent> {
   @override
   Widget build(BuildContext context) {
     return Formix(

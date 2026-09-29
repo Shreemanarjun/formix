@@ -24,21 +24,19 @@ void main() {
       const id = FormixFieldID<String>('test');
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                theme: FormixThemeData(
-                  decorationTheme: InputDecorationTheme(
-                    filled: true,
-                    fillColor: Colors.red,
-                  ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              theme: FormixThemeData(
+                decorationTheme: InputDecorationTheme(
+                  filled: true,
+                  fillColor: Colors.red,
                 ),
-                fields: [
-                  FormixFieldConfig(id: id, initialValue: ''),
-                ],
-                child: FormixTextFormField(fieldId: id),
               ),
+              fields: [
+                FormixFieldConfig(id: id, initialValue: ''),
+              ],
+              child: FormixTextFormField(fieldId: id),
             ),
           ),
         ),
@@ -55,22 +53,20 @@ void main() {
       const id = FormixFieldID<String>('test');
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                theme: FormixThemeData(
-                  enabled: false,
-                  decorationTheme: InputDecorationTheme(
-                    filled: true,
-                    fillColor: Colors.red,
-                  ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              theme: FormixThemeData(
+                enabled: false,
+                decorationTheme: InputDecorationTheme(
+                  filled: true,
+                  fillColor: Colors.red,
                 ),
-                fields: [
-                  FormixFieldConfig(id: id, initialValue: ''),
-                ],
-                child: FormixTextFormField(fieldId: id),
               ),
+              fields: [
+                FormixFieldConfig(id: id, initialValue: ''),
+              ],
+              child: FormixTextFormField(fieldId: id),
             ),
           ),
         ),
@@ -89,32 +85,30 @@ void main() {
       const dropId = FormixFieldID<String>('drop');
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                theme: FormixThemeData(
-                  decorationTheme: InputDecorationTheme(
-                    border: OutlineInputBorder(),
-                    filled: true,
-                    fillColor: Colors.blue,
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              theme: FormixThemeData(
+                decorationTheme: InputDecorationTheme(
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.blue,
+                ),
+              ),
+              fields: [
+                FormixFieldConfig(id: numId, initialValue: 0),
+                FormixFieldConfig(id: dropId, initialValue: 'A'),
+              ],
+              child: Column(
+                children: [
+                  FormixNumberFormField<int>(fieldId: numId),
+                  FormixDropdownFormField<String>(
+                    fieldId: dropId,
+                    items: [
+                      DropdownMenuItem(value: 'A', child: Text('A')),
+                    ],
                   ),
-                ),
-                fields: [
-                  FormixFieldConfig(id: numId, initialValue: 0),
-                  FormixFieldConfig(id: dropId, initialValue: 'A'),
                 ],
-                child: Column(
-                  children: [
-                    FormixNumberFormField<int>(fieldId: numId),
-                    FormixDropdownFormField<String>(
-                      fieldId: dropId,
-                      items: [
-                        DropdownMenuItem(value: 'A', child: Text('A')),
-                      ],
-                    ),
-                  ],
-                ),
               ),
             ),
           ),
@@ -139,28 +133,26 @@ void main() {
       const id2 = FormixFieldID<String>('f2');
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                theme: FormixThemeData(
-                  decorationTheme: InputDecorationTheme(fillColor: Colors.red, filled: true),
-                ),
-                fields: [
-                  FormixFieldConfig(id: id1, initialValue: ''),
-                  FormixFieldConfig(id: id2, initialValue: ''),
-                ],
-                child: Column(
-                  children: [
-                    FormixTextFormField(fieldId: id1),
-                    FormixTheme(
-                      data: FormixThemeData(
-                        decorationTheme: InputDecorationTheme(fillColor: Colors.green, filled: true),
-                      ),
-                      child: FormixTextFormField(fieldId: id2),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              theme: FormixThemeData(
+                decorationTheme: InputDecorationTheme(fillColor: Colors.red, filled: true),
+              ),
+              fields: [
+                FormixFieldConfig(id: id1, initialValue: ''),
+                FormixFieldConfig(id: id2, initialValue: ''),
+              ],
+              child: Column(
+                children: [
+                  FormixTextFormField(fieldId: id1),
+                  FormixTheme(
+                    data: FormixThemeData(
+                      decorationTheme: InputDecorationTheme(fillColor: Colors.green, filled: true),
                     ),
-                  ],
-                ),
+                    child: FormixTextFormField(fieldId: id2),
+                  ),
+                ],
               ),
             ),
           ),
@@ -214,23 +206,21 @@ void main() {
       final themeNotifier = ValueNotifier<Color>(Colors.red);
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: ValueListenableBuilder<Color>(
-                valueListenable: themeNotifier,
-                builder: (context, color, child) {
-                  return Formix(
-                    theme: FormixThemeData(
-                      decorationTheme: InputDecorationTheme(fillColor: color, filled: true),
-                    ),
-                    fields: const [
-                      FormixFieldConfig(id: id, initialValue: ''),
-                    ],
-                    child: const FormixTextFormField(fieldId: id),
-                  );
-                },
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: ValueListenableBuilder<Color>(
+              valueListenable: themeNotifier,
+              builder: (context, color, child) {
+                return Formix(
+                  theme: FormixThemeData(
+                    decorationTheme: InputDecorationTheme(fillColor: color, filled: true),
+                  ),
+                  fields: const [
+                    FormixFieldConfig(id: id, initialValue: ''),
+                  ],
+                  child: const FormixTextFormField(fieldId: id),
+                );
+              },
             ),
           ),
         ),
@@ -250,19 +240,17 @@ void main() {
       const id = FormixFieldID<String>('test');
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                theme: FormixThemeData(
-                  loadingIcon: Icon(Icons.refresh, key: Key('global-loading')),
-                  editIcon: Icon(Icons.check, key: Key('global-edit')),
-                ),
-                fields: [
-                  FormixFieldConfig(id: id, initialValue: 'initial'),
-                ],
-                child: FormixTextFormField(fieldId: id),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              theme: FormixThemeData(
+                loadingIcon: Icon(Icons.refresh, key: Key('global-loading')),
+                editIcon: Icon(Icons.check, key: Key('global-edit')),
               ),
+              fields: [
+                FormixFieldConfig(id: id, initialValue: 'initial'),
+              ],
+              child: FormixTextFormField(fieldId: id),
             ),
           ),
         ),

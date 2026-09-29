@@ -10,13 +10,6 @@ Future<List<String>> fetchModels(String carMake) async {
   return [];
 }
 
-final modelsProvider = FutureProvider.family<List<String>, String>((
-  ref,
-  make,
-) async {
-  return await fetchModels(make);
-});
-
 void main() {
   group('Async Data & Dependent Dropdowns', () {
     const makeField = FormixFieldID<String>('make');
@@ -26,53 +19,41 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: Column(
-                  children: [
-                    const FormixDropdownFormField<String>(
-                      fieldId: makeField,
-                      items: [
-                        DropdownMenuItem(value: 'Tesla', child: Text('Tesla')),
-                        DropdownMenuItem(value: 'Ford', child: Text('Ford')),
-                      ],
-                      decoration: InputDecoration(labelText: 'Make'),
-                    ),
-                    FormixDependentField<String>(
-                      fieldId: makeField,
-                      builder: (context, make) {
-                        return Consumer(
-                          builder: (context, ref, _) {
-                            final asyncModels = ref.watch(
-                              modelsProvider(make ?? ''),
-                            );
-
-                            return asyncModels.when(
-                              data: (models) => FormixDropdownFormField<String>(
-                                fieldId: modelField,
-                                items: models
-                                    .map(
-                                      (m) => DropdownMenuItem(
-                                        value: m,
-                                        child: Text(m),
-                                      ),
-                                    )
-                                    .toList(),
-                                decoration: const InputDecoration(
-                                  labelText: 'Model',
-                                ),
-                              ),
-                              loading: () => const Text('Loading models...'),
-                              error: (e, _) => Text('Error: $e'), // Should check errors
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: Column(
+                children: [
+                  const FormixDropdownFormField<String>(
+                    fieldId: makeField,
+                    items: [
+                      DropdownMenuItem(value: 'Tesla', child: Text('Tesla')),
+                      DropdownMenuItem(value: 'Ford', child: Text('Ford')),
+                    ],
+                    decoration: InputDecoration(labelText: 'Make'),
+                  ),
+                  FormixDependentAsyncField<List<String>, String>(
+                    fieldId: const FormixFieldID<List<String>>('model_options'),
+                    dependency: makeField,
+                    future: (make) => fetchModels(make ?? ''),
+                    loadingBuilder: (context) =>
+                        const Text('Loading models...'),
+                    asyncErrorBuilder: (context, e) => Text('Error: $e'),
+                    builder: (context, state) {
+                      final models = state.asyncState.value ?? const <String>[];
+                      return FormixDropdownFormField<String>(
+                        fieldId: modelField,
+                        items: models
+                            .map(
+                              (m) =>
+                                  DropdownMenuItem(value: m, child: Text(m)),
+                            )
+                            .toList(),
+                        decoration: const InputDecoration(labelText: 'Model'),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ),
@@ -125,17 +106,15 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixAsyncField<String>(
-                  fieldId: fieldId,
-                  future: future,
-                  builder: (context, state) {
-                    return Text(state.value ?? 'No Value');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixAsyncField<String>(
+                fieldId: fieldId,
+                future: future,
+                builder: (context, state) {
+                  return Text(state.value ?? 'No Value');
+                },
               ),
             ),
           ),

@@ -10,22 +10,20 @@ void main() {
 
     testWidgets('Enter-to-Next focuses next field', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig<String>(id: field1, initialValue: ''),
-                  FormixFieldConfig<String>(id: field2, initialValue: ''),
-                  FormixFieldConfig<String>(id: field3, initialValue: ''),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig<String>(id: field1, initialValue: ''),
+                FormixFieldConfig<String>(id: field2, initialValue: ''),
+                FormixFieldConfig<String>(id: field3, initialValue: ''),
+              ],
+              child: Column(
+                children: [
+                  FormixTextFormField(fieldId: field1),
+                  FormixTextFormField(fieldId: field2),
+                  FormixTextFormField(fieldId: field3),
                 ],
-                child: Column(
-                  children: [
-                    FormixTextFormField(fieldId: field1),
-                    FormixTextFormField(fieldId: field2),
-                    FormixTextFormField(fieldId: field3),
-                  ],
-                ),
               ),
             ),
           ),
@@ -73,25 +71,23 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig<String>(
-                    id: requiredField,
-                    initialValue: '',
-                    validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
-                  ),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = Formix.controllerOf(context)!;
-                    return const Column(
-                      children: [FormixTextFormField(fieldId: requiredField)],
-                    );
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig<String>(
+                  id: requiredField,
+                  initialValue: '',
+                  validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
                 ),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = Formix.controllerOf(context)!;
+                  return const Column(
+                    children: [FormixTextFormField(fieldId: requiredField)],
+                  );
+                },
               ),
             ),
           ),

@@ -16,16 +16,14 @@ void main() {
 
     testWidgets('renders with initial numeric value', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'num_field': 42.5},
-                fields: [FormixFieldConfig(id: numField, initialValue: 42.5)],
-                child: FormixNumberFormField(
-                  fieldId: numField,
-                  decoration: const InputDecoration(labelText: 'Number'),
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'num_field': 42.5},
+              fields: [FormixFieldConfig(id: numField, initialValue: 42.5)],
+              child: FormixNumberFormField(
+                fieldId: numField,
+                decoration: const InputDecoration(labelText: 'Number'),
               ),
             ),
           ),
@@ -39,14 +37,12 @@ void main() {
 
     testWidgets('renders with int value', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'int_field': 42},
-                fields: [FormixFieldConfig(id: intField, initialValue: 42)],
-                child: FormixNumberFormField(fieldId: intField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'int_field': 42},
+              fields: [FormixFieldConfig(id: intField, initialValue: 42)],
+              child: FormixNumberFormField(fieldId: intField),
             ),
           ),
         ),
@@ -57,16 +53,14 @@ void main() {
 
     testWidgets('renders with double value', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'double_field': 42.7},
-                fields: [
-                  FormixFieldConfig(id: doubleField, initialValue: 42.7),
-                ],
-                child: FormixNumberFormField(fieldId: doubleField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'double_field': 42.7},
+              fields: [
+                FormixFieldConfig(id: doubleField, initialValue: 42.7),
+              ],
+              child: FormixNumberFormField(fieldId: doubleField),
             ),
           ),
         ),
@@ -77,14 +71,12 @@ void main() {
 
     testWidgets('accepts numeric input and updates value', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'num_field': 0},
-                fields: [FormixFieldConfig(id: numField, initialValue: 0)],
-                child: FormixNumberFormField(fieldId: numField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'num_field': 0},
+              fields: [FormixFieldConfig(id: numField, initialValue: 0)],
+              child: FormixNumberFormField(fieldId: numField),
             ),
           ),
         ),
@@ -96,24 +88,18 @@ void main() {
       expect(find.text('123'), findsOneWidget);
 
       // Check that the controller has the updated value
-      final provider = Formix.of(tester.element(find.byType(TextFormField)))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(TextFormField)),
-      );
-      final controller = container.read(provider.notifier);
+      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
       expect(controller.getValue(numField), 123);
     });
 
     testWidgets('handles decimal input', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'num_field': 0.0}, // Start with double
-                fields: [FormixFieldConfig(id: numField, initialValue: 0.0)],
-                child: FormixNumberFormField(fieldId: numField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'num_field': 0.0}, // Start with double
+              fields: [FormixFieldConfig(id: numField, initialValue: 0.0)],
+              child: FormixNumberFormField(fieldId: numField),
             ),
           ),
         ),
@@ -124,24 +110,18 @@ void main() {
 
       expect(find.text('123.45'), findsOneWidget);
 
-      final provider = Formix.of(tester.element(find.byType(TextFormField)))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(TextFormField)),
-      );
-      final controller = container.read(provider.notifier);
+      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
       expect(controller.getValue(numField), 123.45);
     });
 
     testWidgets('enforces minimum constraint', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'num_field': 50},
-                fields: [FormixFieldConfig(id: numField, initialValue: 50)],
-                child: FormixNumberFormField(fieldId: numField, min: 10),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'num_field': 50},
+              fields: [FormixFieldConfig(id: numField, initialValue: 50)],
+              child: FormixNumberFormField(fieldId: numField, min: 10),
             ),
           ),
         ),
@@ -155,24 +135,18 @@ void main() {
       expect(find.text('5'), findsOneWidget);
 
       // But the controller value should remain unchanged
-      final provider = Formix.of(tester.element(find.byType(TextFormField)))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(TextFormField)),
-      );
-      final controller = container.read(provider.notifier);
+      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
       expect(controller.getValue(numField), 50); // Should still be 50
     });
 
     testWidgets('enforces maximum constraint', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'num_field': 50},
-                fields: [FormixFieldConfig(id: numField, initialValue: 50)],
-                child: FormixNumberFormField(fieldId: numField, max: 100),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'num_field': 50},
+              fields: [FormixFieldConfig(id: numField, initialValue: 50)],
+              child: FormixNumberFormField(fieldId: numField, max: 100),
             ),
           ),
         ),
@@ -186,24 +160,18 @@ void main() {
       expect(find.text('150'), findsOneWidget);
 
       // But the controller value should remain unchanged
-      final provider = Formix.of(tester.element(find.byType(TextFormField)))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(TextFormField)),
-      );
-      final controller = container.read(provider.notifier);
+      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
       expect(controller.getValue(numField), 50);
     });
 
     testWidgets('handles empty input by using default value', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'num_field': 42},
-                fields: [FormixFieldConfig(id: numField, initialValue: 42)],
-                child: FormixNumberFormField(fieldId: numField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'num_field': 42},
+              fields: [FormixFieldConfig(id: numField, initialValue: 42)],
+              child: FormixNumberFormField(fieldId: numField),
             ),
           ),
         ),
@@ -214,24 +182,18 @@ void main() {
       await tester.pump();
 
       // Should use the current value as default (42.0)
-      final provider = Formix.of(tester.element(find.byType(TextFormField)))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(TextFormField)),
-      );
-      final controller = container.read(provider.notifier);
+      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
       expect(controller.getValue(numField), 42.0);
     });
 
     testWidgets('handles invalid input gracefully', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'num_field': 42},
-                fields: [FormixFieldConfig(id: numField, initialValue: 42)],
-                child: FormixNumberFormField(fieldId: numField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'num_field': 42},
+              fields: [FormixFieldConfig(id: numField, initialValue: 42)],
+              child: FormixNumberFormField(fieldId: numField),
             ),
           ),
         ),
@@ -245,24 +207,18 @@ void main() {
       expect(find.text('not-a-number'), findsOneWidget);
 
       // Controller value should remain unchanged
-      final provider = Formix.of(tester.element(find.byType(TextFormField)))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(TextFormField)),
-      );
-      final controller = container.read(provider.notifier);
+      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
       expect(controller.getValue(numField), 42);
     });
 
     testWidgets('updates text when value changes externally', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'num_field': 42},
-                fields: [FormixFieldConfig(id: numField, initialValue: 42)],
-                child: FormixNumberFormField(fieldId: numField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'num_field': 42},
+              fields: [FormixFieldConfig(id: numField, initialValue: 42)],
+              child: FormixNumberFormField(fieldId: numField),
             ),
           ),
         ),
@@ -271,11 +227,7 @@ void main() {
       expect(find.text('42'), findsOneWidget);
 
       // Change value externally
-      final provider = Formix.of(tester.element(find.byType(TextFormField)))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(TextFormField)),
-      );
-      final controller = container.read(provider.notifier);
+      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
       controller.setValue(numField, 99);
       await tester.pump();
 
@@ -284,20 +236,18 @@ void main() {
 
     testWidgets('shows validation error', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(
-                    id: numField,
-                    validator: (value) => (value ?? 0) < 10 ? 'Must be at least 10' : null,
-                  ),
-                ],
-                child: FormixNumberFormField(
-                  fieldId: numField,
-                  decoration: const InputDecoration(labelText: 'Number'),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(
+                  id: numField,
+                  validator: (value) => (value ?? 0) < 10 ? 'Must be at least 10' : null,
                 ),
+              ],
+              child: FormixNumberFormField(
+                fieldId: numField,
+                decoration: const InputDecoration(labelText: 'Number'),
               ),
             ),
           ),
@@ -312,21 +262,19 @@ void main() {
 
     testWidgets('shows loading indicator during validation', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(
-                    id: numField,
-                    asyncValidator: (value) async {
-                      await Future.delayed(const Duration(milliseconds: 100));
-                      return null;
-                    },
-                  ),
-                ],
-                child: FormixNumberFormField(fieldId: numField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(
+                  id: numField,
+                  asyncValidator: (value) async {
+                    await Future.delayed(const Duration(milliseconds: 100));
+                    return null;
+                  },
+                ),
+              ],
+              child: FormixNumberFormField(fieldId: numField),
             ),
           ),
         ),
@@ -341,14 +289,12 @@ void main() {
 
     testWidgets('shows dirty indicator when field is modified', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'num_field': 42},
-                fields: [FormixFieldConfig(id: numField, initialValue: 42)],
-                child: FormixNumberFormField(fieldId: numField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'num_field': 42},
+              fields: [FormixFieldConfig(id: numField, initialValue: 42)],
+              child: FormixNumberFormField(fieldId: numField),
             ),
           ),
         ),
@@ -366,14 +312,12 @@ void main() {
 
     testWidgets('preserves focus state', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'num_field': 42},
-                fields: [FormixFieldConfig(id: numField, initialValue: 42)],
-                child: FormixNumberFormField(fieldId: numField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'num_field': 42},
+              fields: [FormixFieldConfig(id: numField, initialValue: 42)],
+              child: FormixNumberFormField(fieldId: numField),
             ),
           ),
         ),
@@ -393,13 +337,11 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: FormixNumberFormField(
-                fieldId: numField,
-                controller: customController,
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: FormixNumberFormField(
+              fieldId: numField,
+              controller: customController,
             ),
           ),
         ),
@@ -410,19 +352,17 @@ void main() {
 
     testWidgets('applies custom decoration', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'num_field': 42},
-                fields: [FormixFieldConfig(id: numField, initialValue: 42)],
-                child: FormixNumberFormField(
-                  fieldId: numField,
-                  decoration: const InputDecoration(
-                    labelText: 'Custom Label',
-                    hintText: 'Enter a number',
-                    prefixIcon: Icon(Icons.numbers),
-                  ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'num_field': 42},
+              fields: [FormixFieldConfig(id: numField, initialValue: 42)],
+              child: FormixNumberFormField(
+                fieldId: numField,
+                decoration: const InputDecoration(
+                  labelText: 'Custom Label',
+                  hintText: 'Enter a number',
+                  prefixIcon: Icon(Icons.numbers),
                 ),
               ),
             ),
@@ -437,14 +377,12 @@ void main() {
 
     testWidgets('maintains type consistency for int fields', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'int_field': 42},
-                fields: [FormixFieldConfig(id: intField, initialValue: 42)],
-                child: FormixNumberFormField(fieldId: intField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'int_field': 42},
+              fields: [FormixFieldConfig(id: intField, initialValue: 42)],
+              child: FormixNumberFormField(fieldId: intField),
             ),
           ),
         ),
@@ -453,11 +391,7 @@ void main() {
       await tester.enterText(find.byType(TextFormField), '123.7');
       await tester.pump();
 
-      final provider = Formix.of(tester.element(find.byType(TextFormField)))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(TextFormField)),
-      );
-      final controller = container.read(provider.notifier);
+      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
       final value = controller.getValue(intField);
 
       expect(value, isA<int>());
@@ -466,16 +400,14 @@ void main() {
 
     testWidgets('maintains type consistency for double fields', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'double_field': 42.0},
-                fields: [
-                  FormixFieldConfig(id: doubleField, initialValue: 42.0),
-                ],
-                child: FormixNumberFormField(fieldId: doubleField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'double_field': 42.0},
+              fields: [
+                FormixFieldConfig(id: doubleField, initialValue: 42.0),
+              ],
+              child: FormixNumberFormField(fieldId: doubleField),
             ),
           ),
         ),
@@ -484,11 +416,7 @@ void main() {
       await tester.enterText(find.byType(TextFormField), '123');
       await tester.pump();
 
-      final provider = Formix.of(tester.element(find.byType(TextFormField)))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(TextFormField)),
-      );
-      final controller = container.read(provider.notifier);
+      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
       final value = controller.getValue(doubleField);
 
       expect(value, isA<double>());
@@ -497,13 +425,11 @@ void main() {
 
     testWidgets('handles null initial values', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: numField)],
-                child: FormixNumberFormField(fieldId: numField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: numField)],
+              child: FormixNumberFormField(fieldId: numField),
             ),
           ),
         ),
@@ -512,24 +438,18 @@ void main() {
       // Should display empty text
       expect(find.text(''), findsOneWidget);
 
-      final provider = Formix.of(tester.element(find.byType(TextFormField)))!;
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(TextFormField)),
-      );
-      final controller = container.read(provider.notifier);
+      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
       expect(controller.getValue(numField), isNull);
     });
 
     testWidgets('disposes resources properly', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'num_field': 42},
-                fields: [FormixFieldConfig(id: numField, initialValue: 42)],
-                child: FormixNumberFormField(fieldId: numField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'num_field': 42},
+              fields: [FormixFieldConfig(id: numField, initialValue: 42)],
+              child: FormixNumberFormField(fieldId: numField),
             ),
           ),
         ),
@@ -540,7 +460,7 @@ void main() {
 
       // Remove widget
       await tester.pumpWidget(
-        ProviderScope(child: MaterialApp(home: Container())),
+        MaterialApp(home: Container()),
       );
 
       // Widget should be disposed

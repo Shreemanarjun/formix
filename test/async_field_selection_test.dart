@@ -36,26 +36,24 @@ void main() {
     final statesCompleter = Completer<List<String>>();
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              onChanged: (_) {},
-              child: FormixAsyncField<List<String>>(
-                fieldId: stateOptionsId,
-                future: statesCompleter.future,
-                onData: (context, controller, data) {
-                  controller.setValue(selectedStateId, data.first);
-                },
-                builder: (context, stateSnapshot) {
-                  return FormixRawFormField<String>(
-                    fieldId: selectedStateId,
-                    builder: (context, selectionState) {
-                      return Text(selectionState.value ?? 'No selection');
-                    },
-                  );
-                },
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            onChanged: (_) {},
+            child: FormixAsyncField<List<String>>(
+              fieldId: stateOptionsId,
+              future: statesCompleter.future,
+              onData: (context, controller, data) {
+                controller.setValue(selectedStateId, data.first);
+              },
+              builder: (context, stateSnapshot) {
+                return FormixRawFormField<String>(
+                  fieldId: selectedStateId,
+                  builder: (context, selectionState) {
+                    return Text(selectionState.value ?? 'No selection');
+                  },
+                );
+              },
             ),
           ),
         ),
@@ -80,29 +78,27 @@ void main() {
     final statesCompleter = Completer<List<String>>();
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              onChanged: (_) {},
-              child: FormixAsyncField<List<String>>(
-                fieldId: stateOptionsId,
-                future: statesCompleter.future,
-                onData: (context, controller, states) {
-                  // This is the clean way
-                  if (states.isNotEmpty && controller.getValue(selectedStateId) == null) {
-                    controller.setValue(selectedStateId, states.first);
-                  }
-                },
-                builder: (context, stateSnapshot) {
-                  return FormixRawFormField<String>(
-                    fieldId: selectedStateId,
-                    builder: (context, selectionState) {
-                      return Text(selectionState.value ?? 'No selection');
-                    },
-                  );
-                },
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            onChanged: (_) {},
+            child: FormixAsyncField<List<String>>(
+              fieldId: stateOptionsId,
+              future: statesCompleter.future,
+              onData: (context, controller, states) {
+                // This is the clean way
+                if (states.isNotEmpty && controller.getValue(selectedStateId) == null) {
+                  controller.setValue(selectedStateId, states.first);
+                }
+              },
+              builder: (context, stateSnapshot) {
+                return FormixRawFormField<String>(
+                  fieldId: selectedStateId,
+                  builder: (context, selectionState) {
+                    return Text(selectionState.value ?? 'No selection');
+                  },
+                );
+              },
             ),
           ),
         ),
@@ -143,53 +139,51 @@ void main() {
     }
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              onChanged: (_) {},
-              child: Column(
-                children: [
-                  // State Selector
-                  FormixRawFormField<MockState>(
-                    fieldId: stateFieldId,
-                    builder: (context, stateStatus) {
-                      return DropdownButton<MockState>(
-                        value: stateStatus.value,
-                        items: mockStates.map((s) => DropdownMenuItem(value: s, child: Text(s.name))).toList(),
-                        onChanged: (s) => stateStatus.didChange(s),
-                      );
-                    },
-                  ),
-                  // City Dependent Field
-                  FormixDependentAsyncField<List<MockCity>, MockState>(
-                    fieldId: cityOptionsId,
-                    dependency: stateFieldId,
-                    resetField: cityFieldId,
-                    future: fetchCities,
-                    onData: (context, controller, cities) {
-                      // Auto-select first city
-                      if (cities.isNotEmpty && controller.getValue(cityFieldId) == null) {
-                        controller.setValue(cityFieldId, cities.first);
-                      }
-                    },
-                    loadingBuilder: (context) => const CircularProgressIndicator(),
-                    builder: (context, cityOptionsSnapshot) {
-                      final cities = cityOptionsSnapshot.value ?? [];
-                      // If empty/loading handled, this should be safe
-                      return FormixRawFormField<MockCity?>(
-                        fieldId: cityFieldId,
-                        builder: (context, cityStatus) {
-                          if (cities.isEmpty && cityStatus.value == null) {
-                            return const Text('No Cities Available');
-                          }
-                          return Text(cityStatus.value?.name ?? 'No City Selected');
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            onChanged: (_) {},
+            child: Column(
+              children: [
+                // State Selector
+                FormixRawFormField<MockState>(
+                  fieldId: stateFieldId,
+                  builder: (context, stateStatus) {
+                    return DropdownButton<MockState>(
+                      value: stateStatus.value,
+                      items: mockStates.map((s) => DropdownMenuItem(value: s, child: Text(s.name))).toList(),
+                      onChanged: (s) => stateStatus.didChange(s),
+                    );
+                  },
+                ),
+                // City Dependent Field
+                FormixDependentAsyncField<List<MockCity>, MockState>(
+                  fieldId: cityOptionsId,
+                  dependency: stateFieldId,
+                  resetField: cityFieldId,
+                  future: fetchCities,
+                  onData: (context, controller, cities) {
+                    // Auto-select first city
+                    if (cities.isNotEmpty && controller.getValue(cityFieldId) == null) {
+                      controller.setValue(cityFieldId, cities.first);
+                    }
+                  },
+                  loadingBuilder: (context) => const CircularProgressIndicator(),
+                  builder: (context, cityOptionsSnapshot) {
+                    final cities = cityOptionsSnapshot.value ?? [];
+                    // If empty/loading handled, this should be safe
+                    return FormixRawFormField<MockCity?>(
+                      fieldId: cityFieldId,
+                      builder: (context, cityStatus) {
+                        if (cities.isEmpty && cityStatus.value == null) {
+                          return const Text('No Cities Available');
+                        }
+                        return Text(cityStatus.value?.name ?? 'No City Selected');
+                      },
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ),

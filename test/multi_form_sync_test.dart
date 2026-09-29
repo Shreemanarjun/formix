@@ -10,9 +10,6 @@ void main() {
       late FormixController controllerA;
       late FormixController controllerB;
 
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
       controllerA = FormixController(
         fields: [
           const FormixFieldConfig<String>(id: fieldA, initialValue: 'A').toField(),

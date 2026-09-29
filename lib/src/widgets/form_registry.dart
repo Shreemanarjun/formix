@@ -23,7 +23,7 @@ import '../../formix.dart';
 ///   ]
 /// )
 /// ```
-class FormixFieldRegistry extends ConsumerStatefulWidget {
+class FormixFieldRegistry extends StatefulWidget {
   /// Creates a [FormixFieldRegistry].
   const FormixFieldRegistry({
     super.key,
@@ -45,10 +45,10 @@ class FormixFieldRegistry extends ConsumerStatefulWidget {
   final bool preserveStateOnDispose;
 
   @override
-  ConsumerState<FormixFieldRegistry> createState() => _FormixFieldRegistryState();
+  State<FormixFieldRegistry> createState() => _FormixFieldRegistryState();
 }
 
-class _FormixFieldRegistryState extends ConsumerState<FormixFieldRegistry> {
+class _FormixFieldRegistryState extends State<FormixFieldRegistry> {
   FormixController? _controller;
   Object? _initializationError;
 
@@ -86,16 +86,8 @@ class _FormixFieldRegistryState extends ConsumerState<FormixFieldRegistry> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    var provider = Formix.of(context);
-    if (provider == null) {
-      try {
-        provider = ref.watch(currentControllerProvider);
-      } catch (_) {
-        // ProviderScope missing
-      }
-    }
-
-    if (provider == null) {
+    final newController = Formix.controllerOf(context);
+    if (newController == null) {
       if (mounted) {
         setState(() {
           _initializationError = 'FormixFieldRegistry used outside of Formix';
@@ -104,22 +96,11 @@ class _FormixFieldRegistryState extends ConsumerState<FormixFieldRegistry> {
       return;
     }
 
-    // Keep provider alive
-    ref.watch(provider);
-    try {
-      final newController = ref.read(provider.notifier);
-      if (newController != _controller) {
-        _controller = newController;
-        _registerFields();
-      }
-      _initializationError = null;
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _initializationError = e;
-        });
-      }
+    if (newController != _controller) {
+      _controller = newController;
+      _registerFields();
     }
+    _initializationError = null;
   }
 
   void _registerFields() {

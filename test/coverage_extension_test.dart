@@ -135,67 +135,65 @@ void main() {
       const arrayField = FormixArrayID<String>('items');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {
-                  'name': 'Initial',
-                  'items': ['Item 1'],
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {
+                'name': 'Initial',
+                'items': ['Item 1'],
+              },
+              fields: const [
+                FormixFieldConfig(id: nameField),
+                FormixFieldConfig(id: arrayField),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  // Watchers
+                  scope.watchValue(nameField);
+                  scope.watchValidation(nameField);
+                  scope.watchError(nameField);
+                  scope.watchIsValidating(nameField);
+                  scope.watchFieldIsValid(nameField);
+                  scope.watchIsDirty(nameField);
+                  scope.watchIsTouched(nameField);
+                  // ignore: unnecessary_statements
+                  scope.watchIsValid;
+                  // ignore: unnecessary_statements
+                  scope.watchIsFormDirty;
+                  // ignore: unnecessary_statements
+                  scope.watchIsSubmitting;
+                  scope.watchGroupIsValid('user');
+                  scope.watchGroupIsDirty('user');
+                  scope.watchArray(arrayField);
+
+                  try {
+                    // ignore: unnecessary_statements
+                    scope.watchState;
+                  } catch (_) {}
+
+                  return Column(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          // Action methods
+                          scope.toNestedMap();
+                          scope.isGroupValid('user');
+                          scope.isGroupDirty('user');
+                          scope.markAsTouched(nameField);
+                          scope.focusField(nameField);
+                          scope.scrollToField(nameField);
+                          scope.focusFirstError();
+                          scope.addArrayItem(arrayField, 'Item 2');
+                          scope.replaceArrayItem(arrayField, 0, 'New Item');
+                          scope.moveArrayItem(arrayField, 0, 1);
+                          scope.clearArray(arrayField);
+                          scope.removeArrayItemAt(arrayField, 0);
+                        },
+                        child: const Text('Actions'),
+                      ),
+                    ],
+                  );
                 },
-                fields: const [
-                  FormixFieldConfig(id: nameField),
-                  FormixFieldConfig(id: arrayField),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    // Watchers
-                    scope.watchValue(nameField);
-                    scope.watchValidation(nameField);
-                    scope.watchError(nameField);
-                    scope.watchIsValidating(nameField);
-                    scope.watchFieldIsValid(nameField);
-                    scope.watchIsDirty(nameField);
-                    scope.watchIsTouched(nameField);
-                    // ignore: unnecessary_statements
-                    scope.watchIsValid;
-                    // ignore: unnecessary_statements
-                    scope.watchIsFormDirty;
-                    // ignore: unnecessary_statements
-                    scope.watchIsSubmitting;
-                    scope.watchGroupIsValid('user');
-                    scope.watchGroupIsDirty('user');
-                    scope.watchArray(arrayField);
-
-                    try {
-                      // ignore: unnecessary_statements
-                      scope.watchState;
-                    } catch (_) {}
-
-                    return Column(
-                      children: [
-                        ElevatedButton(
-                          onPressed: () {
-                            // Action methods
-                            scope.toNestedMap();
-                            scope.isGroupValid('user');
-                            scope.isGroupDirty('user');
-                            scope.markAsTouched(nameField);
-                            scope.focusField(nameField);
-                            scope.scrollToField(nameField);
-                            scope.focusFirstError();
-                            scope.addArrayItem(arrayField, 'Item 2');
-                            scope.replaceArrayItem(arrayField, 0, 'New Item');
-                            scope.moveArrayItem(arrayField, 0, 1);
-                            scope.clearArray(arrayField);
-                            scope.removeArrayItemAt(arrayField, 0);
-                          },
-                          child: const Text('Actions'),
-                        ),
-                      ],
-                    );
-                  },
-                ),
               ),
             ),
           ),
@@ -220,29 +218,27 @@ void main() {
       const nameField = FormixFieldID<String>('name');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              fields: const [FormixFieldConfig(id: nameField)],
-              child: FormixNavigationGuard(
-                onDirtyPop: (context) async {
-                  onDirtyPopCalled = true;
-                  return true;
-                },
-                child: Scaffold(
-                  body: FormixBuilder(
-                    builder: (context, scope) {
-                      return Column(
-                        children: [
-                          const FormixTextFormField(fieldId: nameField),
-                          ElevatedButton(
-                            onPressed: () => Navigator.of(context).maybePop(),
-                            child: const Text('Back'),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+        MaterialApp(
+          home: Formix(
+            fields: const [FormixFieldConfig(id: nameField)],
+            child: FormixNavigationGuard(
+              onDirtyPop: (context) async {
+                onDirtyPopCalled = true;
+                return true;
+              },
+              child: Scaffold(
+                body: FormixBuilder(
+                  builder: (context, scope) {
+                    return Column(
+                      children: [
+                        const FormixTextFormField(fieldId: nameField),
+                        ElevatedButton(
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          child: const Text('Back'),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -263,40 +259,38 @@ void main() {
       bool popped = false;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Builder(
-                builder: (context) => ElevatedButton(
-                  onPressed: () async {
-                    await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => Formix(
-                          fields: const [FormixFieldConfig(id: nameField)],
-                          child: FormixNavigationGuard(
-                            child: Scaffold(
-                              body: FormixBuilder(
-                                builder: (context, scope) {
-                                  return Column(
-                                    children: [
-                                      const FormixTextFormField(fieldId: nameField),
-                                      ElevatedButton(
-                                        onPressed: () => Navigator.of(context).maybePop(),
-                                        child: const Text('Back'),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => Formix(
+                        fields: const [FormixFieldConfig(id: nameField)],
+                        child: FormixNavigationGuard(
+                          child: Scaffold(
+                            body: FormixBuilder(
+                              builder: (context, scope) {
+                                return Column(
+                                  children: [
+                                    const FormixTextFormField(fieldId: nameField),
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.of(context).maybePop(),
+                                      child: const Text('Back'),
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                           ),
                         ),
                       ),
-                    );
-                    popped = true;
-                  },
-                  child: const Text('Go'),
-                ),
+                    ),
+                  );
+                  popped = true;
+                },
+                child: const Text('Go'),
               ),
             ),
           ),
@@ -324,40 +318,38 @@ void main() {
       bool popped = false;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Builder(
-                builder: (context) => ElevatedButton(
-                  onPressed: () async {
-                    await Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => Formix(
-                          fields: const [FormixFieldConfig(id: nameField)],
-                          child: FormixNavigationGuard(
-                            child: Scaffold(
-                              body: FormixBuilder(
-                                builder: (context, scope) {
-                                  return Column(
-                                    children: [
-                                      const FormixTextFormField(fieldId: nameField),
-                                      ElevatedButton(
-                                        onPressed: () => Navigator.of(context).maybePop(),
-                                        child: const Text('Back'),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () async {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => Formix(
+                        fields: const [FormixFieldConfig(id: nameField)],
+                        child: FormixNavigationGuard(
+                          child: Scaffold(
+                            body: FormixBuilder(
+                              builder: (context, scope) {
+                                return Column(
+                                  children: [
+                                    const FormixTextFormField(fieldId: nameField),
+                                    ElevatedButton(
+                                      onPressed: () => Navigator.of(context).maybePop(),
+                                      child: const Text('Back'),
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                           ),
                         ),
                       ),
-                    );
-                    popped = true;
-                  },
-                  child: const Text('Go'),
-                ),
+                    ),
+                  );
+                  popped = true;
+                },
+                child: const Text('Go'),
               ),
             ),
           ),
@@ -399,19 +391,17 @@ void main() {
       int buildCount = 0;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              initialValue: const {'name': 'A'},
-              fields: const [FormixFieldConfig(id: fieldId)],
-              child: FormixFieldConditionalSelector<String>(
-                fieldId: fieldId,
-                shouldRebuild: (info) => true, // Ensure it builds
-                builder: (context, info, child) {
-                  buildCount++;
-                  return Text('Value: ${info.value}');
-                },
-              ),
+        MaterialApp(
+          home: Formix(
+            initialValue: const {'name': 'A'},
+            fields: const [FormixFieldConfig(id: fieldId)],
+            child: FormixFieldConditionalSelector<String>(
+              fieldId: fieldId,
+              shouldRebuild: (info) => true, // Ensure it builds
+              builder: (context, info, child) {
+                buildCount++;
+                return Text('Value: ${info.value}');
+              },
             ),
           ),
         ),
@@ -425,27 +415,25 @@ void main() {
       int lastCount = 0;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              initialValue: const {'name': 'A'},
-              fields: const [FormixFieldConfig(id: fieldId)],
-              child: FormixBuilder(
-                builder: (context, scope) => Column(
-                  children: [
-                    FormixFieldPerformanceMonitor<String>(
-                      fieldId: fieldId,
-                      builder: (context, info, count) {
-                        lastCount = count;
-                        return Text('Count: $count');
-                      },
-                    ),
-                    ElevatedButton(
-                      onPressed: () => scope.setValue(fieldId, 'B'),
-                      child: const Text('Update'),
-                    ),
-                  ],
-                ),
+        MaterialApp(
+          home: Formix(
+            initialValue: const {'name': 'A'},
+            fields: const [FormixFieldConfig(id: fieldId)],
+            child: FormixBuilder(
+              builder: (context, scope) => Column(
+                children: [
+                  FormixFieldPerformanceMonitor<String>(
+                    fieldId: fieldId,
+                    builder: (context, info, count) {
+                      lastCount = count;
+                      return Text('Count: $count');
+                    },
+                  ),
+                  ElevatedButton(
+                    onPressed: () => scope.setValue(fieldId, 'B'),
+                    child: const Text('Update'),
+                  ),
+                ],
               ),
             ),
           ),
@@ -465,22 +453,20 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(
-                    id: nameField,
-                    validator: (val) => val == 'error' ? 'Error' : null,
-                  ),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = scope.controller;
-                    return const FormixTextFormField(fieldId: nameField);
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(
+                  id: nameField,
+                  validator: (val) => val == 'error' ? 'Error' : null,
                 ),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = scope.controller;
+                  return const FormixTextFormField(fieldId: nameField);
+                },
               ),
             ),
           ),
@@ -505,13 +491,11 @@ void main() {
       const nameField = FormixFieldID<String>('name');
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: {'name': 'Initial', 'age': 20},
-                child: Column(children: [MyCustomField(fieldId: nameField)]),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: {'name': 'Initial', 'age': 20},
+              child: Column(children: [MyCustomField(fieldId: nameField)]),
             ),
           ),
         ),
@@ -541,17 +525,15 @@ void main() {
       const textField = FormixFieldID<String>('desc');
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: {'count': 10, 'desc': 'Hello'},
-                child: Column(
-                  children: [
-                    MyNumberField(fieldId: numberField),
-                    MyTextField(fieldId: textField),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: {'count': 10, 'desc': 'Hello'},
+              child: Column(
+                children: [
+                  MyNumberField(fieldId: numberField),
+                  MyTextField(fieldId: textField),
+                ],
               ),
             ),
           ),
@@ -576,12 +558,10 @@ void main() {
       const fieldId = FormixFieldID<String>('manual');
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: MyCustomField(fieldId: fieldId, initialValue: 'Initial'),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: MyCustomField(fieldId: fieldId, initialValue: 'Initial'),
             ),
           ),
         ),
@@ -596,15 +576,13 @@ void main() {
       const arrayId = FormixArrayID<String>('items');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixArray<String>(
-                  id: arrayId,
-                  emptyBuilder: (context, scope) => const Text('Empty'),
-                  itemBuilder: (context, index, id, scope) => Container(),
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixArray<String>(
+                id: arrayId,
+                emptyBuilder: (context, scope) => const Text('Empty'),
+                itemBuilder: (context, index, id, scope) => Container(),
               ),
             ),
           ),
@@ -618,18 +596,16 @@ void main() {
       const arrayId = FormixArrayID<String>('items');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {
-                  'items': ['A', 'B'],
-                },
-                child: FormixArray<String>(
-                  id: arrayId,
-                  scrollable: true,
-                  itemBuilder: (context, index, id, scope) => Text('Item $index'),
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {
+                'items': ['A', 'B'],
+              },
+              child: FormixArray<String>(
+                id: arrayId,
+                scrollable: true,
+                itemBuilder: (context, index, id, scope) => Text('Item $index'),
               ),
             ),
           ),
@@ -644,20 +620,18 @@ void main() {
       String? resolvedPrefix;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixGroup(
+                prefix: 'user',
                 child: FormixGroup(
-                  prefix: 'user',
-                  child: FormixGroup(
-                    prefix: 'profile',
-                    child: Builder(
-                      builder: (context) {
-                        resolvedPrefix = FormixGroup.prefixOf(context);
-                        return Container();
-                      },
-                    ),
+                  prefix: 'profile',
+                  child: Builder(
+                    builder: (context) {
+                      resolvedPrefix = FormixGroup.prefixOf(context);
+                      return Container();
+                    },
                   ),
                 ),
               ),

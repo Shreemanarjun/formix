@@ -12,30 +12,28 @@ void main() {
       String? currentInitialValue;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: StatefulBuilder(
-                  builder: (context, setState) {
-                    return Column(
-                      children: [
-                        FormixTextFormField(
-                          fieldId: textFieldId,
-                          initialValue: currentInitialValue,
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              currentInitialValue = 'Updated Text';
-                            });
-                          },
-                          child: const Text('Update'),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    children: [
+                      FormixTextFormField(
+                        fieldId: textFieldId,
+                        initialValue: currentInitialValue,
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            currentInitialValue = 'Updated Text';
+                          });
+                        },
+                        child: const Text('Update'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -52,30 +50,28 @@ void main() {
       String? currentInitialValue = 'Value A';
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: StatefulBuilder(
-                  builder: (context, setState) {
-                    return Column(
-                      children: [
-                        FormixTextFormField(
-                          fieldId: textFieldId,
-                          initialValue: currentInitialValue,
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              currentInitialValue = 'Value B';
-                            });
-                          },
-                          child: const Text('Update'),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    children: [
+                      FormixTextFormField(
+                        fieldId: textFieldId,
+                        initialValue: currentInitialValue,
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            currentInitialValue = 'Value B';
+                          });
+                        },
+                        child: const Text('Update'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -97,42 +93,40 @@ void main() {
       String? currentInitialValue = 'Initial A';
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: StatefulBuilder(
-                  builder: (context, setState) {
-                    return Column(
-                      children: [
-                        // Dependency
-                        const FormixTextFormField(
-                          fieldId: dependencyId,
-                          initialValue: 'Dep',
-                        ),
-                        // Dependent Field
-                        FormixDependentAsyncField<String, String>(
-                          fieldId: dependentId,
-                          dependency: dependencyId,
-                          // Future returns same value to prove only initialValue change drives the update
-                          future: (dep) async => 'Async Data',
-                          initialValue: currentInitialValue,
-                          // Use manual/keepPrevious to avoid stuck loading state overlapping
-                          keepPreviousData: true,
-                          builder: (context, state) => Text(state.value ?? 'No Value'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              currentInitialValue = 'Initial B';
-                            });
-                          },
-                          child: const Text('Update Initial'),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    children: [
+                      // Dependency
+                      const FormixTextFormField(
+                        fieldId: dependencyId,
+                        initialValue: 'Dep',
+                      ),
+                      // Dependent Field
+                      FormixDependentAsyncField<String, String>(
+                        fieldId: dependentId,
+                        dependency: dependencyId,
+                        // Future returns same value to prove only initialValue change drives the update
+                        future: (dep) async => 'Async Data',
+                        initialValue: currentInitialValue,
+                        // Use manual/keepPrevious to avoid stuck loading state overlapping
+                        keepPreviousData: true,
+                        builder: (context, state) => Text(state.value ?? 'No Value'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            currentInitialValue = 'Initial B';
+                          });
+                        },
+                        child: const Text('Update Initial'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -173,35 +167,33 @@ void main() {
       String? currentInitialValue = 'Initial A';
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: StatefulBuilder(
-                  builder: (context, setState) {
-                    return Column(
-                      children: [
-                        const FormixTextFormField(fieldId: dependencyId, initialValue: 'Dep'),
-                        FormixDependentAsyncField<String, String>(
-                          fieldId: dependentId,
-                          dependency: dependencyId,
-                          // Future matches initial value to keep state pristine
-                          future: (dep) async => 'Initial A',
-                          initialValue: currentInitialValue,
-                          builder: (context, state) => Text(state.value ?? 'No Value'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              currentInitialValue = 'Initial B';
-                            });
-                          },
-                          child: const Text('Update Initial'),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    children: [
+                      const FormixTextFormField(fieldId: dependencyId, initialValue: 'Dep'),
+                      FormixDependentAsyncField<String, String>(
+                        fieldId: dependentId,
+                        dependency: dependencyId,
+                        // Future matches initial value to keep state pristine
+                        future: (dep) async => 'Initial A',
+                        initialValue: currentInitialValue,
+                        builder: (context, state) => Text(state.value ?? 'No Value'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            currentInitialValue = 'Initial B';
+                          });
+                        },
+                        child: const Text('Update Initial'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),

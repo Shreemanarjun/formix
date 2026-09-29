@@ -13,30 +13,28 @@ void main() {
       bool submitted = false;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: Column(
-                  children: [
-                    FormixAsyncField<String>(
-                      fieldId: fieldId,
-                      future: completer.future,
-                      builder: (context, state) => Text(state.value ?? 'No Value'),
-                      loadingBuilder: (context) => const Text('Loading...'),
-                    ),
-                    FormixBuilder(
-                      builder: (context, scope) => ElevatedButton(
-                        onPressed: () => scope.controller.submit(
-                          onValid: (values) async {
-                            submitted = true;
-                          },
-                        ),
-                        child: const Text('Submit'),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: Column(
+                children: [
+                  FormixAsyncField<String>(
+                    fieldId: fieldId,
+                    future: completer.future,
+                    builder: (context, state) => Text(state.value ?? 'No Value'),
+                    loadingBuilder: (context) => const Text('Loading...'),
+                  ),
+                  FormixBuilder(
+                    builder: (context, scope) => ElevatedButton(
+                      onPressed: () => scope.controller.submit(
+                        onValid: (values) async {
+                          submitted = true;
+                        },
                       ),
+                      child: const Text('Submit'),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -98,26 +96,24 @@ void main() {
       }
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: Column(
-                  children: [
-                    FormixAsyncField<String>(
-                      fieldId: fieldId,
-                      future: fetchData(),
-                      onRetry: fetchData,
-                      builder: (context, state) => Text(state.value ?? ''),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: Column(
+                children: [
+                  FormixAsyncField<String>(
+                    fieldId: fieldId,
+                    future: fetchData(),
+                    onRetry: fetchData,
+                    builder: (context, state) => Text(state.value ?? ''),
+                  ),
+                  FormixBuilder(
+                    builder: (context, scope) => ElevatedButton(
+                      onPressed: () => scope.controller.reset(),
+                      child: const Text('Reset'),
                     ),
-                    FormixBuilder(
-                      builder: (context, scope) => ElevatedButton(
-                        onPressed: () => scope.controller.reset(),
-                        child: const Text('Reset'),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -146,18 +142,16 @@ void main() {
         final futureNotifier = ValueNotifier<Future<String>>(completer1.future);
 
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Formix(
-                  child: ValueListenableBuilder<Future<String>>(
-                    valueListenable: futureNotifier,
-                    builder: (context, future, _) => FormixAsyncField<String>(
-                      fieldId: fieldId,
-                      future: future,
-                      builder: (context, state) => Text(state.value ?? 'No Value'),
-                      loadingBuilder: (context) => const Text('Loading'),
-                    ),
+          MaterialApp(
+            home: Scaffold(
+              body: Formix(
+                child: ValueListenableBuilder<Future<String>>(
+                  valueListenable: futureNotifier,
+                  builder: (context, future, _) => FormixAsyncField<String>(
+                    fieldId: fieldId,
+                    future: future,
+                    builder: (context, state) => Text(state.value ?? 'No Value'),
+                    loadingBuilder: (context) => const Text('Loading'),
                   ),
                 ),
               ),
@@ -195,37 +189,35 @@ void main() {
       final initialCompleter = Completer<String>();
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixAsyncField<String>(
-                  fieldId: fieldId,
-                  future: initialCompleter.future,
-                  onRetry: () async {
-                    attempts++;
-                    return 'Attempt $attempts';
-                  },
-                  asyncErrorBuilder: (context, error) => Column(
-                    children: [
-                      Text('Error: $error'),
-                      FormixBuilder(
-                        builder: (context, scope) {
-                          return ElevatedButton(
-                            onPressed: () {
-                              final state = tester.state<FormixAsyncFieldState<String>>(
-                                find.byType(FormixAsyncField<String>),
-                              );
-                              state.refresh();
-                            },
-                            child: const Text('Retry'),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  builder: (context, state) => Text(state.value ?? ''),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixAsyncField<String>(
+                fieldId: fieldId,
+                future: initialCompleter.future,
+                onRetry: () async {
+                  attempts++;
+                  return 'Attempt $attempts';
+                },
+                asyncErrorBuilder: (context, error) => Column(
+                  children: [
+                    Text('Error: $error'),
+                    FormixBuilder(
+                      builder: (context, scope) {
+                        return ElevatedButton(
+                          onPressed: () {
+                            final state = tester.state<FormixAsyncFieldState<String>>(
+                              find.byType(FormixAsyncField<String>),
+                            );
+                            state.refresh();
+                          },
+                          child: const Text('Retry'),
+                        );
+                      },
+                    ),
+                  ],
                 ),
+                builder: (context, state) => Text(state.value ?? ''),
               ),
             ),
           ),

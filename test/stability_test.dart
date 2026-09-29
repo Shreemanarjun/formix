@@ -5,22 +5,17 @@ import 'package:formix/formix.dart';
 void main() {
   group('Rebuild and Stability Tests', () {
     testWidgets('FormixController instance is preserved when localization messages change', (tester) async {
-      // We'll override the messages provider to trigger updates
-      final messagesStateProvider = NotifierProvider<MessagesNotifier, FormixMessages>(MessagesNotifier.new);
+      addTearDown(() => formixGlobalMessages.value = const DefaultFormixMessages());
+      formixGlobalMessages.value = const DefaultFormixMessages();
 
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            formixMessagesProvider.overrideWith((ref) => ref.watch(messagesStateProvider)),
-          ],
-          child: MaterialApp(
-            home: Formix(
-              child: Consumer(
-                builder: (context, ref, child) {
-                  final controller = Formix.controllerOf(context);
-                  return Text('Hash: ${identityHashCode(controller)}');
-                },
-              ),
+        MaterialApp(
+          home: Formix(
+            child: Builder(
+              builder: (context) {
+                final controller = Formix.controllerOf(context);
+                return Text('Hash: ${identityHashCode(controller)}');
+              },
             ),
           ),
         ),
@@ -28,9 +23,8 @@ void main() {
 
       final text1 = tester.widget<Text>(find.byType(Text)).data!;
 
-      // Trigger a message change
-      final container = ProviderScope.containerOf(tester.element(find.byType(Formix)));
-      container.read(messagesStateProvider.notifier).state = const CustomMessages();
+      // Trigger a message change via the global messages signal.
+      formixGlobalMessages.value = const CustomMessages();
 
       await tester.pump();
 
@@ -41,30 +35,28 @@ void main() {
 
     testWidgets('FormixController is preserved when parent rebuilds with identical initialValue map instance', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: StatefulBuilder(
-              builder: (context, setState) {
-                return Column(
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => setState(() {}),
-                      child: const Text('Rebuild'),
+        MaterialApp(
+          home: StatefulBuilder(
+            builder: (context, setState) {
+              return Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: () => setState(() {}),
+                    child: const Text('Rebuild'),
+                  ),
+                  Formix(
+                    // Pass a NEW map instance every build, but with same content
+                    initialValue: Map<String, dynamic>.from({'a': 1}),
+                    child: Builder(
+                      builder: (context) {
+                        final controller = Formix.controllerOf(context);
+                        return Text('Hash: ${identityHashCode(controller)}');
+                      },
                     ),
-                    Formix(
-                      // Pass a NEW map instance every build, but with same content
-                      initialValue: Map<String, dynamic>.from({'a': 1}),
-                      child: Consumer(
-                        builder: (context, ref, child) {
-                          final controller = Formix.controllerOf(context);
-                          return Text('Hash: ${identityHashCode(controller)}');
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       );
@@ -88,31 +80,28 @@ void main() {
       late FormixData stateAfter;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: StatefulBuilder(
-              builder: (context, setState) {
-                return Column(
-                  children: [
-                    ElevatedButton(
-                      onPressed: () => setState(() {}),
-                      child: const Text('Rebuild'),
+        MaterialApp(
+          home: StatefulBuilder(
+            builder: (context, setState) {
+              return Column(
+                children: [
+                  ElevatedButton(
+                    onPressed: () => setState(() {}),
+                    child: const Text('Rebuild'),
+                  ),
+                  Formix(
+                    fields: List.from(fields), // New list instance every time
+                    child: Builder(
+                      builder: (context) {
+                        final controller = Formix.of(context)!;
+                        stateAfter = controller.state; // Keep track of latest state
+                        return const Text('Watching');
+                      },
                     ),
-                    Formix(
-                      fields: List.from(fields), // New list instance every time
-                      child: Consumer(
-                        builder: (context, ref, child) {
-                          final provider = Formix.of(context)!;
-                          final data = ref.watch(provider);
-                          stateAfter = data; // Keep track of latest state
-                          return const Text('Watching');
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       );
@@ -140,14 +129,6 @@ void main() {
       expect(p1 == p4, isTrue);
     });
   });
-}
-
-class MessagesNotifier extends Notifier<FormixMessages> {
-  @override
-  FormixMessages build() => const DefaultFormixMessages();
-
-  @override
-  set state(FormixMessages value) => super.state = value;
 }
 
 class CustomMessages extends DefaultFormixMessages {

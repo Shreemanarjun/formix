@@ -118,15 +118,13 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(id: testField, initialValue: 'initial'),
-                ],
-                child: TestFormFieldWidget(fieldId: testField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(id: testField, initialValue: 'initial'),
+              ],
+              child: TestFormFieldWidget(fieldId: testField),
             ),
           ),
         ),
@@ -144,15 +142,13 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(id: testField, initialValue: 'initial'),
-                ],
-                child: TestFormFieldWidget(fieldId: testField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(id: testField, initialValue: 'initial'),
+              ],
+              child: TestFormFieldWidget(fieldId: testField),
             ),
           ),
         ),
@@ -169,14 +165,12 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: TestFormFieldWidget(
-                  fieldId: testField,
-                  initialValue: 'auto_registered',
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: TestFormFieldWidget(
+                fieldId: testField,
+                initialValue: 'auto_registered',
               ),
             ),
           ),
@@ -196,13 +190,11 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: TestFormFieldWidget(
-                fieldId: const FormixFieldID<String>('custom_field'),
-                controller: customController,
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: TestFormFieldWidget(
+              fieldId: const FormixFieldID<String>('custom_field'),
+              controller: customController,
             ),
           ),
         ),
@@ -219,20 +211,18 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: {'fallback_field': 'fallback_value'},
-                fields: [
-                  FormixFieldConfig(
-                    id: FormixFieldID<String>('fallback_field'),
-                    initialValue: 'fallback_value',
-                  ),
-                ],
-                child: TestFormFieldWidget(
-                  fieldId: FormixFieldID<String>('fallback_field'),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: {'fallback_field': 'fallback_value'},
+              fields: [
+                FormixFieldConfig(
+                  id: FormixFieldID<String>('fallback_field'),
+                  initialValue: 'fallback_value',
                 ),
+              ],
+              child: TestFormFieldWidget(
+                fieldId: FormixFieldID<String>('fallback_field'),
               ),
             ),
           ),
@@ -247,13 +237,11 @@ void main() {
 
     testWidgets('didChange updates field value', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: testField)],
-                child: TestFormFieldWidget(fieldId: testField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: testField)],
+              child: TestFormFieldWidget(fieldId: testField),
             ),
           ),
         ),
@@ -270,13 +258,11 @@ void main() {
 
     testWidgets('setField is alias for didChange', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: testField)],
-                child: TestFormFieldWidget(fieldId: testField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: testField)],
+              child: TestFormFieldWidget(fieldId: testField),
             ),
           ),
         ),
@@ -295,16 +281,14 @@ void main() {
       const field2 = FormixFieldID<String>('field2');
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(id: field1),
-                  FormixFieldConfig(id: field2),
-                ],
-                child: TestFormFieldWidget(fieldId: field1),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(id: field1),
+                FormixFieldConfig(id: field2),
+              ],
+              child: TestFormFieldWidget(fieldId: field1),
             ),
           ),
         ),
@@ -321,13 +305,11 @@ void main() {
 
     testWidgets('markAsTouched updates touched state', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: testField)],
-                child: TestFormFieldWidget(fieldId: testField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: testField)],
+              child: TestFormFieldWidget(fieldId: testField),
             ),
           ),
         ),
@@ -346,13 +328,11 @@ void main() {
       'onFieldChanged is called when field value changes externally',
       (tester) async {
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Formix(
-                  fields: [FormixFieldConfig(id: testField)],
-                  child: TestFormFieldWidget(fieldId: testField),
-                ),
+          MaterialApp(
+            home: Scaffold(
+              body: Formix(
+                fields: [FormixFieldConfig(id: testField)],
+                child: TestFormFieldWidget(fieldId: testField),
               ),
             ),
           ),
@@ -369,13 +349,11 @@ void main() {
 
     testWidgets('dispose cleans up resources', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: testField)],
-                child: TestFormFieldWidget(fieldId: testField),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: testField)],
+              child: TestFormFieldWidget(fieldId: testField),
             ),
           ),
         ),
@@ -397,17 +375,15 @@ void main() {
       const field2 = FormixFieldID<String>('field2');
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: {'field1': 'value1', 'field2': 'value2'},
-                fields: [
-                  FormixFieldConfig(id: field1, initialValue: 'value1'),
-                  FormixFieldConfig(id: field2, initialValue: 'value2'),
-                ],
-                child: TestFormFieldWidget(fieldId: field1),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: {'field1': 'value1', 'field2': 'value2'},
+              fields: [
+                FormixFieldConfig(id: field1, initialValue: 'value1'),
+                FormixFieldConfig(id: field2, initialValue: 'value2'),
+              ],
+              child: TestFormFieldWidget(fieldId: field1),
             ),
           ),
         ),
@@ -420,17 +396,15 @@ void main() {
 
       // Update widget with different field
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: {'field1': 'value1', 'field2': 'value2'},
-                fields: [
-                  FormixFieldConfig(id: field1, initialValue: 'value1'),
-                  FormixFieldConfig(id: field2, initialValue: 'value2'),
-                ],
-                child: TestFormFieldWidget(fieldId: field2),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: {'field1': 'value1', 'field2': 'value2'},
+              fields: [
+                FormixFieldConfig(id: field1, initialValue: 'value1'),
+                FormixFieldConfig(id: field2, initialValue: 'value2'),
+              ],
+              child: TestFormFieldWidget(fieldId: field2),
             ),
           ),
         ),
@@ -444,17 +418,15 @@ void main() {
     ) async {
       String? savedValue;
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(id: testField, initialValue: 'to_save'),
-                ],
-                child: TestFormFieldWidget(
-                  fieldId: testField,
-                  onSaved: (val) => savedValue = val,
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(id: testField, initialValue: 'to_save'),
+              ],
+              child: TestFormFieldWidget(
+                fieldId: testField,
+                onSaved: (val) => savedValue = val,
               ),
             ),
           ),
@@ -471,17 +443,15 @@ void main() {
     testWidgets('onReset is called when field is reset', (tester) async {
       bool resetCalled = false;
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(id: testField, initialValue: 'initial'),
-                ],
-                child: TestFormFieldWidget(
-                  fieldId: testField,
-                  onReset: () => resetCalled = true,
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(id: testField, initialValue: 'initial'),
+              ],
+              child: TestFormFieldWidget(
+                fieldId: testField,
+                onReset: () => resetCalled = true,
               ),
             ),
           ),
@@ -502,15 +472,13 @@ void main() {
 
     testWidgets('forceErrorText overrides validation', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: testField)],
-                child: TestFormFieldWidget(
-                  fieldId: testField,
-                  forceErrorText: 'Forced Error',
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: testField)],
+              child: TestFormFieldWidget(
+                fieldId: testField,
+                forceErrorText: 'Forced Error',
               ),
             ),
           ),
@@ -526,29 +494,27 @@ void main() {
 
     testWidgets('errorBuilder is used when provided', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(
-                    id: testField,
-                    validator: (_) => 'Validation Error',
-                  ),
-                ],
-                child: FormixRawFormField<String>(
-                  fieldId: testField,
-                  errorBuilder: (context, error) => Text('Custom Error: $error'),
-                  builder: (context, snapshot) {
-                    if (snapshot.shouldShowError) {
-                      return snapshot.errorBuilder!(
-                        context,
-                        snapshot.validation.errorMessage!,
-                      );
-                    }
-                    return const Text('No Error');
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(
+                  id: testField,
+                  validator: (_) => 'Validation Error',
                 ),
+              ],
+              child: FormixRawFormField<String>(
+                fieldId: testField,
+                errorBuilder: (context, error) => Text('Custom Error: $error'),
+                builder: (context, snapshot) {
+                  if (snapshot.shouldShowError) {
+                    return snapshot.errorBuilder!(
+                      context,
+                      snapshot.validation.errorMessage!,
+                    );
+                  }
+                  return const Text('No Error');
+                },
               ),
             ),
           ),
@@ -567,13 +533,11 @@ void main() {
 
     testWidgets('enabled property is passed to state', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: testField)],
-                child: TestFormFieldWidget(fieldId: testField, enabled: false),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: testField)],
+              child: TestFormFieldWidget(fieldId: testField, enabled: false),
             ),
           ),
         ),
@@ -589,19 +553,17 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                autovalidateMode: FormixAutovalidateMode.onUserInteraction,
-                fields: [
-                  FormixFieldConfig(id: testField, validator: (_) => 'Error'),
-                ],
-                child: TestFormFieldWidget(
-                  fieldId: testField,
-                  validator: (_) => 'Error',
-                  autovalidateMode: FormixAutovalidateMode.always,
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              autovalidateMode: FormixAutovalidateMode.onUserInteraction,
+              fields: [
+                FormixFieldConfig(id: testField, validator: (_) => 'Error'),
+              ],
+              child: TestFormFieldWidget(
+                fieldId: testField,
+                validator: (_) => 'Error',
+                autovalidateMode: FormixAutovalidateMode.always,
               ),
             ),
           ),

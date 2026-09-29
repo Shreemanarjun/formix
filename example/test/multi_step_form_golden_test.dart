@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:example/ui/multi_step_form/multi_step_form_page.dart';
 
@@ -10,11 +9,9 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(
-      const ProviderScope(
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          home: MultiStepFormPage(),
-        ),
+      const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: MultiStepFormPage(),
       ),
     );
 
@@ -32,11 +29,9 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
 
     await tester.pumpWidget(
-      const ProviderScope(
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          home: MultiStepFormPage(),
-        ),
+      const MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: MultiStepFormPage(),
       ),
     );
 

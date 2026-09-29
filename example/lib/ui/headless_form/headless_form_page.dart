@@ -2,25 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:formix/formix.dart';
 
 // Headless Form Example - Showcasing Latest API
-class HeadlessFormExample extends ConsumerWidget {
+class HeadlessFormExample extends StatelessWidget {
   const HeadlessFormExample({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return const HeadlessFormExampleContent();
   }
 }
 
-class HeadlessFormExampleContent extends ConsumerStatefulWidget {
+class HeadlessFormExampleContent extends StatefulWidget {
   const HeadlessFormExampleContent({super.key});
 
   @override
-  ConsumerState<HeadlessFormExampleContent> createState() =>
+  State<HeadlessFormExampleContent> createState() =>
       _HeadlessFormExampleContentState();
 }
 
 class _HeadlessFormExampleContentState
-    extends ConsumerState<HeadlessFormExampleContent> {
+    extends State<HeadlessFormExampleContent> {
   // Field IDs
   static final ratingField = FormixFieldID<int>('rating');
   static final feedbackField = FormixFieldID<String>('feedback');

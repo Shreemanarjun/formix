@@ -320,16 +320,14 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: TestFieldSelector<String>(
-                fieldId: const FormixFieldID<String>('custom_field'),
-                controller: customController,
-                builder: (context, info, child) {
-                  return Text('Value: ${info.value}');
-                },
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: TestFieldSelector<String>(
+              fieldId: const FormixFieldID<String>('custom_field'),
+              controller: customController,
+              builder: (context, info, child) {
+                return Text('Value: ${info.value}');
+              },
             ),
           ),
         ),
@@ -340,15 +338,13 @@ void main() {
 
     testWidgets('dispose cleans up listeners', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: testField)],
-                child: TestFieldSelector<String>(
-                  fieldId: testField,
-                  builder: _testBuilder,
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: testField)],
+              child: TestFieldSelector<String>(
+                fieldId: testField,
+                builder: _testBuilder,
               ),
             ),
           ),
@@ -402,23 +398,21 @@ void main() {
 
     testWidgets('renders with initial field value', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'string_field': 'initial_value'},
-                fields: [
-                  FormixFieldConfig(
-                    id: stringField,
-                    initialValue: 'initial_value',
-                  ),
-                ],
-                child: TestValueSelector<String>(
-                  fieldId: stringField,
-                  builder: (context, value, child) {
-                    return Text('Value: $value');
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'string_field': 'initial_value'},
+              fields: [
+                FormixFieldConfig(
+                  id: stringField,
+                  initialValue: 'initial_value',
                 ),
+              ],
+              child: TestValueSelector<String>(
+                fieldId: stringField,
+                builder: (context, value, child) {
+                  return Text('Value: $value');
+                },
               ),
             ),
           ),
@@ -432,17 +426,15 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: stringField)],
-                child: TestValueSelector<String>(
-                  fieldId: stringField,
-                  builder: (context, value, child) {
-                    return Text('Value: ${value ?? "null"}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: stringField)],
+              child: TestValueSelector<String>(
+                fieldId: stringField,
+                builder: (context, value, child) {
+                  return Text('Value: ${value ?? "null"}');
+                },
               ),
             ),
           ),
@@ -456,20 +448,18 @@ void main() {
       int buildCount = 0;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: stringField)],
-                child: TestValueSelector<String>(
-                  fieldId: stringField,
-                  builder: (context, value, child) {
-                    buildCount++;
-                    return Text(
-                      'Build: $buildCount, Value: ${value ?? "null"}',
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: stringField)],
+              child: TestValueSelector<String>(
+                fieldId: stringField,
+                builder: (context, value, child) {
+                  buildCount++;
+                  return Text(
+                    'Build: $buildCount, Value: ${value ?? "null"}',
+                  );
+                },
               ),
             ),
           ),
@@ -510,18 +500,16 @@ void main() {
 
     testWidgets('works with different data types - int', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'int_field': 42},
-                fields: [FormixFieldConfig(id: intField, initialValue: 42)],
-                child: TestValueSelector<int>(
-                  fieldId: intField,
-                  builder: (context, value, child) {
-                    return Text('Number: $value');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'int_field': 42},
+              fields: [FormixFieldConfig(id: intField, initialValue: 42)],
+              child: TestValueSelector<int>(
+                fieldId: intField,
+                builder: (context, value, child) {
+                  return Text('Number: $value');
+                },
               ),
             ),
           ),
@@ -547,18 +535,16 @@ void main() {
 
     testWidgets('works with different data types - bool', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'bool_field': true},
-                fields: [FormixFieldConfig(id: boolField, initialValue: true)],
-                child: TestValueSelector<bool>(
-                  fieldId: boolField,
-                  builder: (context, value, child) {
-                    return Text('Boolean: $value');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'bool_field': true},
+              fields: [FormixFieldConfig(id: boolField, initialValue: true)],
+              child: TestValueSelector<bool>(
+                fieldId: boolField,
+                builder: (context, value, child) {
+                  return Text('Boolean: $value');
+                },
               ),
             ),
           ),
@@ -584,17 +570,15 @@ void main() {
 
     testWidgets('handles null values correctly', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: stringField)],
-                child: TestValueSelector<String>(
-                  fieldId: stringField,
-                  builder: (context, value, child) {
-                    return Text('Value: ${value ?? "is_null"}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: stringField)],
+              child: TestValueSelector<String>(
+                fieldId: stringField,
+                builder: (context, value, child) {
+                  return Text('Value: ${value ?? "is_null"}');
+                },
               ),
             ),
           ),
@@ -629,20 +613,18 @@ void main() {
       const childWidget = Text('Child Content');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: stringField)],
-                child: TestValueSelector<String>(
-                  fieldId: stringField,
-                  child: childWidget,
-                  builder: (context, value, child) {
-                    return Column(
-                      children: [Text('Value: ${value ?? "null"}'), child!],
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: stringField)],
+              child: TestValueSelector<String>(
+                fieldId: stringField,
+                child: childWidget,
+                builder: (context, value, child) {
+                  return Column(
+                    children: [Text('Value: ${value ?? "null"}'), child!],
+                  );
+                },
               ),
             ),
           ),
@@ -659,14 +641,12 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: TestValueSelector<String>(
-                fieldId: const FormixFieldID<String>('custom_field'),
-                controller: customController,
-                builder: (context, value, child) => Text('Value: $value'),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: TestValueSelector<String>(
+              fieldId: const FormixFieldID<String>('custom_field'),
+              controller: customController,
+              builder: (context, value, child) => Text('Value: $value'),
             ),
           ),
         ),
@@ -679,18 +659,16 @@ void main() {
       int buildCount = 0;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: intField)],
-                child: TestValueSelector<int>(
-                  fieldId: intField,
-                  builder: (context, value, child) {
-                    buildCount++;
-                    return Text('Build: $buildCount, Value: ${value ?? 0}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: intField)],
+              child: TestValueSelector<int>(
+                fieldId: intField,
+                builder: (context, value, child) {
+                  buildCount++;
+                  return Text('Build: $buildCount, Value: ${value ?? 0}');
+                },
               ),
             ),
           ),
@@ -721,15 +699,13 @@ void main() {
 
     testWidgets('dispose cleans up resources', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: stringField)],
-                child: TestValueSelector<String>(
-                  fieldId: stringField,
-                  builder: (context, value, child) => Text('Value: ${value ?? "null"}'),
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: stringField)],
+              child: TestValueSelector<String>(
+                fieldId: stringField,
+                builder: (context, value, child) => Text('Value: ${value ?? "null"}'),
               ),
             ),
           ),
@@ -745,25 +721,23 @@ void main() {
       const listField = FormixFieldID<List<String>>('list_field');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {
-                  'list_field': ['a', 'b', 'c'],
-                },
-                fields: const [
-                  FormixFieldConfig(
-                    id: listField,
-                    initialValue: ['a', 'b', 'c'],
-                  ),
-                ],
-                child: TestValueSelector<List<String>>(
-                  fieldId: listField,
-                  builder: (context, value, child) {
-                    return Text('Length: ${value?.length ?? 0}');
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {
+                'list_field': ['a', 'b', 'c'],
+              },
+              fields: const [
+                FormixFieldConfig(
+                  id: listField,
+                  initialValue: ['a', 'b', 'c'],
                 ),
+              ],
+              child: TestValueSelector<List<String>>(
+                fieldId: listField,
+                builder: (context, value, child) {
+                  return Text('Length: ${value?.length ?? 0}');
+                },
               ),
             ),
           ),
@@ -789,17 +763,15 @@ void main() {
 
     testWidgets('handles empty string values', (tester) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: stringField)],
-                child: TestValueSelector<String>(
-                  fieldId: stringField,
-                  builder: (context, value, child) {
-                    return Text('Value: "${value ?? "null"}"');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: stringField)],
+              child: TestValueSelector<String>(
+                fieldId: stringField,
+                builder: (context, value, child) {
+                  return Text('Value: "${value ?? "null"}"');
+                },
               ),
             ),
           ),
@@ -828,27 +800,25 @@ void main() {
       const field2 = FormixFieldID<String>('field2');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'field1': 'value1', 'field2': 'value2'},
-                fields: const [
-                  FormixFieldConfig(id: field1, initialValue: 'value1'),
-                  FormixFieldConfig(id: field2, initialValue: 'value2'),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'field1': 'value1', 'field2': 'value2'},
+              fields: const [
+                FormixFieldConfig(id: field1, initialValue: 'value1'),
+                FormixFieldConfig(id: field2, initialValue: 'value2'),
+              ],
+              child: Column(
+                children: [
+                  TestValueSelector<String>(
+                    fieldId: field1,
+                    builder: (context, value, child) => Text('Field1: $value'),
+                  ),
+                  TestValueSelector<String>(
+                    fieldId: field2,
+                    builder: (context, value, child) => Text('Field2: $value'),
+                  ),
                 ],
-                child: Column(
-                  children: [
-                    TestValueSelector<String>(
-                      fieldId: field1,
-                      builder: (context, value, child) => Text('Field1: $value'),
-                    ),
-                    TestValueSelector<String>(
-                      fieldId: field2,
-                      builder: (context, value, child) => Text('Field2: $value'),
-                    ),
-                  ],
-                ),
               ),
             ),
           ),

@@ -1,8 +1,6 @@
 /// A type-safe form package for Flutter
 library;
 
-export 'package:flutter_riverpod/flutter_riverpod.dart';
-
 // Core classes
 export 'src/controllers/field_id.dart';
 export 'src/controllers/field.dart';

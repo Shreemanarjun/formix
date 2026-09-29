@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 import '../../formix.dart';
 import 'ancestor_validator.dart';
 
 /// A comprehensive toolset for interacting with [Formix] state and logic.
 ///
 /// [FormixScope] provides reactive accessors (for watching changes) and
-/// action methods (for triggering logic). It abstracts away the complexity
-/// of Riverpod providers while maintaining high performance through granular
-/// selectors.
+/// action methods (for triggering logic). The `watch*` accessors read the
+/// controller's [Signal]/[Computed] slices, so — when called inside a
+/// [FormixBuilder] (which builds within a [SignalBuilder]) — the widget rebuilds
+/// only when the specific slice you read changes.
 class FormixScope {
   /// The [BuildContext] of the widget.
   final BuildContext context;
-
-  /// The [WidgetRef] used to watch and read providers.
-  final WidgetRef ref;
 
   /// The [FormixController] instance for the current form.
   final FormixController controller;
@@ -21,78 +20,63 @@ class FormixScope {
   /// Creates a [FormixScope].
   FormixScope({
     required this.context,
-    required this.ref,
     required this.controller,
   });
 
-  // --- Reactive Accessors (These call ref.watch) ---
+  // --- Reactive Accessors (read signal slices; reactive inside a SignalBuilder) ---
 
   /// Watch a specific field's value.
   ///
   /// Only rebuilds the widget when this specific field's value changes.
-  T? watchValue<T>(FormixFieldID<T> id) {
-    final dynamic val = ref.watch(fieldValueProvider(id));
-    return val as T?;
-  }
+  T? watchValue<T>(FormixFieldID<T> id) => controller.valueSignal(id).value;
 
   /// Watch a specific field's validation state.
-  ValidationResult watchValidation<T>(FormixFieldID<T> id) => ref.watch(fieldValidationProvider(id));
+  ValidationResult watchValidation<T>(FormixFieldID<T> id) => controller.validationSignal(id).value;
 
   /// Watch only the error message of a field. Returns null if valid.
   ///
   /// More efficient than [watchValidation] if you only need the message.
-  String? watchError<T>(FormixFieldID<T> id) => ref.watch(fieldErrorProvider(id));
+  String? watchError<T>(FormixFieldID<T> id) => controller.validationSignal(id).value.errorMessage;
 
   /// Watch if a field is currently being validated (async).
-  bool watchIsValidating<T>(FormixFieldID<T> id) => ref.watch(fieldValidatingProvider(id));
+  bool watchIsValidating<T>(FormixFieldID<T> id) => controller.validationSignal(id).value.isValidating;
 
   /// Watch if a specific field is valid.
-  bool watchFieldIsValid<T>(FormixFieldID<T> id) => ref.watch(fieldIsValidProvider(id));
+  bool watchFieldIsValid<T>(FormixFieldID<T> id) => controller.validationSignal(id).value.isValid;
 
   /// Watch if a specific field is dirty (its value differs from initial).
-  bool watchIsDirty<T>(FormixFieldID<T> id) => ref.watch(fieldDirtyProvider(id));
+  bool watchIsDirty<T>(FormixFieldID<T> id) => controller.dirtySignal(id).value;
 
   /// Watch if a specific field has been touched (focused or modified).
-  bool watchIsTouched<T>(FormixFieldID<T> id) => ref.watch(fieldTouchedProvider(id));
+  bool watchIsTouched<T>(FormixFieldID<T> id) => controller.touchedSignal(id).value;
 
   /// Watch if a specific field is pending (optimistic update or async).
-  bool watchIsPending<T>(FormixFieldID<T> id) => ref.watch(fieldPendingProvider(id));
+  bool watchIsPending<T>(FormixFieldID<T> id) => controller.pendingSignal(id).value;
 
   /// Watch the overall validity of the form.
-  bool get watchIsValid => ref.watch(formValidProvider);
+  bool get watchIsValid => controller.isValidSignal.value;
 
   /// Watch if the form has any modifications at all.
-  bool get watchIsFormDirty => ref.watch(formDirtyProvider);
+  bool get watchIsFormDirty => controller.isDirtySignal.value;
 
   /// Watch if the form is currently submitting or performing async validation.
-  bool get watchIsSubmitting => ref.watch(formSubmittingProvider);
+  bool get watchIsSubmitting => controller.isSubmittingSignal.value;
 
   /// Watch the current step in a multi-step form.
-  int get watchCurrentStep => ref.watch(formCurrentStepProvider);
+  int get watchCurrentStep => controller.currentStepSignal.value;
 
   /// Get the current form state (watches the entire state object).
   ///
   /// WARNING: Using this will cause the widget to rebuild whenever ANY field
   /// in the form changes. For better performance, use field-specific watchers
   /// like [watchValue] or [watchValidation].
-  FormixData get watchState {
-    var provider = Formix.of(context);
-    if (provider == null) {
-      try {
-        provider = ref.watch(currentControllerProvider);
-      } catch (_) {}
-    }
-    if (provider != null) {
-      return ref.watch(provider);
-    }
-    throw StateError('No Formix provider found');
-  }
+  FormixData get watchState => controller.state;
 
   /// Watch if a specific group of fields is valid.
-  bool watchGroupIsValid(String prefix) => ref.watch(groupValidProvider(prefix));
+  bool watchGroupIsValid(String prefix) => controller.groupValidSignal(prefix).value;
 
   /// Watch if a specific group of fields contains any modifications.
-  bool watchGroupIsDirty(String prefix) => ref.watch(groupDirtyProvider(prefix));
+  bool watchGroupIsDirty(String prefix) => controller.groupDirtySignal(prefix).value;
 
   // --- Action Methods (Non-reactive) ---
 
@@ -227,7 +211,7 @@ class FormixScope {
 ///   },
 /// )
 /// ```
-class FormixBuilder extends ConsumerStatefulWidget {
+class FormixBuilder extends StatefulWidget {
   /// Creates a [FormixBuilder].
   const FormixBuilder({super.key, required this.builder, this.select});
 
@@ -239,18 +223,17 @@ class FormixBuilder extends ConsumerStatefulWidget {
   final Object? Function(FormixData state)? select;
 
   @override
-  ConsumerState<FormixBuilder> createState() => _FormixBuilderState();
+  State<FormixBuilder> createState() => _FormixBuilderState();
 }
 
-class _FormixBuilderState extends ConsumerState<FormixBuilder> {
+class _FormixBuilderState extends State<FormixBuilder> {
   FormixScope? _scope;
   FormixController? _previousController;
+  Computed<Object?>? _selected;
 
   @override
   void dispose() {
-    // Clean up any resources if necessary.
-    // Riverpod providers will auto-dispose when this widget is removed
-    // if there are no other listeners.
+    _selected?.dispose();
     super.dispose();
   }
 
@@ -263,36 +246,23 @@ class _FormixBuilderState extends ConsumerState<FormixBuilder> {
 
     if (errorWidget != null) return errorWidget;
 
-    final provider = Formix.of(context)!;
+    final controller = Formix.of(context)!;
 
-    try {
-      // Rebuild only when selected state changes if select is provided
-      if (widget.select != null) {
-        ref.watch(provider.select(widget.select!));
-      }
-
-      // We watch the notifier so we get the new controller if it's recreated.
-      final controller = ref.watch(provider.notifier);
-
-      // Cache the scope to prevent unnecessary allocations
-      if (_scope == null || _previousController != controller) {
-        _scope = FormixScope(
-          context: context,
-          ref: ref,
-          controller: controller,
-        );
-        _previousController = controller;
-      }
-
-      return widget.builder(context, _scope!);
-    } catch (e) {
-      return FormixConfigurationErrorWidget(
-        message: 'Failed to initialize FormixBuilder',
-        details: e.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.\n\nExample:\nvoid main() {\n  runApp(ProviderScope(child: MyApp()));\n}'
-            : 'Error: $e',
-      );
+    if (_scope == null || _previousController != controller) {
+      _scope = FormixScope(context: context, controller: controller);
+      _previousController = controller;
+      _selected?.dispose();
+      _selected = widget.select != null ? computed(() => widget.select!(controller.state)) : null;
     }
+
+    return SignalBuilder(
+      builder: (context) {
+        // Subscribe to the selected slice (if provided); scope.watch* calls
+        // inside the builder add their own fine-grained subscriptions.
+        _selected?.value;
+        return widget.builder(context, _scope!);
+      },
+    );
   }
 }
 
@@ -317,7 +287,7 @@ class _FormixBuilderState extends ConsumerState<FormixBuilder> {
 ///   }
 /// }
 /// ```
-abstract class FormixWidget extends ConsumerStatefulWidget {
+abstract class FormixWidget extends StatefulWidget {
   /// Creates a [FormixWidget].
   const FormixWidget({super.key, this.select});
 
@@ -326,16 +296,22 @@ abstract class FormixWidget extends ConsumerStatefulWidget {
   final Object? Function(FormixData state)? select;
 
   @override
-  @mustCallSuper
-  ConsumerState<FormixWidget> createState() => _FormixWidgetState();
+  State<FormixWidget> createState() => _FormixWidgetState();
 
   /// Build the widget based on the provided [FormixScope].
   Widget buildForm(BuildContext context, FormixScope scope);
 }
 
-class _FormixWidgetState extends ConsumerState<FormixWidget> {
+class _FormixWidgetState extends State<FormixWidget> {
   FormixScope? _scope;
   FormixController? _previousController;
+  Computed<Object?>? _selected;
+
+  @override
+  void dispose() {
+    _selected?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -346,34 +322,20 @@ class _FormixWidgetState extends ConsumerState<FormixWidget> {
 
     if (errorWidget != null) return errorWidget;
 
-    final provider = Formix.of(context)!;
+    final controller = Formix.of(context)!;
 
-    try {
-      // Rebuild only when selected state changes if select is provided
-      if (widget.select != null) {
-        ref.watch(provider.select(widget.select!));
-      }
-
-      final controller = ref.watch(provider.notifier);
-
-      // Cache the scope to prevent unnecessary allocations
-      if (_scope == null || _previousController != controller) {
-        _scope = FormixScope(
-          context: context,
-          ref: ref,
-          controller: controller,
-        );
-        _previousController = controller;
-      }
-
-      return widget.buildForm(context, _scope!);
-    } catch (e) {
-      return FormixConfigurationErrorWidget(
-        message: 'Failed to initialize ${widget.runtimeType}',
-        details: e.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.\n\nExample:\nvoid main() {\n  runApp(ProviderScope(child: MyApp()));\n}'
-            : 'Error: $e',
-      );
+    if (_scope == null || _previousController != controller) {
+      _scope = FormixScope(context: context, controller: controller);
+      _previousController = controller;
+      _selected?.dispose();
+      _selected = widget.select != null ? computed(() => widget.select!(controller.state)) : null;
     }
+
+    return SignalBuilder(
+      builder: (context) {
+        _selected?.value;
+        return widget.buildForm(context, _scope!);
+      },
+    );
   }
 }

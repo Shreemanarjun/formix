@@ -9,30 +9,28 @@ void main() {
       const fieldB = FormixFieldID<String>('b');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    return Column(
-                      children: [
-                        const FormixTextFormField(
-                          key: Key('A'),
-                          fieldId: fieldA,
-                        ),
-                        const FormixTextFormField(
-                          key: Key('B'),
-                          fieldId: fieldB,
-                        ),
-                        ElevatedButton(
-                          onPressed: () => scope.focusField(fieldB),
-                          child: const Text('Focus B'),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  return Column(
+                    children: [
+                      const FormixTextFormField(
+                        key: Key('A'),
+                        fieldId: fieldA,
+                      ),
+                      const FormixTextFormField(
+                        key: Key('B'),
+                        fieldId: fieldB,
+                      ),
+                      ElevatedButton(
+                        onPressed: () => scope.focusField(fieldB),
+                        child: const Text('Focus B'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -59,36 +57,34 @@ void main() {
       const fieldB = FormixFieldID<String>('b');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    return Column(
-                      children: [
-                        ElevatedButton(
-                          onPressed: () => scope.scrollToField(fieldB),
-                          child: const Text('Scroll to B'),
-                        ),
-                        const Expanded(
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
-                                SizedBox(height: 1000),
-                                FormixTextFormField(
-                                  key: Key('B'),
-                                  fieldId: fieldB,
-                                ),
-                                SizedBox(height: 1000),
-                              ],
-                            ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  return Column(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () => scope.scrollToField(fieldB),
+                        child: const Text('Scroll to B'),
+                      ),
+                      const Expanded(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            children: [
+                              SizedBox(height: 1000),
+                              FormixTextFormField(
+                                key: Key('B'),
+                                fieldId: fieldB,
+                              ),
+                              SizedBox(height: 1000),
+                            ],
                           ),
                         ),
-                      ],
-                    );
-                  },
-                ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -115,46 +111,44 @@ void main() {
       const fieldB = FormixFieldID<String>('b');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig<String>(
-                    id: fieldA,
-                    initialValue: '',
-                    validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
-                  ),
-                  FormixFieldConfig<String>(
-                    id: fieldB,
-                    initialValue: '',
-                    validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
-                  ),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    return Column(
-                      children: [
-                        const FormixTextFormField(
-                          key: Key('A'),
-                          fieldId: fieldA,
-                        ),
-                        const FormixTextFormField(
-                          key: Key('B'),
-                          fieldId: fieldB,
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            if (!scope.validate()) {
-                              scope.focusFirstError();
-                            }
-                          },
-                          child: const Text('Fix Errors'),
-                        ),
-                      ],
-                    );
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig<String>(
+                  id: fieldA,
+                  initialValue: '',
+                  validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
                 ),
+                FormixFieldConfig<String>(
+                  id: fieldB,
+                  initialValue: '',
+                  validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
+                ),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  return Column(
+                    children: [
+                      const FormixTextFormField(
+                        key: Key('A'),
+                        fieldId: fieldA,
+                      ),
+                      const FormixTextFormField(
+                        key: Key('B'),
+                        fieldId: fieldB,
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (!scope.validate()) {
+                            scope.focusFirstError();
+                          }
+                        },
+                        child: const Text('Fix Errors'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),

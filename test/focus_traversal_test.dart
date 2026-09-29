@@ -11,33 +11,31 @@ void main() {
 
     testWidgets('Focus moves from Text -> Dropdown -> Text via Next action', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig<String>(id: field1, initialValue: ''),
-                  FormixFieldConfig<String>(id: field2, initialValue: 'A'),
-                  FormixFieldConfig<String>(id: field3, initialValue: ''),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig<String>(id: field1, initialValue: ''),
+                FormixFieldConfig<String>(id: field2, initialValue: 'A'),
+                FormixFieldConfig<String>(id: field3, initialValue: ''),
+              ],
+              child: Column(
+                children: [
+                  FormixTextFormField(
+                    fieldId: field1,
+                    textInputAction: TextInputAction.next,
+                  ),
+                  FormixDropdownFormField<String>(
+                    fieldId: field2,
+                    items: [
+                      DropdownMenuItem(value: 'A', child: Text('Alpha')),
+                      DropdownMenuItem(value: 'B', child: Text('Beta')),
+                    ],
+                  ),
+                  FormixTextFormField(
+                    fieldId: field3,
+                  ),
                 ],
-                child: Column(
-                  children: [
-                    FormixTextFormField(
-                      fieldId: field1,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    FormixDropdownFormField<String>(
-                      fieldId: field2,
-                      items: [
-                        DropdownMenuItem(value: 'A', child: Text('Alpha')),
-                        DropdownMenuItem(value: 'B', child: Text('Beta')),
-                      ],
-                    ),
-                    FormixTextFormField(
-                      fieldId: field3,
-                    ),
-                  ],
-                ),
               ),
             ),
           ),

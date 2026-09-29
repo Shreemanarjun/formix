@@ -11,26 +11,24 @@ void main() {
     const fieldId = FormixFieldID<String>('role');
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              autovalidateMode: FormixAutovalidateMode.always,
-              fields: [
-                FormixFieldConfig<String>(
-                  id: fieldId,
-                  initialValue: '',
-                  validator: (val) => (val == null || val.isEmpty) ? 'Required' : null,
-                ),
-              ],
-              child: const FormixDropdownFormField<String>(
-                fieldId: fieldId,
-                items: [
-                  DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                  DropdownMenuItem(value: 'user', child: Text('User')),
-                ],
-                decoration: InputDecoration(labelText: 'Role'),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            autovalidateMode: FormixAutovalidateMode.always,
+            fields: [
+              FormixFieldConfig<String>(
+                id: fieldId,
+                initialValue: '',
+                validator: (val) => (val == null || val.isEmpty) ? 'Required' : null,
               ),
+            ],
+            child: const FormixDropdownFormField<String>(
+              fieldId: fieldId,
+              items: [
+                DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                DropdownMenuItem(value: 'user', child: Text('User')),
+              ],
+              decoration: InputDecoration(labelText: 'Role'),
             ),
           ),
         ),

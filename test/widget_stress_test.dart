@@ -13,30 +13,28 @@ void main() {
       int rebuildCount = 0;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'stress_field': 'initial'},
-                child: StatefulBuilder(
-                  builder: (context, setState) {
-                    rebuildCount++;
-                    return Column(
-                      children: [
-                        FormixTextFormField(
-                          fieldId: fieldId,
-                          decoration: InputDecoration(
-                            labelText: 'Rebuild $rebuildCount',
-                          ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'stress_field': 'initial'},
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  rebuildCount++;
+                  return Column(
+                    children: [
+                      FormixTextFormField(
+                        fieldId: fieldId,
+                        decoration: InputDecoration(
+                          labelText: 'Rebuild $rebuildCount',
                         ),
-                        ElevatedButton(
-                          onPressed: () => setState(() {}),
-                          child: const Text('Rebuild'),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => setState(() {}),
+                        child: const Text('Rebuild'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -71,19 +69,17 @@ void main() {
       final stopwatch = Stopwatch()..start();
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: ListView.builder(
-                  itemCount: fieldCount,
-                  itemBuilder: (context, index) {
-                    return FormixTextFormField(
-                      fieldId: FormixFieldID('field_$index'),
-                      initialValue: 'value_$index',
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: ListView.builder(
+                itemCount: fieldCount,
+                itemBuilder: (context, index) {
+                  return FormixTextFormField(
+                    fieldId: FormixFieldID('field_$index'),
+                    initialValue: 'value_$index',
+                  );
+                },
               ),
             ),
           ),
@@ -105,11 +101,9 @@ void main() {
       const fieldId = FormixFieldID<String>('typing_field');
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(child: FormixTextFormField(fieldId: fieldId)),
-            ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(child: FormixTextFormField(fieldId: fieldId)),
           ),
         ),
       );
@@ -151,21 +145,19 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = scope.controller;
-                    return ValueListenableBuilder<bool>(
-                      valueListenable: showField,
-                      builder: (context, show, _) {
-                        return show ? const FormixTextFormField(fieldId: fieldId) : Container();
-                      },
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = scope.controller;
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: showField,
+                    builder: (context, show, _) {
+                      return show ? const FormixTextFormField(fieldId: fieldId) : Container();
+                    },
+                  );
+                },
               ),
             ),
           ),
@@ -199,38 +191,36 @@ void main() {
       int buildCount = 0;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'idempotent_field': 'initial'},
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    return Column(
-                      children: [
-                        Builder(
-                          builder: (context) {
-                            scope.watchValue(fieldId); // Watch field
-                            buildCount++;
-                            return Text('Builds: $buildCount');
-                          },
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            scope.controller.setValue(fieldId, 'new_value');
-                          },
-                          child: const Text('Update'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            scope.controller.setValue(fieldId, 'new_value');
-                          },
-                          child: const Text('Update Duplicate'),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'idempotent_field': 'initial'},
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  return Column(
+                    children: [
+                      Builder(
+                        builder: (context) {
+                          scope.watchValue(fieldId); // Watch field
+                          buildCount++;
+                          return Text('Builds: $buildCount');
+                        },
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          scope.controller.setValue(fieldId, 'new_value');
+                        },
+                        child: const Text('Update'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          scope.controller.setValue(fieldId, 'new_value');
+                        },
+                        child: const Text('Update Duplicate'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -259,26 +249,24 @@ void main() {
       const dependentCount = 100;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'source': 'start'},
-                child: ListView.builder(
-                  itemCount: dependentCount + 1,
-                  itemBuilder: (context, index) {
-                    if (index == 0) {
-                      return const FormixTextFormField(fieldId: sourceField);
-                    }
-                    final dependentId = FormixFieldID<String>('dep_$index');
-                    return FormixBuilder(
-                      builder: (context, scope) {
-                        final sourceVal = scope.watchValue(sourceField);
-                        return Text('$dependentId: $sourceVal');
-                      },
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'source': 'start'},
+              child: ListView.builder(
+                itemCount: dependentCount + 1,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return const FormixTextFormField(fieldId: sourceField);
+                  }
+                  final dependentId = FormixFieldID<String>('dep_$index');
+                  return FormixBuilder(
+                    builder: (context, scope) {
+                      final sourceVal = scope.watchValue(sourceField);
+                      return Text('$dependentId: $sourceVal');
+                    },
+                  );
+                },
               ),
             ),
           ),

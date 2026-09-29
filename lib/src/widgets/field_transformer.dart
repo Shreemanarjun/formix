@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 
 import '../../formix.dart';
 
@@ -17,7 +18,7 @@ import '../../formix.dart';
 ///   transform: (text) => text?.length ?? 0,
 /// )
 /// ```
-class FormixFieldTransformer<T, S> extends ConsumerStatefulWidget {
+class FormixFieldTransformer<T, S> extends StatefulWidget {
   /// Creates a [FormixFieldTransformer].
   const FormixFieldTransformer({
     super.key,
@@ -42,27 +43,20 @@ class FormixFieldTransformer<T, S> extends ConsumerStatefulWidget {
   final Object? Function(T? value)? select;
 
   @override
-  ConsumerState<FormixFieldTransformer<T, S>> createState() => _FormixFieldTransformerState<T, S>();
+  State<FormixFieldTransformer<T, S>> createState() => _FormixFieldTransformerState<T, S>();
 }
 
-class _FormixFieldTransformerState<T, S> extends ConsumerState<FormixFieldTransformer<T, S>> {
+class _FormixFieldTransformerState<T, S> extends State<FormixFieldTransformer<T, S>> {
   FormixController? _controller;
   Object? _initializationError;
+  VoidCallback? _disposeEffect;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    var provider = Formix.of(context);
-    if (provider == null) {
-      try {
-        provider = ref.watch(currentControllerProvider);
-      } catch (_) {
-        // ProviderScope missing
-      }
-    }
-
-    if (provider == null) {
+    final newController = Formix.controllerOf(context);
+    if (newController == null) {
       if (mounted) {
         setState(() {
           _initializationError = 'FormixFieldTransformer used outside of Formix';
@@ -71,23 +65,24 @@ class _FormixFieldTransformerState<T, S> extends ConsumerState<FormixFieldTransf
       return;
     }
 
-    // We don't watch the provider here to avoid unnecessary rebuilds
-    // The ref.listen in build() handles granular updates
-    try {
-      final newController = ref.read(provider.notifier);
-      if (newController != _controller) {
-        _controller = newController;
-        // Initial transform
-        scheduleMicrotask(_transformValue);
-      }
-      _initializationError = null;
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _initializationError = e;
-        });
-      }
+    if (newController != _controller) {
+      _controller = newController;
+      _wireEffect();
     }
+    _initializationError = null;
+  }
+
+  /// Subscribes to the source field; the effect re-runs (and re-transforms)
+  /// whenever the source value (or its selected part) changes.
+  void _wireEffect() {
+    _disposeEffect?.call();
+    final controller = _controller;
+    if (controller == null) return;
+    _disposeEffect = effect(() {
+      final value = controller.valueSignal(widget.sourceField).value;
+      if (widget.select != null) widget.select!(value);
+      _transformValue();
+    });
   }
 
   void _transformValue() {
@@ -127,9 +122,15 @@ class _FormixFieldTransformerState<T, S> extends ConsumerState<FormixFieldTransf
 
     // Check if source or target field changed
     if (oldWidget.sourceField != widget.sourceField || oldWidget.targetField != widget.targetField) {
-      // Re-transform with new fields
-      scheduleMicrotask(_transformValue);
+      // Rewire the effect (and re-transform) with the new fields.
+      _wireEffect();
     }
+  }
+
+  @override
+  void dispose() {
+    _disposeEffect?.call();
+    super.dispose();
   }
 
   @override
@@ -143,17 +144,7 @@ class _FormixFieldTransformerState<T, S> extends ConsumerState<FormixFieldTransf
       );
     }
 
-    // Listen to source field reactively using granular selector
-    final provider = fieldValueProvider(widget.sourceField);
-    if (widget.select != null) {
-      ref.listen(
-        provider.select((value) => widget.select!(value as T?)),
-        (_, __) => _transformValue(),
-      );
-    } else {
-      ref.listen(provider, (_, __) => _transformValue());
-    }
-
+    // Reactivity is handled by the effect wired in didChangeDependencies.
     return const SizedBox.shrink();
   }
 }

@@ -14,41 +14,27 @@ class TestFormixController extends FormixController {
   }
 }
 
-base class DisposalObserver extends ProviderObserver {
-  final List<String> disposedProviders = [];
-
-  @override
-  void didDisposeProvider(ProviderObserverContext context) {
-    if (context.provider.name != null) {
-      disposedProviders.add(context.provider.name!);
-    }
-  }
-}
-
 void main() {
   const navigatorKey = Key('nestedNavigator');
 
   testWidgets('FormixController is disposed when navigating away (keepAlive: false)', (tester) async {
     final controller = TestFormixController();
-    final observer = DisposalObserver();
+    addTearDown(controller.dispose);
 
     await tester.pumpWidget(
-      ProviderScope(
-        observers: [observer],
-        child: MaterialApp(
-          home: Scaffold(
-            body: Navigator(
-              key: navigatorKey,
-              onGenerateRoute: (settings) {
-                return MaterialPageRoute(
-                  builder: (context) => Formix(
-                    controller: controller, // Inject our test controller
-                    keepAlive: false, // Default behavior
-                    child: const SizedBox(),
-                  ),
-                );
-              },
-            ),
+      MaterialApp(
+        home: Scaffold(
+          body: Navigator(
+            key: navigatorKey,
+            onGenerateRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (context) => Formix(
+                  controller: controller, // Inject our test controller
+                  keepAlive: false, // Default behavior
+                  child: const SizedBox(),
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -56,14 +42,14 @@ void main() {
 
     // Initial check: not disposed
     expect(controller.isDisposed, isFalse);
-    expect(observer.disposedProviders, isNot(contains('formControllerProvider')));
 
     // Push a new route to simulate navigation
     final navigator = tester.state<NavigatorState>(find.byKey(navigatorKey));
     navigator.pushReplacement(MaterialPageRoute(builder: (_) => const Text('Page B')));
 
     // Pump to trigger cleanup
-    await tester.pumpAndSettle(); await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
     // In the new ownership model, Formix DOES NOT dispose controllers it didn't create.
     // The caller who provided the controller is now responsible for its disposal.
@@ -72,125 +58,113 @@ void main() {
 
   testWidgets('FormixController is NOT disposed when navigating away if keepAlive: true (External Controller)', (tester) async {
     final controller = TestFormixController();
-    final observer = DisposalObserver();
+    addTearDown(controller.dispose);
 
     await tester.pumpWidget(
-      ProviderScope(
-        observers: [observer],
-        child: MaterialApp(
-          home: Scaffold(
-            body: Navigator(
-              key: navigatorKey,
-              onGenerateRoute: (settings) {
-                return MaterialPageRoute(
-                  builder: (context) => Formix(
-                    controller: controller,
-                    keepAlive: true,
-                    child: const SizedBox(),
-                  ),
-                );
-              },
-            ),
+      MaterialApp(
+        home: Scaffold(
+          body: Navigator(
+            key: navigatorKey,
+            onGenerateRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (context) => Formix(
+                  controller: controller,
+                  keepAlive: true,
+                  child: const SizedBox(),
+                ),
+              );
+            },
           ),
         ),
       ),
     );
 
     expect(controller.isDisposed, isFalse);
-    expect(observer.disposedProviders, isNot(contains('formControllerProvider')));
 
     // Navigate away
     final navigator = tester.state<NavigatorState>(find.byKey(navigatorKey));
     navigator.pushReplacement(MaterialPageRoute(builder: (_) => const Text('Page B')));
 
-    await tester.pumpAndSettle(); await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
-    // Check if NOT disposed
+    // Check if NOT disposed: an externally-owned controller is preserved.
     expect(controller.isDisposed, isFalse);
-    // Note: The provider inside the nested scope is disposed, but the controller is preserved.
   });
 
   testWidgets('Internal FormixController is disposed when navigating away (keepAlive: false)', (tester) async {
-    final observer = DisposalObserver();
     final GlobalKey<FormixState> formKey = GlobalKey<FormixState>();
 
     await tester.pumpWidget(
-      ProviderScope(
-        observers: [observer],
-        child: MaterialApp(
-          home: Scaffold(
-            body: Navigator(
-              key: navigatorKey,
-              onGenerateRoute: (settings) {
-                return MaterialPageRoute(
-                  builder: (context) => Formix(
-                    key: formKey,
-                    keepAlive: false,
-                    child: const SizedBox(),
-                  ),
-                );
-              },
-            ),
+      MaterialApp(
+        home: Scaffold(
+          body: Navigator(
+            key: navigatorKey,
+            onGenerateRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (context) => Formix(
+                  key: formKey,
+                  keepAlive: false,
+                  child: const SizedBox(),
+                ),
+              );
+            },
           ),
         ),
       ),
     );
 
-    // Ensure it's created
+    // Capture the internally-owned controller before navigating away.
     final controller = formKey.currentState?.controller;
-    // We access dependencies to ensure provider is built
-    formKey.currentState?.provider;
     expect(controller, isNotNull);
+    expect(controller!.mounted, isTrue);
 
     // Navigate away
     final navigator = tester.state<NavigatorState>(find.byKey(navigatorKey));
     navigator.pushReplacement(MaterialPageRoute(builder: (_) => const Text('Page B')));
 
-    await tester.pumpAndSettle(); await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
-    // Check if the provider was disposed
-    expect(observer.disposedProviders, contains('formControllerProvider'));
+    // The internally-owned controller should have been disposed on unmount.
+    expect(controller.mounted, isFalse);
   });
 
   testWidgets('Internal FormixController is NOT disposed when navigating away if keepAlive: true', (tester) async {
-    final observer = DisposalObserver();
     final GlobalKey<FormixState> formKey = GlobalKey<FormixState>();
 
     await tester.pumpWidget(
-      ProviderScope(
-        observers: [observer],
-        child: MaterialApp(
-          home: Scaffold(
-            body: Navigator(
-              key: navigatorKey,
-              onGenerateRoute: (settings) {
-                return MaterialPageRoute(
-                  builder: (context) => Formix(
-                    key: formKey,
-                    keepAlive: true,
-                    child: const SizedBox(),
-                  ),
-                );
-              },
-            ),
+      MaterialApp(
+        home: Scaffold(
+          body: Navigator(
+            key: navigatorKey,
+            onGenerateRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (context) => Formix(
+                  key: formKey,
+                  keepAlive: true,
+                  child: const SizedBox(),
+                ),
+              );
+            },
           ),
         ),
       ),
     );
 
-    // Ensure it's created
+    // Capture the internally-owned controller before navigating away.
     final controller = formKey.currentState?.controller;
-    // We access dependencies to ensure provider is built
-    formKey.currentState?.provider;
     expect(controller, isNotNull);
+    expect(controller!.mounted, isTrue);
 
     // Navigate away
     final navigator = tester.state<NavigatorState>(find.byKey(navigatorKey));
     navigator.pushReplacement(MaterialPageRoute(builder: (_) => const Text('Page B')));
 
-    await tester.pumpAndSettle(); await tester.pump(const Duration(seconds: 1));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 1));
 
-    // Check if the provider was disposed
-    expect(observer.disposedProviders, isNot(contains('formControllerProvider')));
+    // With keepAlive: true the controller should be preserved.
+    expect(controller.mounted, isTrue);
   });
 }

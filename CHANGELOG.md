@@ -1,3 +1,23 @@
+## 0.2.0 - Signals core (Breaking)
+
+Formix now runs on [signals](https://pub.dev/packages/signals_flutter) instead of Riverpod.
+The form logic, validators, and widget API are unchanged; the reactivity engine is faster
+and simpler. See `MIGRATION.md` for the full upgrade guide.
+
+- **No more `ProviderScope`**: `Formix` is fully self-contained. Removed the
+  `flutter_riverpod` dependency and the re-export from `package:formix`.
+- **Signals core**: whole-form state is a single `Signal<FormixData>`; per-field/aspect
+  slices are exposed as memoized `Computed`s (`valueSignal`, `validationSignal`,
+  `dirtySignal`, `touchedSignal`, `pendingSignal`, `isValidSignal`, `isDirtySignal`,
+  `isSubmittingSignal`, `currentStepSignal`, `groupValidSignal`, `groupDirtySignal`) for
+  surgical rebuilds. Widgets rebuild via `SignalBuilder`.
+- **Removed**: all `*Provider` globals and `formControllerProvider`-family plumbing.
+  Construct controllers directly with `FormixController(...)` / `FormixController.fromParameter(...)`.
+- **Renamed**: `RiverpodFormController` → `FormixBaseController`.
+- **Global messages**: `formixMessagesProvider` → the reactive `formixGlobalMessages` signal.
+  Set `formixGlobalMessages.value = MyMessages()` on a language change; all forms re-validate.
+- `FormixAsyncField.asyncValue` now uses `AsyncState<T>` (signals) instead of `AsyncValue<T>`.
+
 ## 0.1.3 - Dev (Unreleased)
 - **Message Updates & Localization**:
   - Re-introduced optimization to prevent form controller resets during global message/locale updates by switching to `ref.listen` and excluding `messages` from `FormixParameter` equality.

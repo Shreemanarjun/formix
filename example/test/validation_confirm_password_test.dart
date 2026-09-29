@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:formix/formix.dart';
 import 'package:example/ui/validation_examples/validation_examples_page.dart';
 
 /// Pumps the [ValidationExamplesContent] inside a full test harness.
@@ -8,11 +7,7 @@ Future<void> _pumpPage(WidgetTester tester) async {
   // Tall enough to see email, password, and confirm password without scrolling.
   await tester.binding.setSurfaceSize(const Size(600, 1200));
   await tester.pumpWidget(
-    const ProviderScope(
-      child: MaterialApp(
-        home: Scaffold(body: ValidationExamplesContent()),
-      ),
-    ),
+    const MaterialApp(home: Scaffold(body: ValidationExamplesContent())),
   );
   await tester.pumpAndSettle();
 }
@@ -57,21 +52,20 @@ void main() {
 
     // ── Correct behaviour ─────────────────────────────────────────────────────
 
-    testWidgets(
-      'shows no error when confirm password matches password',
-      (tester) async {
-        await _pumpPage(tester);
+    testWidgets('shows no error when confirm password matches password', (
+      tester,
+    ) async {
+      await _pumpPage(tester);
 
-        await tester.enterText(_field('Password'), 'Secret1A');
-        await tester.pumpAndSettle();
+      await tester.enterText(_field('Password'), 'Secret1A');
+      await tester.pumpAndSettle();
 
-        await tester.enterText(_field('Confirm Password'), 'Secret1A');
-        await tester.pumpAndSettle();
+      await tester.enterText(_field('Confirm Password'), 'Secret1A');
+      await tester.pumpAndSettle();
 
-        expect(find.text('Passwords do not match'), findsNothing);
-        expect(find.text('Please confirm your password'), findsNothing);
-      },
-    );
+      expect(find.text('Passwords do not match'), findsNothing);
+      expect(find.text('Please confirm your password'), findsNothing);
+    });
 
     testWidgets(
       'shows "Passwords do not match" when confirm password differs',
@@ -88,24 +82,23 @@ void main() {
       },
     );
 
-    testWidgets(
-      'shows required error when confirm password is left empty',
-      (tester) async {
-        await _pumpPage(tester);
+    testWidgets('shows required error when confirm password is left empty', (
+      tester,
+    ) async {
+      await _pumpPage(tester);
 
-        // Type something into password so confirmPassword's dependsOn fires
-        await tester.enterText(_field('Password'), 'Secret1A');
-        await tester.pumpAndSettle();
+      // Type something into password so confirmPassword's dependsOn fires
+      await tester.enterText(_field('Password'), 'Secret1A');
+      await tester.pumpAndSettle();
 
-        // Touch the confirm field then blur it without typing
-        await tester.tap(_field('Confirm Password'));
-        await tester.pumpAndSettle();
-        await tester.tap(_field('Password')); // blur confirm
-        await tester.pumpAndSettle();
+      // Touch the confirm field then blur it without typing
+      await tester.tap(_field('Confirm Password'));
+      await tester.pumpAndSettle();
+      await tester.tap(_field('Password')); // blur confirm
+      await tester.pumpAndSettle();
 
-        expect(find.text('Please confirm your password'), findsOneWidget);
-      },
-    );
+      expect(find.text('Please confirm your password'), findsOneWidget);
+    });
 
     testWidgets(
       'clears "Passwords do not match" error after correcting confirm password',

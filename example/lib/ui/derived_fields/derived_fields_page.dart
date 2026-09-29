@@ -2,25 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:formix/formix.dart';
 
 // Derived Fields Example
-class DerivedFieldsExample extends ConsumerWidget {
+class DerivedFieldsExample extends StatelessWidget {
   const DerivedFieldsExample({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return const DerivedFieldsExampleContent();
   }
 }
 
-class DerivedFieldsExampleContent extends ConsumerStatefulWidget {
+class DerivedFieldsExampleContent extends StatefulWidget {
   const DerivedFieldsExampleContent({super.key});
 
   @override
-  ConsumerState<DerivedFieldsExampleContent> createState() =>
+  State<DerivedFieldsExampleContent> createState() =>
       _DerivedFieldsExampleContentState();
 }
 
 class _DerivedFieldsExampleContentState
-    extends ConsumerState<DerivedFieldsExampleContent> {
+    extends State<DerivedFieldsExampleContent> {
   @override
   Widget build(BuildContext context) {
     return Formix(
@@ -143,10 +143,10 @@ class _DerivedFieldsExampleContentState
                     style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(width: 8),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final fullName = ref.watch(
-                        fieldValueProvider(FormixFieldID<String>('fullName')),
+                  FormixBuilder(
+                    builder: (context, scope) {
+                      final fullName = scope.watchValue(
+                        FormixFieldID<String>('fullName'),
                       );
                       return Text(
                         fullName?.isEmpty ?? true
@@ -193,11 +193,9 @@ class _DerivedFieldsExampleContentState
                     style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(width: 8),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final age = ref.watch(
-                        fieldValueProvider(FormixFieldID<int>('age')),
-                      );
+                  FormixBuilder(
+                    builder: (context, scope) {
+                      final age = scope.watchValue(FormixFieldID<int>('age'));
                       return Text(
                         '$age years old',
                         style: const TextStyle(fontWeight: FontWeight.bold),
@@ -257,10 +255,10 @@ class _DerivedFieldsExampleContentState
                     style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(width: 8),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final total = ref.watch(
-                        fieldValueProvider(FormixFieldID<double>('total')),
+                  FormixBuilder(
+                    builder: (context, scope) {
+                      final total = scope.watchValue(
+                        FormixFieldID<double>('total'),
                       );
                       return Text(
                         '\$${total?.toStringAsFixed(2) ?? '0.00'}',
@@ -300,10 +298,10 @@ class _DerivedFieldsExampleContentState
                     style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(width: 8),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final finalTotal = ref.watch(
-                        fieldValueProvider(FormixFieldID<double>('finalTotal')),
+                  FormixBuilder(
+                    builder: (context, scope) {
+                      final finalTotal = scope.watchValue(
+                        FormixFieldID<double>('finalTotal'),
                       );
                       return Text(
                         '\$${finalTotal?.toStringAsFixed(2) ?? '0.00'}',
@@ -319,18 +317,12 @@ class _DerivedFieldsExampleContentState
 
             // Custom Field Derivation Implementation
             // This demonstrates how to implement field derivation without circular dependencies
-            Consumer(
-              builder: (context, ref, child) {
+            FormixBuilder(
+              builder: (context, scope) {
                 final firstName =
-                    ref.watch(
-                      fieldValueProvider(FormixFieldID<String>('firstName')),
-                    ) ??
-                    '';
+                    scope.watchValue(FormixFieldID<String>('firstName')) ?? '';
                 final lastName =
-                    ref.watch(
-                      fieldValueProvider(FormixFieldID<String>('lastName')),
-                    ) ??
-                    '';
+                    scope.watchValue(FormixFieldID<String>('lastName')) ?? '';
                 final fullName = '$firstName $lastName'.trim();
 
                 // Update the derived field value
@@ -348,17 +340,12 @@ class _DerivedFieldsExampleContentState
               },
             ),
 
-            Consumer(
-              builder: (context, ref, child) {
+            FormixBuilder(
+              builder: (context, scope) {
                 final birthYear =
-                    ref.watch(
-                      fieldValueProvider(FormixFieldID<int>('birthYear')),
-                    ) ??
-                    2000;
+                    scope.watchValue(FormixFieldID<int>('birthYear')) ?? 2000;
                 final currentYear =
-                    ref.watch(
-                      fieldValueProvider(FormixFieldID<int>('currentYear')),
-                    ) ??
+                    scope.watchValue(FormixFieldID<int>('currentYear')) ??
                     DateTime.now().year;
                 final age = currentYear - birthYear;
 
@@ -373,18 +360,12 @@ class _DerivedFieldsExampleContentState
               },
             ),
 
-            Consumer(
-              builder: (context, ref, child) {
+            FormixBuilder(
+              builder: (context, scope) {
                 final price =
-                    ref.watch(
-                      fieldValueProvider(FormixFieldID<double>('price')),
-                    ) ??
-                    0.0;
+                    scope.watchValue(FormixFieldID<double>('price')) ?? 0.0;
                 final quantity =
-                    ref.watch(
-                      fieldValueProvider(FormixFieldID<int>('quantity')),
-                    ) ??
-                    1;
+                    scope.watchValue(FormixFieldID<int>('quantity')) ?? 1;
                 final total = price * quantity;
 
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -398,18 +379,13 @@ class _DerivedFieldsExampleContentState
               },
             ),
 
-            Consumer(
-              builder: (context, ref, child) {
+            FormixBuilder(
+              builder: (context, scope) {
                 final total =
-                    ref.watch(
-                      fieldValueProvider(FormixFieldID<double>('total')),
-                    ) ??
-                    0.0;
+                    scope.watchValue(FormixFieldID<double>('total')) ?? 0.0;
                 final discountPercent =
-                    ref.watch(
-                      fieldValueProvider(
-                        FormixFieldID<double>('discountPercent'),
-                      ),
+                    scope.watchValue(
+                      FormixFieldID<double>('discountPercent'),
                     ) ??
                     0.0;
                 final discountAmount = total * (discountPercent / 100);

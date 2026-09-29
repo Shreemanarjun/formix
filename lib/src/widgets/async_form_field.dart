@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 import '../../formix.dart';
 
 /// A widget that handles asynchronous values for a form field.
 ///
-/// It waits for either an [asyncValue] (from Riverpod) or a [future] to resolve,
+/// It waits for either an [asyncValue] (an [AsyncState]) or a [future] to resolve,
 /// then populates the form field value and handles validation.
 ///
 /// This is particularly useful for:
@@ -83,10 +84,10 @@ class FormixAsyncField<T> extends FormixFieldWidget<T> {
   /// You must call `state.refresh()` to trigger the loading.
   final bool manual;
 
-  /// An [AsyncValue] providing the data. Usually from `ref.watch(provider)`.
-  final AsyncValue<T>? asyncValue;
+  /// An [AsyncState] providing the data (e.g. from an async signal).
+  final AsyncState<T>? asyncValue;
 
-  /// A [Future] that resolves to the data. Use this if not using Riverpod providers directly.
+  /// A [Future] that resolves to the data.
   final Future<T>? future;
 
   /// Optional callback to generate a new future when `refresh()` is called.
@@ -118,10 +119,10 @@ class FormixAsyncField<T> extends FormixFieldWidget<T> {
 
 /// State for [FormixAsyncField].
 class FormixAsyncFieldState<T> extends FormixFieldWidgetState<T> {
-  AsyncValue<T> _asyncState = const AsyncValue.loading();
+  AsyncState<T> _asyncState = AsyncState.loading();
 
   /// The current state of the asynchronous operation.
-  AsyncValue<T> get asyncState => _asyncState;
+  AsyncState<T> get asyncState => _asyncState;
 
   int _activeFutureVersion = 0;
   Timer? _debounceTimer;
@@ -182,7 +183,7 @@ class FormixAsyncFieldState<T> extends FormixFieldWidgetState<T> {
 
     if (!widget.keepPreviousData || !_asyncState.hasValue) {
       setState(() {
-        _asyncState = const AsyncValue.loading();
+        _asyncState = AsyncState.loading();
       });
       _updatePendingState(true);
     }
@@ -191,7 +192,7 @@ class FormixAsyncFieldState<T> extends FormixFieldWidgetState<T> {
         .then((data) {
           if (mounted && version == _activeFutureVersion) {
             setState(() {
-              _asyncState = AsyncValue.data(data);
+              _asyncState = AsyncState.data(data);
             });
             _updatePendingState(false);
             _syncValue();
@@ -200,7 +201,7 @@ class FormixAsyncFieldState<T> extends FormixFieldWidgetState<T> {
         .catchError((e, st) {
           if (mounted && version == _activeFutureVersion) {
             setState(() {
-              _asyncState = AsyncValue.error(e, st);
+              _asyncState = AsyncState.error(e, st);
             });
             _updatePendingState(false);
           }
@@ -283,9 +284,9 @@ class FormixAsyncFieldState<T> extends FormixFieldWidgetState<T> {
   Widget build(BuildContext context) {
     final widget = this.widget as FormixAsyncField<T>;
 
-    return _asyncState.when(
+    return _asyncState.map(
       data: (_) => widget.builder(context, this),
-      error: (e, _) => widget.asyncErrorBuilder?.call(context, e) ?? Text('Error: $e'),
+      error: (e, [_]) => widget.asyncErrorBuilder?.call(context, e) ?? Text('Error: $e'),
       loading: () => widget.loadingBuilder?.call(context) ?? const Center(child: CircularProgressIndicator()),
     );
   }

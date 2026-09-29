@@ -1,3 +1,5 @@
+import 'package:signals_flutter/signals_flutter.dart';
+
 // Localization exports
 export 'i18n/formix_localizations.dart';
 export 'i18n/messages_de.dart';
@@ -6,7 +8,15 @@ export 'i18n/messages_fr.dart';
 export 'i18n/messages_hi.dart';
 export 'i18n/messages_zh.dart';
 
-// No other imports needed for this file as of now.
+/// The global, reactive validation messages used by every form that does not
+/// override them via `Formix(messages: ...)` or `FormixController(messages: ...)`.
+///
+/// Set `formixGlobalMessages.value = MyLocalizedMessages()` (e.g. on a language
+/// change) and all forms watching it will re-validate with the new copy.
+final Signal<FormixMessages> formixGlobalMessages = signal(
+  const DefaultFormixMessages(),
+  options: const SignalOptions(name: 'formixGlobalMessages'),
+);
 
 /// Interface for all validation messages used in the formix library.
 /// Developers can implement this class to provide translations.

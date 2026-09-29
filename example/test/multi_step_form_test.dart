@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:example/ui/multi_step_form/multi_step_form_page.dart';
 
@@ -8,9 +7,7 @@ void main() {
     testWidgets(
       'Step 1 data should persist when navigating to Step 2 and back',
       (tester) async {
-        await tester.pumpWidget(
-          const ProviderScope(child: MaterialApp(home: MultiStepFormPage())),
-        );
+        await tester.pumpWidget(const MaterialApp(home: MultiStepFormPage()));
 
         await tester.pumpAndSettle();
 
@@ -67,9 +64,7 @@ void main() {
     testWidgets('Step 2 data should persist when navigating forward and back', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: MultiStepFormPage())),
-      );
+      await tester.pumpWidget(const MaterialApp(home: MultiStepFormPage()));
 
       await tester.pumpAndSettle();
 
@@ -141,9 +136,7 @@ void main() {
     testWidgets('All steps data should be collected at submission', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: MultiStepFormPage())),
-      );
+      await tester.pumpWidget(const MaterialApp(home: MultiStepFormPage()));
 
       await tester.pumpAndSettle();
 
@@ -223,9 +216,7 @@ void main() {
     testWidgets('Lazy loading: Only current step widgets should be mounted', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: MultiStepFormPage())),
-      );
+      await tester.pumpWidget(const MaterialApp(home: MultiStepFormPage()));
 
       await tester.pumpAndSettle();
 

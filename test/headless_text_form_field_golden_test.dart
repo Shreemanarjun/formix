@@ -8,33 +8,31 @@ void main() {
       const id = FormixFieldID<String>('headless_tff');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(
-                    id: id,
-                    initialValue: '',
-                    validator: (v) => (v?.isEmpty ?? true) ? 'Required Field' : null,
-                  ),
-                ],
-                child: FormixRawTextField<String>(
-                  fieldId: id,
-                  autovalidateMode: FormixAutovalidateMode.always,
-                  valueToString: (v) => v ?? '',
-                  stringToValue: (s) => s,
-                  builder: (context, snapshot) {
-                    return TextFormField(
-                      controller: snapshot.textController,
-                      focusNode: snapshot.focusNode,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        errorText: snapshot.shouldShowError ? snapshot.validation.errorMessage : null,
-                      ),
-                    );
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(
+                  id: id,
+                  initialValue: '',
+                  validator: (v) => (v?.isEmpty ?? true) ? 'Required Field' : null,
                 ),
+              ],
+              child: FormixRawTextField<String>(
+                fieldId: id,
+                autovalidateMode: FormixAutovalidateMode.always,
+                valueToString: (v) => v ?? '',
+                stringToValue: (s) => s,
+                builder: (context, snapshot) {
+                  return TextFormField(
+                    controller: snapshot.textController,
+                    focusNode: snapshot.focusNode,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      errorText: snapshot.shouldShowError ? snapshot.validation.errorMessage : null,
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -51,45 +49,43 @@ void main() {
       const id = FormixFieldID<String>('golden_headless_tff');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              useMaterial3: true,
-              primarySwatch: Colors.blue,
-            ),
-            home: Scaffold(
-              backgroundColor: Colors.white,
-              body: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(32.0),
-                  child: Formix(
-                    fields: [
-                      FormixFieldConfig(
-                        id: id,
-                        initialValue: '',
-                        validator: (v) => (v?.isEmpty ?? true) ? 'Username cannot be empty' : null,
-                      ),
-                    ],
-                    child: FormixRawTextField<String>(
-                      fieldId: id,
-                      autovalidateMode: FormixAutovalidateMode.always,
-                      valueToString: (v) => v ?? '',
-                      stringToValue: (s) => s,
-                      builder: (context, snapshot) {
-                        return TextFormField(
-                          controller: snapshot.textController,
-                          focusNode: snapshot.focusNode,
-                          decoration: InputDecoration(
-                            labelText: 'Username',
-                            hintText: 'Enter your username',
-                            prefixIcon: const Icon(Icons.person),
-                            border: const OutlineInputBorder(),
-                            errorText: snapshot.shouldShowError ? snapshot.validation.errorMessage : null,
-                          ),
-                        );
-                      },
+        MaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            useMaterial3: true,
+            primarySwatch: Colors.blue,
+          ),
+          home: Scaffold(
+            backgroundColor: Colors.white,
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Formix(
+                  fields: [
+                    FormixFieldConfig(
+                      id: id,
+                      initialValue: '',
+                      validator: (v) => (v?.isEmpty ?? true) ? 'Username cannot be empty' : null,
                     ),
+                  ],
+                  child: FormixRawTextField<String>(
+                    fieldId: id,
+                    autovalidateMode: FormixAutovalidateMode.always,
+                    valueToString: (v) => v ?? '',
+                    stringToValue: (s) => s,
+                    builder: (context, snapshot) {
+                      return TextFormField(
+                        controller: snapshot.textController,
+                        focusNode: snapshot.focusNode,
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          hintText: 'Enter your username',
+                          prefixIcon: const Icon(Icons.person),
+                          border: const OutlineInputBorder(),
+                          errorText: snapshot.shouldShowError ? snapshot.validation.errorMessage : null,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),

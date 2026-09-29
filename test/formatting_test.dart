@@ -11,29 +11,27 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig<String>(
-                    id: cardNumberField,
-                    label: 'Card Number',
-                    initialValue: '',
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(16),
-                    ],
-                  ),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = Formix.controllerOf(context)!;
-                    return const Column(
-                      children: [FormixTextFormField(fieldId: cardNumberField)],
-                    );
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig<String>(
+                  id: cardNumberField,
+                  label: 'Card Number',
+                  initialValue: '',
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(16),
+                  ],
                 ),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = Formix.controllerOf(context)!;
+                  return const Column(
+                    children: [FormixTextFormField(fieldId: cardNumberField)],
+                  );
+                },
               ),
             ),
           ),
@@ -64,26 +62,24 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig<String>(
-                    id: phoneField,
-                    initialValue: '',
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  ),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = Formix.controllerOf(context)!;
-                    return FormixTextFormField(
-                      fieldId: phoneField,
-                      inputFormatters: [LengthLimitingTextInputFormatter(10)],
-                    );
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig<String>(
+                  id: phoneField,
+                  initialValue: '',
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 ),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = Formix.controllerOf(context)!;
+                  return FormixTextFormField(
+                    fieldId: phoneField,
+                    inputFormatters: [LengthLimitingTextInputFormatter(10)],
+                  );
+                },
               ),
             ),
           ),
