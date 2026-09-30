@@ -679,11 +679,14 @@ class FormixController extends FormixBaseController {
       final context = _contexts[firstErrorKey];
 
       if (error != null && context != null && context.mounted) {
-        final view = View.of(context);
         final directionality = Directionality.of(context);
 
-        SemanticsService.sendAnnouncement(
-          view,
+        // `announce` is available across old and current stable Flutter (the
+        // view-scoped `sendAnnouncement` only exists on newer versions). It is
+        // deprecated on the newest Flutter, but kept intentionally for broad
+        // compatibility.
+        // ignore: deprecated_member_use
+        SemanticsService.announce(
           error,
           directionality,
           assertiveness: Assertiveness.assertive,
