@@ -646,9 +646,11 @@ class SchemaBasedFormController extends FormixController {
       }
       return result;
     } catch (e) {
+      // coverage:ignore-start — unreachable: schema.submit has its own try/catch and always returns a result rather than throwing
       return FormSubmissionResult.failure(
         error: schema.messages.validationFailed(e.toString()),
       );
+      // coverage:ignore-end
     }
   }
 

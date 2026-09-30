@@ -328,6 +328,101 @@ void main() {
       c.setValue(pw, 'xyz');
       expect(c.getValidation(confirm).isValid, isFalse);
     });
+
+    test('dependent field in onBlur mode revalidates when touched (line 805)', () {
+      const pw = FormixFieldID<String>('pw');
+      const confirm = FormixFieldID<String>('confirm');
+      final c = FormixController(
+        initialValue: const {'pw': '', 'confirm': ''},
+        fields: [
+          const FormixField<String>(id: pw, initialValue: ''),
+          FormixField<String>(
+            id: confirm,
+            initialValue: '',
+            dependsOn: [pw],
+            validationMode: FormixAutovalidateMode.onBlur,
+            crossFieldValidator: (v, state) =>
+                v == state.values['pw'] ? null : 'mismatch',
+          ),
+        ],
+        autovalidateMode: FormixAutovalidateMode.onBlur,
+      );
+      addTearDown(c.dispose);
+
+      c.setValue(confirm, 'abc');
+      c.markAsTouched(confirm); // onBlur: touched dependent revalidates
+      c.setValue(pw, 'xyz');
+      expect(c.getValidation(confirm).isValid, isFalse);
+    });
+  });
+
+  group('built-in validator message keys resolve to localized strings', () {
+    test('email / minLength / maxLength / pattern / min / max keys', () {
+      const email = FormixFieldID<String>('email');
+      const short = FormixFieldID<String>('short');
+      const long = FormixFieldID<String>('long');
+      const patt = FormixFieldID<String>('patt');
+      const qty = FormixFieldID<int>('qty');
+      const big = FormixFieldID<int>('big');
+
+      final c = FormixController(
+        initialValue: const {
+          'email': '',
+          'short': '',
+          'long': '',
+          'patt': '',
+          'qty': 0,
+          'big': 0,
+        },
+        fields: [
+          FormixFieldConfig<String>.chain(
+            id: email,
+            rules: FormixValidators.string().email(),
+          ).toField(),
+          FormixFieldConfig<String>.chain(
+            id: short,
+            rules: FormixValidators.string().minLength(5),
+          ).toField(),
+          FormixFieldConfig<String>.chain(
+            id: long,
+            rules: FormixValidators.string().maxLength(2),
+          ).toField(),
+          FormixFieldConfig<String>.chain(
+            id: patt,
+            rules: FormixValidators.string().pattern(RegExp(r'^\d+$')),
+          ).toField(),
+          FormixFieldConfig<int>.chain(
+            id: qty,
+            rules: FormixValidators.number<int>().min(10),
+          ).toField(),
+          FormixFieldConfig<int>.chain(
+            id: big,
+            rules: FormixValidators.number<int>().max(5),
+          ).toField(),
+        ],
+        autovalidateMode: FormixAutovalidateMode.always,
+      );
+      addTearDown(c.dispose);
+
+      c.setValue(email, 'not-an-email');
+      c.setValue(short, 'ab');
+      c.setValue(long, 'abcdef');
+      c.setValue(patt, 'abc');
+      c.setValue(qty, 1);
+      c.setValue(big, 999);
+
+      // Each field should report a resolved (non-key) error message.
+      for (final id in [email, short, long, patt]) {
+        final msg = c.getValidation(id).errorMessage;
+        expect(msg, isNotNull);
+        expect(msg, isNot(startsWith('formix_key_')));
+      }
+      for (final id in [qty, big]) {
+        final msg = c.getValidation(id).errorMessage;
+        expect(msg, isNotNull);
+        expect(msg, isNot(startsWith('formix_key_')));
+      }
+    });
   });
 
   group('sync validator throw is caught', () {
@@ -427,19 +522,32 @@ void main() {
   });
 
   group('setFieldValidating error-count adjustment', () {
-    test('valid -> validating -> valid walks both error-count branches', () {
+    test('errored -> validating clears the error (line 1684)', () {
       const f = FormixFieldID<String>('f');
       final c = FormixController(
-        initialValue: const {'f': 'ok'},
-        fields: [const FormixField<String>(id: f, initialValue: 'ok')],
+        initialValue: const {'f': ''},
+        fields: [
+          FormixField<String>(
+            id: f,
+            initialValue: '',
+            validator: (v) => (v == null || v.isEmpty) ? 'required' : null,
+          ),
+        ],
+        autovalidateMode: FormixAutovalidateMode.always,
       );
       addTearDown(c.dispose);
 
-      // valid -> validating (hits the errorCount++ branch, 1682).
+      // Force an errored state.
+      c.setValue(f, 'x');
+      c.setValue(f, '');
+      c.markAsTouched(f);
+      expect(c.getValidation(f).isValid, isFalse);
+
+      // errored (isValid=false) -> validating (isValid=true) hits the
+      // `!oldRes.isValid && newRes.isValid` decrement branch (1684).
       c.setFieldValidating(f, isValidating: true);
       expect(c.getValidation(f).isValidating, isTrue);
 
-      // validating -> valid (hits the errorCount-- branch, 1684).
       c.setFieldValidating(f, isValidating: false);
       expect(c.getValidation(f).isValid, isTrue);
     });
@@ -529,6 +637,171 @@ void main() {
       // Should not throw despite the listener throwing.
       c.setValue(name, 'x');
       expect(c.getValue(name), 'x');
+    });
+  });
+
+  group('submit waitForPending loop', () {
+    test('submit waits until pending field settles', () async {
+      const f = FormixFieldID<String>('f');
+      final c = FormixController(
+        initialValue: const {'f': ''},
+        fields: [const FormixField<String>(id: f, initialValue: '')],
+      );
+      addTearDown(c.dispose);
+
+      // Put a field into pending so the waitForPending while-loop iterates.
+      c.setPending(f, true);
+
+      var submitted = false;
+      final future = c.submit(
+        onValid: (_) async => submitted = true,
+        waitForPending: true,
+      );
+
+      // Clear pending on the next microtask so the stream emits and the loop
+      // (`await stream.first`) exits.
+      scheduleMicrotask(() => c.setPending(f, false));
+
+      await future;
+      expect(submitted, isTrue);
+    });
+
+    test('debugForceSubmit waits for pending (lines 445/446)', () async {
+      const f = FormixFieldID<String>('f');
+      final c = FormixController(
+        initialValue: const {'f': ''},
+        fields: [const FormixField<String>(id: f, initialValue: '')],
+      );
+      addTearDown(c.dispose);
+
+      c.setPending(f, true);
+
+      var submitted = false;
+      final future = c.debugForceSubmit(
+        onValid: (_) async => submitted = true,
+        waitForPending: true,
+      );
+      scheduleMicrotask(() => c.setPending(f, false));
+
+      await future;
+      expect(submitted, isTrue);
+    });
+  });
+
+  group('unregister single field with dependents (line 1351)', () {
+    test('removing a field that has dependencies cleans the graph', () {
+      const a = FormixFieldID<String>('a');
+      const b = FormixFieldID<String>('b');
+      final c = FormixController(
+        initialValue: const {'a': '', 'b': ''},
+        fields: [
+          const FormixField<String>(id: a, initialValue: ''),
+          const FormixField<String>(id: b, initialValue: '', dependsOn: [a]),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      // b depends on a -> unregistering b singly runs the dep-cleanup loop.
+      c.unregisterField(b);
+      expect(c.isFieldRegistered(b), isFalse);
+    });
+  });
+
+  group('resetFields revalidates dependents (lines 1515/1516)', () {
+    test('onUserInteraction/onBlur dependents revalidate on reset', () {
+      const src = FormixFieldID<String>('src');
+      const dep = FormixFieldID<String>('dep');
+      final c = FormixController(
+        initialValue: const {'src': 'a', 'dep': ''},
+        fields: [
+          const FormixField<String>(id: src, initialValue: 'a'),
+          FormixField<String>(
+            id: dep,
+            initialValue: '',
+            dependsOn: [src],
+            validationMode: FormixAutovalidateMode.onUserInteraction,
+            crossFieldValidator: (v, s) =>
+                v == s.values['src'] ? null : 'mismatch',
+          ),
+        ],
+        autovalidateMode: FormixAutovalidateMode.onUserInteraction,
+      );
+      addTearDown(c.dispose);
+
+      c.setValue(dep, 'x');
+      c.markAsTouched(dep);
+      // Reset src -> dependent revalidation branch runs during resetFields.
+      c.resetFields([src]);
+      // Reset the cross-field-validated field itself: _performSyncValidation is
+      // called without currentValidations, hitting the `?? state.validations`
+      // fallback (line 946).
+      c.resetFields([dep]);
+      expect(c.isFieldRegistered(dep), isTrue);
+    });
+
+    test('onBlur dependent revalidates on reset (line 1516)', () {
+      const src = FormixFieldID<String>('src');
+      const dep = FormixFieldID<String>('dep');
+      final c = FormixController(
+        initialValue: const {'src': 'a', 'dep': ''},
+        fields: [
+          const FormixField<String>(id: src, initialValue: 'a'),
+          FormixField<String>(
+            id: dep,
+            initialValue: '',
+            dependsOn: [src],
+            validationMode: FormixAutovalidateMode.onBlur,
+            crossFieldValidator: (v, s) =>
+                v == s.values['src'] ? null : 'mismatch',
+          ),
+        ],
+        autovalidateMode: FormixAutovalidateMode.onBlur,
+      );
+      addTearDown(c.dispose);
+
+      c.setValue(dep, 'x');
+      c.markAsTouched(dep); // onBlur + touched -> revalidates during resetFields
+      c.resetFields([src]);
+      expect(c.isFieldRegistered(dep), isTrue);
+    });
+  });
+
+  group('validate() sets pending for async fields (line 1583)', () {
+    test('validate flips a sync-valid async field to validating', () {
+      const f = FormixFieldID<String>('f');
+      final c = FormixController(
+        initialValue: const {'f': 'ok'},
+        fields: [
+          FormixField<String>(
+            id: f,
+            initialValue: 'ok',
+            asyncValidator: (v) async => null,
+          ),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      final ok = c.validate();
+      // Sync passes but async is pending, so the field is now validating.
+      expect(ok, isTrue);
+      expect(c.getValidation(f).isValidating, isTrue);
+    });
+  });
+
+  group('requireValue', () {
+    test('returns a present value and throws when missing', () {
+      const f = FormixFieldID<String>('f');
+      final c = FormixController(
+        initialValue: const {'f': 'here'},
+        fields: [const FormixField<String>(id: f, initialValue: 'here')],
+      );
+      addTearDown(c.dispose);
+
+      expect(c.requireValue(f), 'here');
+      expect(
+        () => c.requireValue(const FormixFieldID<String>('nope')),
+        throwsStateError,
+      );
     });
   });
 }

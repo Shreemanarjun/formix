@@ -322,4 +322,155 @@ void main() {
       expect(c.getValue(id), 'b');
     });
   });
+
+  group('base field lifecycle: focusNode swap + preserved validators', () {
+    testWidgets('swapping focusNode re-inits + preserves existing validators', (tester) async {
+      const id = FormixFieldID<String>('name');
+      // Pre-register the field WITH a validator so re-registration must preserve
+      // the wrapped validator (base_form_field _ensureFieldRegistered branches).
+      final c = FormixController(
+        initialValue: const {'name': ''},
+        fields: [
+          FormixField<String>(
+            id: id,
+            initialValue: '',
+            validator: (v) => (v == null || v.isEmpty) ? 'required' : null,
+            asyncValidator: (v) async => null,
+          ),
+        ],
+        autovalidateMode: FormixAutovalidateMode.always,
+      );
+      addTearDown(c.dispose);
+
+      final node1 = FocusNode();
+      final node2 = FocusNode();
+      addTearDown(node1.dispose);
+      addTearDown(node2.dispose);
+
+      var useNode1 = true;
+      await tester.pumpWidget(_app(
+        StatefulBuilder(
+          builder: (context, setState) => Column(
+            children: [
+              FormixTextFormField(
+                fieldId: id,
+                focusNode: useNode1 ? node1 : node2,
+                // Providing a widget-level validator forces re-registration,
+                // exercising the preserved-validator branch.
+                validator: (v) => null,
+              ),
+              ElevatedButton(
+                onPressed: () => setState(() => useNode1 = false),
+                child: const Text('swap-node'),
+              ),
+            ],
+          ),
+        ),
+        controller: c,
+      ));
+      await tester.pump();
+
+      // Swap the focusNode -> didUpdateWidget focusNode branch.
+      await tester.tap(find.text('swap-node'));
+      await tester.pump();
+      expect(c.isFieldRegistered(id), isTrue);
+    });
+  });
+
+  group('legacy base widgets: forceErrorText + error display', () {
+    testWidgets('base text/number widgets show forced + validated errors', (tester) async {
+      const textId = FormixFieldID<String>('t');
+      const numId = FormixFieldID<int>('n');
+      final c = FormixController(
+        initialValue: const {'t': '', 'n': 0},
+        fields: [
+          FormixField<String>(
+            id: textId,
+            initialValue: '',
+            validator: (v) => (v == null || v.isEmpty) ? 'text-required' : null,
+          ),
+          FormixField<int>(
+            id: numId,
+            initialValue: 0,
+            validator: (v) => v == 0 ? 'no-zero' : null,
+          ),
+        ],
+        autovalidateMode: FormixAutovalidateMode.always,
+      );
+      addTearDown(c.dispose);
+
+      await tester.pumpWidget(_app(
+        const Column(
+          children: [
+            _BaseText(fieldId: textId),
+            _BaseNumber(fieldId: numId),
+          ],
+        ),
+        controller: c,
+      ));
+      await tester.pump();
+
+      // Drive both base fields into a shown error (touched path) so the
+      // errorText branches (549 / 621) render.
+      c.markAsTouched(textId);
+      c.setValue(textId, '');
+      c.markAsTouched(numId);
+      c.setValue(numId, 0);
+      await tester.pump();
+      expect(find.text('text-required'), findsOneWidget);
+      expect(find.text('no-zero'), findsOneWidget);
+    });
+  });
+
+  group('base field: re-registration preserves wrapped validators', () {
+    testWidgets('mounting with a differing autovalidateMode preserves async + cross validators', (tester) async {
+      const id = FormixFieldID<String>('preserve');
+      // Pre-register with async + cross-field validators so the wrapped-*
+      // getters are present when the widget re-registers.
+      final c = FormixController(
+        initialValue: const {'preserve': ''},
+        fields: [
+          FormixField<String>(
+            id: id,
+            initialValue: '',
+            validationMode: FormixAutovalidateMode.onBlur,
+            asyncValidator: (v) async => null,
+            crossFieldValidator: (v, s) => null,
+          ),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      // Mount a widget that provides NO validator but a DIFFERENT
+      // autovalidateMode, which forces re-registration and exercises the
+      // preserved async (236) and cross-field (241) branches.
+      await tester.pumpWidget(_app(
+        const FormixTextFormField(
+          fieldId: id,
+          autovalidateMode: FormixAutovalidateMode.always,
+        ),
+        controller: c,
+      ));
+      await tester.pump();
+      expect(c.isFieldRegistered(id), isTrue);
+    });
+  });
 }
+
+/// Concrete subclass of the legacy [FormixTextFormFieldWidget] base class.
+class _BaseText extends FormixTextFormFieldWidget {
+  const _BaseText({required super.fieldId});
+  @override
+  _BaseTextState createState() => _BaseTextState();
+}
+
+class _BaseTextState extends FormixTextFormFieldWidgetState {}
+
+/// Concrete subclass of the legacy [FormixNumberFormFieldWidget] base class.
+class _BaseNumber extends FormixNumberFormFieldWidget {
+  const _BaseNumber({required super.fieldId});
+  @override
+  _BaseNumberState createState() => _BaseNumberState();
+}
+
+class _BaseNumberState extends FormixNumberFormFieldWidgetState {}

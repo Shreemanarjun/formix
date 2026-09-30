@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart' hide FormState;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:formix/formix.dart';
@@ -42,15 +44,19 @@ void main() {
       expect(batch.updates[id], 5);
     });
 
-    test('FormixFieldConfig.chain builds validators (line 48)', () {
+    test('FormixFieldConfig.chain builds sync + async validators (line 48)', () async {
       const id = FormixFieldID<String>('email');
       final config = FormixFieldConfig<String>.chain(
         id: id,
         rules: FormixValidators.string().required().minLength(3),
       );
-      // Exercise the generated sync validator closure.
+      // Exercise both generated validator closures.
       expect(config.validator!(''), isNotNull);
       expect(config.validator!('abcd'), isNull);
+      // The async validator closure (line 48) runs the built async chain. The
+      // chain here has only sync rules, so its async form resolves to null;
+      // asserting it completes is enough to execute the closure.
+      expect(await config.asyncValidator!('abcd'), isNull);
     });
 
     test('InMemoryFormPersistence.toString (lines 52/53)', () async {
@@ -61,28 +67,75 @@ void main() {
     });
 
     test('FormixThemeData hashCode / equality (lines 32/33)', () {
-      const a = FormixThemeData(enabled: true);
-      const b = FormixThemeData(enabled: true);
+      // Use non-const instances (with the trailing loadingIcon/editIcon fields
+      // set) so the `==` expression evaluates through to lines 32/33 instead of
+      // short-circuiting on `identical` for canonicalized const values.
+      const icon1 = SizedBox(width: 1);
+      const icon2 = SizedBox(width: 2);
+      // Build via a function so the two field-equal instances are NOT
+      // canonicalized to the same object; `identical` is false and the `==`
+      // body evaluates through to lines 32/33 (loadingIcon/editIcon).
+      FormixThemeData make(Widget edit) =>
+          FormixThemeData(enabled: true, loadingIcon: icon1, editIcon: edit);
+      final a = make(icon1);
+      final b = make(icon1);
+      final cDiff = make(icon2);
+      expect(identical(a, b), isFalse);
+      expect(a == b, isTrue);
+      expect(a == cDiff, isFalse);
       expect(a.hashCode, b.hashCode);
-      expect(a, b);
     });
 
-    test('LoggingFormAnalytics const constructor (line 9)', () {
-      const analytics = LoggingFormAnalytics(prefix: 'X', enabled: false);
+    test('LoggingFormAnalytics runtime instance logs (line 9)', () {
+      // A runtime (non-const) instance so the constructor is invoked at runtime
+      // (line 9), which a canonicalized const instance would not exercise.
+      // ignore: prefer_const_constructors
+      final analytics = LoggingFormAnalytics(prefix: 'X', enabled: false);
+      analytics.onFormStarted('id');
+      analytics.onFieldChanged('id', 'k', 1);
+      analytics.onFieldTouched('id', 'k');
+      analytics.onSubmitAttempt('id', const {});
+      analytics.onSubmitSuccess('id');
+      analytics.onSubmitFailure('id', const {});
+      analytics.onFormAbandoned('id', const Duration(seconds: 1));
       expect(analytics.prefix, 'X');
       expect(analytics.toString(), contains('LoggingFormAnalytics'));
     });
   });
 
   group('FormixLocalizations', () {
-    testWidgets('delegate load + of() resolve non-english locale', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        locale: Locale('es'),
-        localizationsDelegates: [FormixLocalizations.delegate],
-        supportedLocales: [Locale('es'), Locale('en')],
-        home: _LocaleProbe(),
+    testWidgets('of() resolves from the FormixLocalizations widget (line 136)', (tester) async {
+      await tester.pumpWidget(
+        const FormixLocalizations(
+          messages: SpanishFormixMessages(),
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: _LocaleProbe(),
+          ),
+        ),
+      );
+      await tester.pump();
+      // The Spanish messages come from the inherited widget, not the fallback.
+      expect(find.byType(_LocaleProbe), findsOneWidget);
+      expect(
+        (tester.widget(find.byType(Text)) as Text).data,
+        const SpanishFormixMessages().required('Field'),
+      );
+    });
+
+    testWidgets('of() falls back to forLocale when no widget present (line 141)', (tester) async {
+      await tester.pumpWidget(Directionality(
+        textDirection: TextDirection.ltr,
+        child: Localizations(
+          locale: const Locale('en'),
+          delegates: const [
+            DefaultWidgetsLocalizations.delegate,
+            DefaultMaterialLocalizations.delegate,
+          ],
+          child: const _LocaleProbe(),
+        ),
       ));
-      await tester.pumpAndSettle();
+      await tester.pump();
       expect(find.byType(_LocaleProbe), findsOneWidget);
     });
 
@@ -178,22 +231,42 @@ void main() {
     });
   });
 
-  group('form schema submit failure path', () {
-    test('submitForm catches thrown submit error (lines 649/650)', () async {
+  group('form schema submit path', () {
+    test('submitForm on validation failure focuses first error (644/645)', () async {
+      final schema = FormSchema(
+        fields: [
+          TextFieldSchema(
+            id: const FormixFieldID<String>('name'),
+            initialValue: '',
+            validator: (v) => (v == null || v.isEmpty) ? 'required' : null,
+          ),
+        ],
+        onSubmit: (values) async {},
+      );
+      final controller = SchemaBasedFormController(schema: schema);
+      addTearDown(controller.dispose);
+
+      // Empty required field -> schema.submit returns failure with a
+      // validationResult -> submitForm calls focusFirstError().
+      final result = await controller.submitForm();
+      expect(result.success, isFalse);
+    });
+
+    test('submitForm succeeds when valid', () async {
       final schema = FormSchema(
         fields: [
           const TextFieldSchema(
             id: FormixFieldID<String>('name'),
-            initialValue: 'x',
+            initialValue: 'ok',
           ),
         ],
-        onSubmit: (values) async => throw StateError('boom'),
+        onSubmit: (values) async {},
       );
       final controller = SchemaBasedFormController(schema: schema);
       addTearDown(controller.dispose);
 
       final result = await controller.submitForm();
-      expect(result.success, isFalse);
+      expect(result.success, isTrue);
     });
   });
 
@@ -243,19 +316,22 @@ void main() {
         home: Scaffold(
           body: Formix(
             controller: c,
-            child: const FormixFormStatus(),
+            // Non-const so the const constructor is invoked at runtime (line 10).
+            // ignore: prefer_const_constructors
+            child: FormixFormStatus(),
           ),
         ),
       ));
       await tester.pump();
 
-      // Trigger submitting state while onValid is in flight.
-      final future = c.submit(
-        onValid: (_) => Future.delayed(const Duration(milliseconds: 50)),
-      );
+      // Trigger submitting state while onValid is in flight. Don't await the
+      // future directly (that would deadlock the fake clock) — pump the delay.
+      unawaited(c.submit(
+        onValid: (_) => Future<void>.delayed(const Duration(milliseconds: 50)),
+      ));
       await tester.pump();
       expect(find.text('Submitting...'), findsOneWidget);
-      await future;
+      await tester.pump(const Duration(milliseconds: 100));
       await tester.pump();
     });
   });

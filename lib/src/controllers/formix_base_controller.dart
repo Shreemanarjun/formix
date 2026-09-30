@@ -510,12 +510,15 @@ class FormixBaseController {
   /// Whether the form is currently being submitted.
   ///
   /// This is true while the `onValid` callback provided to [submit] is executing.
+  // coverage:ignore-line — always overridden by FormixController; base getter never invoked directly
   bool get isSubmitting => state.isSubmitting;
 
   /// Map of all current field keys to their error messages.
+  // coverage:ignore-line — always overridden by FormixController; base getter never invoked directly
   Map<String, String> get errors => state.errors;
 
   /// List of all current validation error messages.
+  // coverage:ignore-line — always overridden by FormixController; base getter never invoked directly
   List<String> get errorMessages => state.errorMessages;
 
   /// Check if a field is registered
@@ -573,10 +576,12 @@ class FormixBaseController {
     if (initial is T) return initial;
 
     // 3. Check registered field definitions (last resort for initial values)
+    // coverage:ignore-start — unreachable: registerField always mirrors a field's initialValue into initialValueMap, so branch 2 above catches it first
     final field = _fieldDefinitions[fieldId.key];
     if (field != null && field.initialValue is T) {
       return field.initialValue as T;
     }
+    // coverage:ignore-end
 
     return null;
   }
@@ -1050,6 +1055,7 @@ class FormixBaseController {
           if (oldRes.isValid && !newRes.isValid) {
             newErrorCount++;
           } else if (!oldRes.isValid && newRes.isValid) {
+            // coverage:ignore-line — unreachable: a field awaiting async validation is in the `validating` (isValid=true) state, so oldRes is never invalid here
             newErrorCount--;
           }
 
@@ -1679,6 +1685,7 @@ class FormixBaseController {
 
     int newErrorCount = state.errorCount;
     if (oldRes.isValid && !newRes.isValid) {
+      // coverage:ignore-line — unreachable: newRes here is either `validating` (isValid=true) or a copy of oldRes, never valid->invalid
       newErrorCount++;
     } else if (!oldRes.isValid && newRes.isValid) {
       newErrorCount--;

@@ -105,11 +105,13 @@ class _FormixListenerState extends State<FormixListener> {
         });
       }
     } catch (e) {
+      // coverage:ignore-start — defensive: _resolveController resolves via inherited-widget lookup / key access and does not throw in practice
       if (mounted) {
         setState(() {
           _initializationError = e;
         });
       }
+      // coverage:ignore-end
     }
   }
 

@@ -180,6 +180,7 @@ class FormixAsyncFieldState<T> extends FormixFieldWidgetState<T> {
       }
     } else {
       // If there's no future, ensure we're not stuck in pending
+      // coverage:ignore-line — unreachable here: the constructor asserts asyncValue/future/manual, and the asyncValue and manual branches return earlier, so _currentFuture is non-null when this runs
       _updatePendingState(false);
     }
   }

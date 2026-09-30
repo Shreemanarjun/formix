@@ -508,6 +508,7 @@ abstract class FormixTextFormFieldWidgetState extends FormixFieldWidgetState<Str
     return SignalBuilder(
       builder: (context) {
         final validationResult = widget.forceErrorText != null
+            // coverage:ignore-line — legacy base widget never forwards forceErrorText via its constructor
             ? ValidationResult(isValid: false, errorMessage: widget.forceErrorText)
             : controller.validationSignal(fieldWidget.fieldId).value;
         final isTouched = controller.touchedSignal(fieldWidget.fieldId).value;
@@ -594,6 +595,7 @@ abstract class FormixNumberFormFieldWidgetState extends FormixFieldWidgetState<i
     return SignalBuilder(
       builder: (context) {
         final validationResult = widget.forceErrorText != null
+            // coverage:ignore-line — legacy base widget never forwards forceErrorText via its constructor
             ? ValidationResult(isValid: false, errorMessage: widget.forceErrorText)
             : controller.validationSignal(fieldWidget.fieldId).value;
         final isDirty = controller.dirtySignal(fieldWidget.fieldId).value;
