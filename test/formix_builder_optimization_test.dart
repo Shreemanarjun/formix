@@ -11,34 +11,32 @@ void main() {
       int rebuildCountWatchA = 0;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: Column(
-                  children: [
-                    // Trigger fields
-                    const FormixTextFormField(fieldId: fieldA, initialValue: 'A'),
-                    const FormixTextFormField(fieldId: fieldB, initialValue: 'B'),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: Column(
+                children: [
+                  // Trigger fields
+                  const FormixTextFormField(fieldId: fieldA, initialValue: 'A'),
+                  const FormixTextFormField(fieldId: fieldB, initialValue: 'B'),
 
-                    // Builder watching nothing (default behavior)
-                    FormixBuilder(
-                      builder: (context, scope) {
-                        rebuildCountScope++;
-                        return const Text('Scope Only');
-                      },
-                    ),
+                  // Builder watching nothing (default behavior)
+                  FormixBuilder(
+                    builder: (context, scope) {
+                      rebuildCountScope++;
+                      return const Text('Scope Only');
+                    },
+                  ),
 
-                    // Builder watching only field A
-                    FormixBuilder(
-                      builder: (context, scope) {
-                        scope.watchValue(fieldA);
-                        rebuildCountWatchA++;
-                        return const Text('Watching A');
-                      },
-                    ),
-                  ],
-                ),
+                  // Builder watching only field A
+                  FormixBuilder(
+                    builder: (context, scope) {
+                      scope.watchValue(fieldA);
+                      rebuildCountWatchA++;
+                      return const Text('Watching A');
+                    },
+                  ),
+                ],
               ),
             ),
           ),
@@ -79,23 +77,21 @@ void main() {
       int rebuildCount = 0;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const FormixTextFormField(fieldId: fieldA, initialValue: 'A'),
-                      FormixBuilder(
-                        select: (state) => state.getValue(fieldA),
-                        builder: (context, scope) {
-                          rebuildCount++;
-                          return Text('Val: ${scope.watchValue(fieldA)}');
-                        },
-                      ),
-                    ],
-                  ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const FormixTextFormField(fieldId: fieldA, initialValue: 'A'),
+                    FormixBuilder(
+                      select: (state) => state.getValue(fieldA),
+                      builder: (context, scope) {
+                        rebuildCount++;
+                        return Text('Val: ${scope.watchValue(fieldA)}');
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),

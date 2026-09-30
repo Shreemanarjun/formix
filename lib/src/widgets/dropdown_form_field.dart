@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 import 'base_form_field.dart';
 import '../enums.dart';
 import 'form_theme.dart';
-import '../controllers/riverpod_controller.dart';
 import '../controllers/validation.dart';
 
 /// A Formix-based dropdown form field that is lifecycle aware.
@@ -68,39 +67,21 @@ class FormixDropdownFormFieldState<T> extends FormixFieldWidgetState<T> {
   @override
   Widget build(BuildContext context) {
     final dropdownWidget = widget as FormixDropdownFormField<T>;
+    if (!hasController) return const SizedBox.shrink();
 
-    if (widget.controller == null) {
-      // Use Consumer to avoid nested selector issues
-      return Consumer(
-        builder: (context, ref, _) {
-          final val = ref.watch(fieldValueProvider(widget.fieldId)) as T?;
-          final validation = ref.watch(fieldValidationProvider(widget.fieldId));
-          final isTouched = ref.watch(fieldTouchedProvider(widget.fieldId));
-          final isDirty = ref.watch(fieldDirtyProvider(widget.fieldId));
-          final isSubmitting = ref.watch(formSubmittingProvider);
-          final validationMode = ref.watch(fieldValidationModeProvider(widget.fieldId));
+    return SignalBuilder(
+      builder: (context) {
+        final val = controller.valueSignal(widget.fieldId).value;
+        final validationResult = widget.forceErrorText != null
+            ? ValidationResult(isValid: false, errorMessage: widget.forceErrorText)
+            : controller.validationSignal(widget.fieldId).value;
+        final isTouched = controller.touchedSignal(widget.fieldId).value;
+        final isDirty = controller.dirtySignal(widget.fieldId).value;
+        final isSubmitting = controller.isSubmittingSignal.value;
+        final validationMode = controller.getValidationMode(widget.fieldId);
 
-          return _buildDropdown(dropdownWidget, val, validation, isTouched, isDirty, isSubmitting, validationMode);
-        },
-      );
-    }
-
-    return AnimatedBuilder(
-      animation: Listenable.merge([
-        controller.fieldValidationNotifier(widget.fieldId),
-        controller.fieldTouchedNotifier(widget.fieldId),
-        controller.fieldDirtyNotifier(widget.fieldId),
-        controller.isSubmittingNotifier,
-      ]),
-      builder: (context, _) => _buildDropdown(
-        dropdownWidget,
-        value,
-        validation,
-        isTouched,
-        isDirty,
-        controller.isSubmitting,
-        controller.getValidationMode(widget.fieldId),
-      ),
+        return _buildDropdown(dropdownWidget, val, validationResult, isTouched, isDirty, isSubmitting, validationMode);
+      },
     );
   }
 
@@ -161,7 +142,7 @@ class FormixDropdownFormFieldState<T> extends FormixFieldWidgetState<T> {
                 focusNode: focusNode,
                 hint: dropdownWidget.hint,
                 disabledHint: dropdownWidget.disabledHint,
-                onChanged: widget.enabled
+                onChanged: effectiveEnabled
                     ? (newValue) {
                         if (newValue != null) {
                           didChange(newValue);

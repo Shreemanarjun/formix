@@ -16,17 +16,15 @@ void main() {
       final futureNotifier = ValueNotifier<Future<String>>(completer1.future);
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              child: ValueListenableBuilder<Future<String>>(
-                valueListenable: futureNotifier,
-                builder: (context, f, _) => FormixAsyncField<String>(
-                  fieldId: fieldId,
-                  future: f,
-                  loadingBuilder: (context) => const Text('Loading'),
-                  builder: (context, state) => Text(state.value ?? 'No Value'),
-                ),
+        MaterialApp(
+          home: Formix(
+            child: ValueListenableBuilder<Future<String>>(
+              valueListenable: futureNotifier,
+              builder: (context, f, _) => FormixAsyncField<String>(
+                fieldId: fieldId,
+                future: f,
+                loadingBuilder: (context) => const Text('Loading'),
+                builder: (context, state) => Text(state.value ?? 'No Value'),
               ),
             ),
           ),
@@ -69,33 +67,31 @@ void main() {
       }
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              child: FormixAsyncField<String>(
-                fieldId: fieldId,
-                future: fetchData(),
-                onRetry: fetchData, // Pass callback correctly
-                asyncErrorBuilder: (context, error) => Column(
-                  children: [
-                    Text('Error: $error'),
-                    Builder(
-                      builder: (context) {
-                        return ElevatedButton(
-                          onPressed: () {
-                            final state = tester.state<FormixAsyncFieldState<String>>(
-                              find.byType(FormixAsyncField<String>),
-                            );
-                            state.refresh();
-                          },
-                          child: const Text('Retry'),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                builder: (context, state) => Text(state.value ?? 'No Data'),
+        MaterialApp(
+          home: Formix(
+            child: FormixAsyncField<String>(
+              fieldId: fieldId,
+              future: fetchData(),
+              onRetry: fetchData, // Pass callback correctly
+              asyncErrorBuilder: (context, error) => Column(
+                children: [
+                  Text('Error: $error'),
+                  Builder(
+                    builder: (context) {
+                      return ElevatedButton(
+                        onPressed: () {
+                          final state = tester.state<FormixAsyncFieldState<String>>(
+                            find.byType(FormixAsyncField<String>),
+                          );
+                          state.refresh();
+                        },
+                        child: const Text('Retry'),
+                      );
+                    },
+                  ),
+                ],
               ),
+              builder: (context, state) => Text(state.value ?? 'No Data'),
             ),
           ),
         ),
@@ -132,18 +128,16 @@ void main() {
       final futureNotifier = ValueNotifier<Future<String>>(completer1.future);
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              child: ValueListenableBuilder<Future<String>>(
-                valueListenable: futureNotifier,
-                builder: (context, f, _) => FormixAsyncField<String>(
-                  fieldId: fieldId,
-                  future: f,
-                  keepPreviousData: true,
-                  loadingBuilder: (context) => const Text('Loading'),
-                  builder: (context, state) => Text(state.value ?? 'No Value'),
-                ),
+        MaterialApp(
+          home: Formix(
+            child: ValueListenableBuilder<Future<String>>(
+              valueListenable: futureNotifier,
+              builder: (context, f, _) => FormixAsyncField<String>(
+                fieldId: fieldId,
+                future: f,
+                keepPreviousData: true,
+                loadingBuilder: (context) => const Text('Loading'),
+                builder: (context, state) => Text(state.value ?? 'No Value'),
               ),
             ),
           ),
@@ -174,19 +168,17 @@ void main() {
       final futureNotifier = ValueNotifier<Future<String>>(completer1.future);
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              child: ValueListenableBuilder<Future<String>>(
-                valueListenable: futureNotifier,
-                builder: (context, f, _) => FormixAsyncField<String>(
-                  fieldId: fieldId,
-                  future: f,
-                  debounce: const Duration(milliseconds: 200),
-                  keepPreviousData: false,
-                  loadingBuilder: (context) => const Text('Loading...'),
-                  builder: (context, state) => Text(state.value ?? 'No Value'),
-                ),
+        MaterialApp(
+          home: Formix(
+            child: ValueListenableBuilder<Future<String>>(
+              valueListenable: futureNotifier,
+              builder: (context, f, _) => FormixAsyncField<String>(
+                fieldId: fieldId,
+                future: f,
+                debounce: const Duration(milliseconds: 200),
+                keepPreviousData: false,
+                loadingBuilder: (context) => const Text('Loading...'),
+                builder: (context, state) => Text(state.value ?? 'No Value'),
               ),
             ),
           ),

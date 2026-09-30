@@ -1,37 +1,25 @@
 import 'package:flutter/widgets.dart';
 import '../../formix.dart';
 
-/// Type alias for the Formix controller provider.
-typedef FormixProvider = AutoDisposeStateNotifierProvider<FormixController, FormixData>;
-
-/// A utility class to validate the presence of required ancestors for Formix widgets.
+/// A utility class to validate the presence of a [Formix] ancestor.
 class FormixAncestorValidator {
-  /// Validates both [ProviderScope] and [Formix] ancestors.
+  /// Validates that a [Formix] ancestor (or an explicit controller) is available.
   ///
-  /// Returns a [FormixConfigurationErrorWidget] if a required ancestor is missing,
-  /// otherwise returns null.
+  /// Returns a [FormixConfigurationErrorWidget] if a required ancestor is
+  /// missing, otherwise returns null.
   static Widget? validate(
     BuildContext context, {
     required String widgetName,
-    FormixProvider? explicitProvider,
+    FormixController? explicitController,
     bool hasExplicitController = false,
     bool requireFormix = true,
   }) {
-    // 1. Check for ProviderScope first
-    if (context.getElementForInheritedWidgetOfExactType<UncontrolledProviderScope>() == null) {
-      return const FormixConfigurationErrorWidget(
-        message: 'Missing ProviderScope',
-        details:
-            'Formix requires a ProviderScope at the root of your application to manage form state using Riverpod.\n\nExample:\nvoid main() {\n  runApp(ProviderScope(child: MyApp()));\n}',
-      );
+    if (!requireFormix || hasExplicitController || explicitController != null) {
+      return null;
     }
 
-    // 2. Check for Formix ancestor or explicit provider/controller
-    if (!requireFormix || hasExplicitController) return null;
-
-    final provider = explicitProvider ?? Formix.of(context);
-
-    if (provider == null) {
+    final controller = Formix.maybeOf(context);
+    if (controller == null) {
       return FormixConfigurationErrorWidget(
         message: 'Missing Formix Ancestor',
         details: '$widgetName must be used inside a Formix widget.\n\nExample:\nFormix(\n  child: $widgetName(...),\n)',

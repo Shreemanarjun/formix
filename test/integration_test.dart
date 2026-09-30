@@ -15,118 +15,116 @@ void main() {
       const agreeField = FormixFieldID<bool>('agree');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {
-                  'name': '',
-                  'email': '',
-                  'age': 18,
-                  'newsletter': false,
-                  'agree': false,
-                },
-                fields: [
-                  FormixFieldConfig<String>(
-                    id: nameField,
-                    initialValue: '',
-                    validator: (value) => (value?.isEmpty ?? true) ? 'Name is required' : null,
-                  ),
-                  FormixFieldConfig<String>(
-                    id: emailField,
-                    initialValue: '',
-                    validator: (value) => (value?.contains('@') ?? false) ? null : 'Invalid email',
-                  ),
-                  FormixFieldConfig<num>(
-                    id: ageField,
-                    initialValue: 18,
-                    validator: (value) => (value ?? 0) >= 18 ? null : 'Must be 18 or older',
-                  ),
-                  FormixFieldConfig<bool>(
-                    id: agreeField,
-                    initialValue: false,
-                    validator: (value) => value == true ? null : 'You must agree to terms',
-                  ),
-                ],
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      const FormixTextFormField(
-                        fieldId: nameField,
-                        decoration: InputDecoration(
-                          labelText: 'Full Name',
-                          hintText: 'Enter your full name',
-                        ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {
+                'name': '',
+                'email': '',
+                'age': 18,
+                'newsletter': false,
+                'agree': false,
+              },
+              fields: [
+                FormixFieldConfig<String>(
+                  id: nameField,
+                  initialValue: '',
+                  validator: (value) => (value?.isEmpty ?? true) ? 'Name is required' : null,
+                ),
+                FormixFieldConfig<String>(
+                  id: emailField,
+                  initialValue: '',
+                  validator: (value) => (value?.contains('@') ?? false) ? null : 'Invalid email',
+                ),
+                FormixFieldConfig<num>(
+                  id: ageField,
+                  initialValue: 18,
+                  validator: (value) => (value ?? 0) >= 18 ? null : 'Must be 18 or older',
+                ),
+                FormixFieldConfig<bool>(
+                  id: agreeField,
+                  initialValue: false,
+                  validator: (value) => value == true ? null : 'You must agree to terms',
+                ),
+              ],
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    const FormixTextFormField(
+                      fieldId: nameField,
+                      decoration: InputDecoration(
+                        labelText: 'Full Name',
+                        hintText: 'Enter your full name',
                       ),
-                      const SizedBox(height: 16),
-                      const FormixTextFormField(
-                        fieldId: emailField,
-                        decoration: InputDecoration(
-                          labelText: 'Email',
-                          hintText: 'Enter your email',
-                        ),
-                        keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 16),
+                    const FormixTextFormField(
+                      fieldId: emailField,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        hintText: 'Enter your email',
                       ),
-                      const SizedBox(height: 16),
-                      const FormixNumberFormField(
-                        fieldId: ageField,
-                        decoration: InputDecoration(
-                          labelText: 'Age',
-                          hintText: 'Enter your age',
-                        ),
-                        min: 0,
-                        max: 120,
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 16),
+                    const FormixNumberFormField(
+                      fieldId: ageField,
+                      decoration: InputDecoration(
+                        labelText: 'Age',
+                        hintText: 'Enter your age',
                       ),
-                      const SizedBox(height: 16),
-                      const FormixCheckboxFormField(
-                        fieldId: newsletterField,
-                        title: Text('Subscribe to newsletter'),
-                      ),
-                      const SizedBox(height: 16),
-                      const FormixCheckboxFormField(
-                        fieldId: agreeField,
-                        title: Text('I agree to terms and conditions'),
-                      ),
-                      const SizedBox(height: 24),
-                      FormixBuilder(
-                        builder: (context, scope) {
-                          final isValid = scope.watchIsValid;
-                          final isDirty = scope.watchIsFormDirty;
+                      min: 0,
+                      max: 120,
+                    ),
+                    const SizedBox(height: 16),
+                    const FormixCheckboxFormField(
+                      fieldId: newsletterField,
+                      title: Text('Subscribe to newsletter'),
+                    ),
+                    const SizedBox(height: 16),
+                    const FormixCheckboxFormField(
+                      fieldId: agreeField,
+                      title: Text('I agree to terms and conditions'),
+                    ),
+                    const SizedBox(height: 24),
+                    FormixBuilder(
+                      builder: (context, scope) {
+                        final isValid = scope.watchIsValid;
+                        final isDirty = scope.watchIsFormDirty;
 
-                          return Column(
-                            children: [
-                              Text(
-                                'Form Status: ${isDirty ? 'Modified' : 'Unchanged'}',
-                              ),
-                              Text(
-                                'Validation: ${isValid ? 'Valid' : 'Invalid'}',
-                              ),
-                              const SizedBox(height: 16),
-                              ElevatedButton(
-                                onPressed: isValid
-                                    ? () {
-                                        final values = scope.values;
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'Form submitted: ${values.length} fields',
-                                            ),
-                                            backgroundColor: Colors.green,
+                        return Column(
+                          children: [
+                            Text(
+                              'Form Status: ${isDirty ? 'Modified' : 'Unchanged'}',
+                            ),
+                            Text(
+                              'Validation: ${isValid ? 'Valid' : 'Invalid'}',
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: isValid
+                                  ? () {
+                                      final values = scope.values;
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Form submitted: ${values.length} fields',
                                           ),
-                                        );
-                                      }
-                                    : null,
-                                child: const Text('Submit'),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  ),
+                                          backgroundColor: Colors.green,
+                                        ),
+                                      );
+                                    }
+                                  : null,
+                              child: const Text('Submit'),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -172,36 +170,34 @@ void main() {
       const emailField = FormixFieldID<String>('email');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {
-                  'name': 'Initial Name',
-                  'email': 'initial@example.com',
-                },
-                child: Column(
-                  children: [
-                    const FormixTextFormField(
-                      fieldId: nameField,
-                      decoration: InputDecoration(labelText: 'Name'),
-                    ),
-                    const FormixTextFormField(
-                      fieldId: emailField,
-                      decoration: InputDecoration(labelText: 'Email'),
-                    ),
-                    FormixBuilder(
-                      builder: (context, scope) {
-                        return ElevatedButton(
-                          onPressed: () {
-                            scope.reset();
-                          },
-                          child: const Text('Reset'),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {
+                'name': 'Initial Name',
+                'email': 'initial@example.com',
+              },
+              child: Column(
+                children: [
+                  const FormixTextFormField(
+                    fieldId: nameField,
+                    decoration: InputDecoration(labelText: 'Name'),
+                  ),
+                  const FormixTextFormField(
+                    fieldId: emailField,
+                    decoration: InputDecoration(labelText: 'Email'),
+                  ),
+                  FormixBuilder(
+                    builder: (context, scope) {
+                      return ElevatedButton(
+                        onPressed: () {
+                          scope.reset();
+                        },
+                        child: const Text('Reset'),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ),
@@ -239,50 +235,48 @@ void main() {
       const confirmPasswordField = FormixFieldID<String>('confirmPassword');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'password': '', 'confirmPassword': ''},
-                child: Column(
-                  children: [
-                    FormixTextFormField(
-                      fieldId: passwordField,
-                      initialValue: '',
-                      validator: (value) {
-                        if (value == null || value.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
-                      decoration: const InputDecoration(labelText: 'Password'),
-                    ),
-                    FormixBuilder(
-                      builder: (context, scope) {
-                        return FormixTextFormField(
-                          fieldId: confirmPasswordField,
-                          validator: (value) {
-                            final password = scope.controller.getValue(
-                              passwordField,
-                            );
-                            if (value != password) {
-                              return 'Passwords do not match';
-                            }
-                            return null;
-                          },
-                          decoration: const InputDecoration(
-                            labelText: 'Confirm Password',
-                          ),
-                        );
-                      },
-                    ),
-                    FormixBuilder(
-                      builder: (context, scope) {
-                        return Text('Form Valid: ${scope.watchIsValid}');
-                      },
-                    ),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'password': '', 'confirmPassword': ''},
+              child: Column(
+                children: [
+                  FormixTextFormField(
+                    fieldId: passwordField,
+                    initialValue: '',
+                    validator: (value) {
+                      if (value == null || value.length < 6) {
+                        return 'Password must be at least 6 characters';
+                      }
+                      return null;
+                    },
+                    decoration: const InputDecoration(labelText: 'Password'),
+                  ),
+                  FormixBuilder(
+                    builder: (context, scope) {
+                      return FormixTextFormField(
+                        fieldId: confirmPasswordField,
+                        validator: (value) {
+                          final password = scope.controller.getValue(
+                            passwordField,
+                          );
+                          if (value != password) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'Confirm Password',
+                        ),
+                      );
+                    },
+                  ),
+                  FormixBuilder(
+                    builder: (context, scope) {
+                      return Text('Form Valid: ${scope.watchIsValid}');
+                    },
+                  ),
+                ],
               ),
             ),
           ),
@@ -318,33 +312,31 @@ void main() {
       const extraField = FormixFieldID<String>('extra');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'showExtra': false, 'extra': ''},
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    final showExtra = scope.watchValue(showExtraField) ?? false;
-                    return Column(
-                      children: [
-                        const FormixCheckboxFormField(
-                          fieldId: showExtraField,
-                          title: Text('Show extra field'),
-                        ),
-                        if (showExtra) ...[
-                          const SizedBox(height: 16),
-                          const FormixTextFormField(
-                            fieldId: extraField,
-                            decoration: InputDecoration(
-                              labelText: 'Extra Information',
-                            ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'showExtra': false, 'extra': ''},
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  final showExtra = scope.watchValue(showExtraField) ?? false;
+                  return Column(
+                    children: [
+                      const FormixCheckboxFormField(
+                        fieldId: showExtraField,
+                        title: Text('Show extra field'),
+                      ),
+                      if (showExtra) ...[
+                        const SizedBox(height: 16),
+                        const FormixTextFormField(
+                          fieldId: extraField,
+                          decoration: InputDecoration(
+                            labelText: 'Extra Information',
                           ),
-                        ],
+                        ),
                       ],
-                    );
-                  },
-                ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -376,40 +368,36 @@ void main() {
       const emailField = FormixFieldID<String>('email');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'name': 'Jane Doe', 'email': 'jane@example.com'},
-                fields: [
-                  FormixFieldConfig<String>(
-                    id: nameField,
-                    validator: (value) => (value?.isEmpty ?? true) ? 'Required' : null,
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'name': 'Jane Doe', 'email': 'jane@example.com'},
+              fields: [
+                FormixFieldConfig<String>(
+                  id: nameField,
+                  validator: (value) => (value?.isEmpty ?? true) ? 'Required' : null,
+                ),
+                FormixFieldConfig<String>(
+                  id: emailField,
+                  validator: (value) => (value?.contains('@') ?? false) ? null : 'Invalid',
+                ),
+              ],
+              child: Column(
+                children: [
+                  const FormixTextFormField(
+                    fieldId: nameField,
+                    decoration: InputDecoration(labelText: 'Name'),
                   ),
-                  FormixFieldConfig<String>(
-                    id: emailField,
-                    validator: (value) => (value?.contains('@') ?? false) ? null : 'Invalid',
+                  const FormixTextFormField(
+                    fieldId: emailField,
+                    decoration: InputDecoration(labelText: 'Email'),
+                  ),
+                  FormixBuilder(
+                    builder: (context, scope) {
+                      return Text('Form Valid: ${scope.watchIsValid}');
+                    },
                   ),
                 ],
-                child: Column(
-                  children: [
-                    const FormixTextFormField(
-                      fieldId: nameField,
-                      decoration: InputDecoration(labelText: 'Name'),
-                    ),
-                    const FormixTextFormField(
-                      fieldId: emailField,
-                      decoration: InputDecoration(labelText: 'Email'),
-                    ),
-                    Consumer(
-                      builder: (context, ref, child) {
-                        final provider = Formix.of(context)!;
-                        final formState = ref.watch(provider);
-                        return Text('Form Valid: ${formState.isValid}');
-                      },
-                    ),
-                  ],
-                ),
               ),
             ),
           ),

@@ -236,7 +236,8 @@ class FormixData {
         resetCount != other.resetCount ||
         errorCount != other.errorCount ||
         dirtyCount != other.dirtyCount ||
-        pendingCount != other.pendingCount) {
+        pendingCount != other.pendingCount ||
+        currentStep != other.currentStep) {
       return false;
     }
 
@@ -245,8 +246,7 @@ class FormixData {
         identical(validations, other.validations) &&
         identical(dirtyStates, other.dirtyStates) &&
         identical(touchedStates, other.touchedStates) &&
-        identical(pendingStates, other.pendingStates) &&
-        identical(changedFields, other.changedFields)) {
+        identical(pendingStates, other.pendingStates)) {
       return true;
     }
 
@@ -256,31 +256,30 @@ class FormixData {
     // by MapEquality's element comparison, but reference equality will be used for those elements.
     // Given Formix's focus on flat form states, this is a significant optimization.
     const mapEquals = MapEquality();
-    const setEquals = SetEquality();
 
     return mapEquals.equals(values, other.values) &&
         mapEquals.equals(validations, other.validations) &&
         mapEquals.equals(dirtyStates, other.dirtyStates) &&
         mapEquals.equals(touchedStates, other.touchedStates) &&
-        mapEquals.equals(pendingStates, other.pendingStates) &&
-        ((changedFields == null && other.changedFields == null) || (changedFields != null && other.changedFields != null && setEquals.equals(changedFields, other.changedFields)));
+        mapEquals.equals(pendingStates, other.pendingStates);
   }
 
   @override
   int get hashCode {
-    // Faster hash combined from pre-calculated counts and identity hint
+    const mapEquals = MapEquality();
+
     return Object.hash(
+      mapEquals.hash(values),
+      mapEquals.hash(validations),
+      mapEquals.hash(dirtyStates),
+      mapEquals.hash(touchedStates),
+      mapEquals.hash(pendingStates),
       isSubmitting,
       resetCount,
       errorCount,
       dirtyCount,
       pendingCount,
-      // For collections, we hashing them is expensive (O(N)), so we use counts
-      // as entropy and hope identity takes care of the rest in most cases.
-      // But for correct Set/Map behavior, we should ideally hash them if we want to be perfect.
-      // However, we can use a simpler hash.
-      values.length,
-      validations.length,
+      currentStep,
     );
   }
 

@@ -8,11 +8,9 @@ void main() {
       await tester.pumpWidget(
         const RootRestorationScope(
           restorationId: 'root',
-          child: ProviderScope(
-            child: MaterialApp(
-              restorationScopeId: 'app',
-              home: RestorationTestForm(),
-            ),
+          child: MaterialApp(
+            restorationScopeId: 'app',
+            home: RestorationTestForm(),
           ),
         ),
       );
@@ -35,11 +33,9 @@ void main() {
       await tester.pumpWidget(
         const RootRestorationScope(
           restorationId: 'root',
-          child: ProviderScope(
-            child: MaterialApp(
-              restorationScopeId: 'app',
-              home: RestorationTestForm(),
-            ),
+          child: MaterialApp(
+            restorationScopeId: 'app',
+            home: RestorationTestForm(),
           ),
         ),
       );
@@ -78,11 +74,9 @@ void main() {
       await tester.pumpWidget(
         const RootRestorationScope(
           restorationId: 'root',
-          child: ProviderScope(
-            child: MaterialApp(
-              restorationScopeId: 'app',
-              home: RestorationTestForm(),
-            ),
+          child: MaterialApp(
+            restorationScopeId: 'app',
+            home: RestorationTestForm(),
           ),
         ),
       );
@@ -117,11 +111,9 @@ void main() {
       await tester.pumpWidget(
         const RootRestorationScope(
           restorationId: 'root',
-          child: ProviderScope(
-            child: MaterialApp(
-              restorationScopeId: 'app',
-              home: RestorationTestForm(),
-            ),
+          child: MaterialApp(
+            restorationScopeId: 'app',
+            home: RestorationTestForm(),
           ),
         ),
       );
@@ -277,8 +269,8 @@ class _RestorationTestFormState extends State<RestorationTestForm> with Restorat
                 keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 24),
-              Consumer(
-                builder: (context, ref, _) {
+              Builder(
+                builder: (context) {
                   final controller = Formix.controllerOf(context)!;
                   return ValueListenableBuilder<bool>(
                     valueListenable: controller.isValidNotifier,
@@ -335,11 +327,11 @@ class _RestorationTestFormState extends State<RestorationTestForm> with Restorat
 }
 
 /// Widget to display current form state for debugging
-class FormixStateDisplay extends ConsumerWidget {
+class FormixStateDisplay extends StatelessWidget {
   const FormixStateDisplay({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final controller = Formix.controllerOf(context)!;
 
     return ValueListenableBuilder<bool>(

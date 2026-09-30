@@ -24,7 +24,7 @@ import '../../formix.dart';
 ///   },
 /// )
 /// ```
-class FormixFieldAsyncTransformer<T, S> extends ConsumerStatefulWidget {
+class FormixFieldAsyncTransformer<T, S> extends StatefulWidget {
   /// Creates a [FormixFieldAsyncTransformer].
   const FormixFieldAsyncTransformer({
     super.key,
@@ -55,15 +55,18 @@ class FormixFieldAsyncTransformer<T, S> extends ConsumerStatefulWidget {
   final bool retransformOnSubmit;
 
   @override
-  ConsumerState<FormixFieldAsyncTransformer<T, S>> createState() => _FormixFieldAsyncTransformerState<T, S>();
+  State<FormixFieldAsyncTransformer<T, S>> createState() => _FormixFieldAsyncTransformerState<T, S>();
 }
 
-class _FormixFieldAsyncTransformerState<T, S> extends ConsumerState<FormixFieldAsyncTransformer<T, S>> {
+class _FormixFieldAsyncTransformerState<T, S> extends State<FormixFieldAsyncTransformer<T, S>> {
   FormixController? _controller;
   final _inputController = StreamController<T?>.broadcast(sync: true);
   StreamSubscription<T?>? _subscription;
   VoidCallback? _formListenerRemover;
+  VoidCallback? _disposeEffect;
   bool _wasSubmitting = false;
+  bool _primed = false;
+  Object? _lastDep;
   Object? _initializationError;
 
   @override
@@ -86,16 +89,8 @@ class _FormixFieldAsyncTransformerState<T, S> extends ConsumerState<FormixFieldA
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    var provider = Formix.of(context);
-    if (provider == null) {
-      try {
-        provider = ref.watch(currentControllerProvider);
-      } catch (_) {
-        // ProviderScope missing
-      }
-    }
-
-    if (provider == null) {
+    final newController = Formix.controllerOf(context);
+    if (newController == null) {
       if (mounted) {
         setState(() {
           _initializationError = 'FormixFieldAsyncTransformer used outside of Formix';
@@ -104,35 +99,41 @@ class _FormixFieldAsyncTransformerState<T, S> extends ConsumerState<FormixFieldA
       return;
     }
 
-    // We don't watch the provider here to avoid unnecessary rebuilds
-    // The ref.listen in build() handles granular updates
-    try {
-      final newController = ref.read(provider.notifier);
-      if (newController != _controller) {
-        if (_controller != null) {
-          _formListenerRemover?.call();
-          _formListenerRemover = null;
-        }
+    if (newController != _controller) {
+      _formListenerRemover?.call();
+      _formListenerRemover = null;
 
-        _controller = newController;
-        if (_controller != null) {
-          if (widget.retransformOnSubmit) {
-            _formListenerRemover = _controller!.addFormListener(_onSubmitChanged);
-          }
-          // Initial transform
-          if (mounted) {
-            _onSourceChanged();
-          }
-        }
+      _controller = newController;
+      if (widget.retransformOnSubmit) {
+        _formListenerRemover = _controller!.addFormListener(_onSubmitChanged);
       }
-      _initializationError = null;
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _initializationError = e;
-        });
-      }
+      _wireEffect();
     }
+    _initializationError = null;
+  }
+
+  /// Subscribes to the source field and feeds the debounce stream whenever the
+  /// source value (or its selected part) actually changes.
+  ///
+  /// The effect tracks ONLY the source value; the side-effect runs [untracked]
+  /// so mutating the target does not re-trigger this effect (which would
+  /// otherwise cause an infinite transform loop). It transforms on the first run
+  /// (initial mount) and thereafter only when the selected part actually changes.
+  void _wireEffect() {
+    _disposeEffect?.call();
+    _primed = false;
+    final controller = _controller;
+    if (controller == null) return;
+    _disposeEffect = effect(() {
+      final value = controller.valueSignal(widget.sourceField).value;
+      final dep = widget.select != null ? widget.select!(value) : value;
+      final shouldTransform = !_primed || dep != _lastDep;
+      _primed = true;
+      _lastDep = dep;
+      if (shouldTransform) {
+        untracked(() => _onSourceChanged(value));
+      }
+    });
   }
 
   @override
@@ -154,12 +155,13 @@ class _FormixFieldAsyncTransformerState<T, S> extends ConsumerState<FormixFieldA
     }
 
     if (oldWidget.sourceField != widget.sourceField || oldWidget.targetField != widget.targetField) {
-      _onSourceChanged();
+      _wireEffect();
     }
   }
 
   @override
   void dispose() {
+    _disposeEffect?.call();
     _subscription?.cancel();
     _inputController.close();
     if (_controller != null) {
@@ -177,22 +179,17 @@ class _FormixFieldAsyncTransformerState<T, S> extends ConsumerState<FormixFieldA
     super.dispose();
   }
 
-  void _onSourceChanged() {
+  void _onSourceChanged(T? sourceValue) {
     if (!mounted || _controller == null) return;
 
-    // Mark as pending. Use microtask since this might be called during build
-    // (e.g. didChangeDependencies)
+    // Mark as pending; deferred so it never mutates state during a build phase.
     Future.microtask(() {
       if (mounted && _controller != null) {
         _controller!.setPending(widget.targetField, true);
       }
     });
 
-    // Get source value
-    final dynamic rawValue = _controller!.getValue(widget.sourceField);
-    final T? sourceValue = rawValue as T?;
-
-    // Emit to stream for debouncing and processing
+    // Emit to the (optionally debounced) stream for processing.
     _inputController.add(sourceValue);
   }
 
@@ -201,8 +198,7 @@ class _FormixFieldAsyncTransformerState<T, S> extends ConsumerState<FormixFieldA
 
     final isSubmitting = state.isSubmitting;
     if (isSubmitting && !_wasSubmitting) {
-      // Started submitting, re-trigger transform
-      _onSourceChanged();
+      _onSourceChanged(state.getValue(widget.sourceField));
     }
     _wasSubmitting = isSubmitting;
   }
@@ -244,22 +240,9 @@ class _FormixFieldAsyncTransformerState<T, S> extends ConsumerState<FormixFieldA
     if (_initializationError != null) {
       return FormixConfigurationErrorWidget(
         message: _initializationError is String ? _initializationError as String : 'Failed to initialize FormixFieldAsyncTransformer',
-        details: _initializationError.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.'
-            : 'Error: $_initializationError',
+        details: 'Error: $_initializationError',
       );
     }
-    // Listen to source field reactively using granular selector
-    final provider = fieldValueProvider(widget.sourceField);
-    if (widget.select != null) {
-      ref.listen(
-        provider.select((value) => widget.select!(value as T?)),
-        (_, __) => _onSourceChanged(),
-      );
-    } else {
-      ref.listen(provider, (_, __) => _onSourceChanged());
-    }
-
     return const SizedBox.shrink();
   }
 }

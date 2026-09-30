@@ -15,12 +15,9 @@ void main() {
         ),
       ];
 
-      final container = ProviderContainer();
       final param = FormixParameter(fields: fields);
-
-      // Keep alive by listening
-      container.listen(formControllerProvider(param), (_, __) {});
-      final controller = container.read(formControllerProvider(param).notifier);
+      final controller = FormixController.fromParameter(param);
+      addTearDown(controller.dispose);
 
       // Verify initial error (auto-validate might be off, triggers on submit)
       await controller.submit(onValid: (_) async {});
@@ -61,14 +58,9 @@ void main() {
           ),
         ];
 
-        final container = ProviderContainer();
         final param = FormixParameter(fields: fields);
-
-        // Keep alive by listening
-        container.listen(formControllerProvider(param), (_, __) {});
-        final controller = container.read(
-          formControllerProvider(param).notifier,
-        );
+        final controller = FormixController.fromParameter(param);
+        addTearDown(controller.dispose);
 
         // Trigger async validation
         controller.setValue(fieldA, 'new value');

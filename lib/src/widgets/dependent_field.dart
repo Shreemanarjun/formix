@@ -21,14 +21,14 @@ import 'ancestor_validator.dart';
 ///   },
 /// )
 /// ```
-class FormixDependentField<T> extends ConsumerStatefulWidget {
+class FormixDependentField<T> extends StatefulWidget {
   /// Creates a dependent field widget.
   const FormixDependentField({
     super.key,
     required this.fieldId,
     required this.builder,
     this.select,
-    this.controllerProvider,
+    this.controller,
   });
 
   /// The ID of the field to watch for changes.
@@ -42,56 +42,87 @@ class FormixDependentField<T> extends ConsumerStatefulWidget {
   /// a complex object change.
   final Object? Function(T? value)? select;
 
-  /// Optional explicit controller provider. If null, it looks up the nearest [Formix].
-  final AutoDisposeStateNotifierProvider<FormixController, FormixData>? controllerProvider;
+  /// Optional explicit controller. If null, it looks up the nearest [Formix].
+  final FormixController? controller;
 
   @override
-  ConsumerState<FormixDependentField<T>> createState() => _FormixDependentFieldState<T>();
+  State<FormixDependentField<T>> createState() => _FormixDependentFieldState<T>();
 }
 
-class _FormixDependentFieldState<T> extends ConsumerState<FormixDependentField<T>> {
+class _FormixDependentFieldState<T> extends State<FormixDependentField<T>> {
+  FormixController? _controller;
+  VoidCallback? _disposeEffect;
+  T? _value;
+  Object? _lastDep;
+  bool _primed = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final controller = widget.controller ?? Formix.controllerOf(context);
+    if (controller != _controller) {
+      _controller = controller;
+      _wire();
+    }
+  }
+
+  @override
+  void didUpdateWidget(FormixDependentField<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final controller = widget.controller ?? Formix.controllerOf(context);
+    if (controller != _controller || oldWidget.fieldId != widget.fieldId) {
+      _controller = controller;
+      _wire();
+    }
+  }
+
+  /// Tracks the field value via an effect and rebuilds only when the selected
+  /// projection actually changes (deterministic gating, independent of computed
+  /// equality). The whole value is always kept for the builder.
+  void _wire() {
+    _disposeEffect?.call();
+    _disposeEffect = null;
+    _primed = false;
+    final controller = _controller;
+    if (controller == null) return;
+    _disposeEffect = effect(() {
+      final value = controller.valueSignal(widget.fieldId).value;
+      final dep = widget.select != null ? widget.select!(value) : value;
+      final firstRun = !_primed;
+      final changed = firstRun || dep != _lastDep;
+      _primed = true;
+      _lastDep = dep;
+      _value = value; // always keep the latest raw value for the builder
+      if (changed && !firstRun && mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _disposeEffect?.call();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final errorWidget = FormixAncestorValidator.validate(
       context,
       widgetName: 'FormixDependentField',
-      explicitProvider: widget.controllerProvider,
+      explicitController: widget.controller,
       requireFormix: false,
     );
 
     if (errorWidget != null) return errorWidget;
 
-    final provider = widget.controllerProvider ?? Formix.of(context) ?? ref.watch(currentControllerProvider);
+    if (_controller == null) {
+      return const FormixConfigurationErrorWidget(
+        message: 'Failed to initialize FormixDependentField',
+        details: 'FormixDependentField must be used inside a Formix widget or given an explicit controller.',
+      );
+    }
 
-    // We use ProviderScope override to ensure we are watching the correct controller
-    // if we are using the global fieldValueProvider
-    return ProviderScope(
-      overrides: [currentControllerProvider.overrideWithValue(provider!)],
-      child: Consumer(
-        builder: (context, ref, _) {
-          try {
-            final provider = fieldValueProvider(widget.fieldId);
-            final T? value;
-
-            if (widget.select != null) {
-              // Watch only the selected part but still provide the whole value to the builder
-              ref.watch(provider.select((v) => widget.select!(v as T?)));
-              value = ref.read(provider) as T?;
-            } else {
-              value = ref.watch(provider) as T?;
-            }
-
-            return widget.builder(context, value);
-          } catch (e) {
-            return FormixConfigurationErrorWidget(
-              message: 'Failed to initialize FormixDependentField',
-              details: e.toString().contains('No ProviderScope found')
-                  ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.'
-                  : 'Error: $e',
-            );
-          }
-        },
-      ),
-    );
+    return widget.builder(context, _value);
   }
 }

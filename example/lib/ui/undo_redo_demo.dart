@@ -8,22 +8,20 @@ class UndoRedoPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Undo/Redo History')),
-      body: ProviderScope(
-        child: Formix(
-          initialValue: const {
-            'document': 'Initial content.\n\nType here...',
-            'font_size': 14.0,
-            'dark_mode': false,
-          },
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                _buildToolbar(context),
-                const Divider(),
-                Expanded(child: _buildEditor()),
-              ],
-            ),
+      body: Formix(
+        initialValue: const {
+          'document': 'Initial content.\n\nType here...',
+          'font_size': 14.0,
+          'dark_mode': false,
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              _buildToolbar(context),
+              const Divider(),
+              Expanded(child: _buildEditor()),
+            ],
           ),
         ),
       ),
@@ -34,7 +32,7 @@ class UndoRedoPage extends StatelessWidget {
     return FormixBuilder(
       builder: (context, scope) {
         // Access controller for undo/redo
-        final controller = scope.controller as RiverpodFormController;
+        final controller = scope.controller;
 
         // We can't easily watch canUndo/canRedo unless we expose them
         // or watch the entire state and check history index?

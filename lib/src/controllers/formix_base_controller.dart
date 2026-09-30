@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'field.dart';
@@ -10,6 +10,7 @@ import 'validation.dart';
 import 'form_state.dart';
 import 'field_config.dart';
 import 'formix_controller.dart';
+import 'submission.dart';
 import '../analytics/form_analytics.dart';
 import '../i18n.dart';
 import '../validators/validation_keys.dart';
@@ -22,7 +23,7 @@ export 'form_state.dart';
 export 'field_config.dart';
 export 'formix_controller.dart';
 
-/// Core logic for managing form state using Riverpod.
+/// Core logic for managing form state, powered by [Signal]s.
 ///
 /// This controller is the brain of the form. It coordinates:
 /// *   **Field Lifecycle**: Registration and disposal of form fields.
@@ -32,16 +33,53 @@ export 'formix_controller.dart';
 /// *   **Undo/Redo**: Maintains a history of form states for easy navigation.
 /// *   **Persistence**: Integrates with [FormixPersistence] to save/restore data.
 ///
-/// You typically interact with this via [Formix.controllerOf(context)] in widgets,
-/// or via a [GlobalKey<FormixState>].
-class RiverpodFormController extends StateNotifier<FormixData> {
+/// The whole-form state is held in a single [Signal<FormixData>]; widgets watch
+/// fine-grained [Computed] slices (see [FormixController]) so a change to one
+/// field only rebuilds the widgets that read that field.
+///
+/// You typically interact with this via [Formix.of(context)] in widgets,
+/// or by holding a [FormixController] instance directly.
+class FormixBaseController {
+  /// The configuration this controller was created with.
+  final FormixParameter parameter;
+
+  /// Creates a [FormixBaseController] and initializes its fields and state.
+  FormixBaseController([this.parameter = const FormixParameter()]) {
+    _initFields();
+    _initialize();
+  }
+
+  void _initFields() {
+    persistence = parameter.persistence;
+    formId = parameter.formId;
+    analytics = parameter.analytics;
+    autovalidateMode = parameter.autovalidateMode;
+    _registeredDevToolsId = parameter.formId ?? parameter.namespace;
+    messages = parameter.messages ?? formixGlobalMessages.peek();
+  }
+
+  /// The reactive source of truth for the entire form state.
+  late final Signal<FormixData> _stateSignal;
+
+  /// Reactive submission lifecycle. Idle until [submit] runs.
+  final Signal<FormixSubmission> _submission = signal(const FormixSubmission.idle());
+
+  /// Reactive submission lifecycle state (idle/submitting/success/error).
+  ReadonlySignal<FormixSubmission> get submissionSignal => _submission;
+
+  /// Disposes the global-message subscription (language changes).
+  VoidCallback? _messagesEffectDispose;
+
   /// Internationalization messages for validation errors
-  FormixMessages messages;
+  late FormixMessages messages;
 
   /// Map of initial values for all registered fields.
   @protected
   final Map<String, dynamic> initialValueMap = {};
   final Map<String, Timer> _debouncers = {};
+  // Per-field async-validation generation; a resolved run with a stale
+  // generation is discarded (a newer input has superseded it).
+  final Map<String, int> _asyncGeneration = {};
   Timer? _submitDebounceTimer;
   DateTime? _lastSubmitTime;
   DateTime? _startTime;
@@ -49,8 +87,10 @@ class RiverpodFormController extends StateNotifier<FormixData> {
   final Map<String, List<String>> _dependentsMap = {};
   final Map<String, Set<String>> _transitiveDependentsCache = {};
 
-  /// Global validation mode for the form.
-  final FormixAutovalidateMode autovalidateMode;
+  /// The global autovalidate mode applied to all fields in this form.
+  ///
+  /// Individual fields may override this with their own [FormixAutovalidateMode].
+  late FormixAutovalidateMode autovalidateMode;
 
   /// Returns the number of registered fields (for testing).
   @visibleForTesting
@@ -60,7 +100,7 @@ class RiverpodFormController extends StateNotifier<FormixData> {
   List<FormixData> _history = [];
   int _historyIndex = -1;
   bool _isRestoringHistory = false;
-  static const int _maxHistoryLength = 50; // Exposed for testing implicitly via max size checks
+  static const int _maxHistoryLength = 50;
 
   /// Returns the number of history states (for testing).
   @visibleForTesting
@@ -89,42 +129,27 @@ class RiverpodFormController extends StateNotifier<FormixData> {
   final _stateController = StreamController<FormixData>.broadcast(sync: true);
 
   /// Stream of form state changes.
-  ///
-  /// Use this to listen to form changes outside of widgets:
-  /// ```dart
-  /// final subscription = controller.stream.listen((state) {
-  ///   print('Form changed: ${state.values}');
-  /// });
-  /// // Don't forget to cancel when done
-  /// subscription.cancel();
-  /// ```
-  @override
   Stream<FormixData> get stream => _stateController.stream;
 
   /// Registered listeners for form state changes
-  final List<void Function(FormixData)> _formListeners = [];
+  @protected
+  final List<void Function(FormixData)> formListeners = [];
+
+  /// Whether this controller is still active (not disposed).
+  bool _isDisposed = false;
+
+  /// Whether this controller is still active (not disposed).
+  bool get mounted => !_isDisposed;
 
   /// Add a listener that will be called whenever the form state changes.
-  ///
-  /// Returns a function that can be called to remove the listener.
-  ///
-  /// Example:
-  /// ```dart
-  /// final removeListener = controller.addFormListener((state) {
-  ///   print('Values: ${state.values}');
-  /// });
-  ///
-  /// // Later, remove the listener
-  /// removeListener();
-  /// ```
   VoidCallback addFormListener(void Function(FormixData state) listener) {
-    _formListeners.add(listener);
+    formListeners.add(listener);
     return () => removeFormListener(listener);
   }
 
   /// Remove a previously added listener
   void removeFormListener(void Function(FormixData state) listener) {
-    _formListeners.remove(listener);
+    formListeners.remove(listener);
   }
 
   /// Notify all listeners and stream subscribers of state changes
@@ -136,7 +161,7 @@ class RiverpodFormController extends StateNotifier<FormixData> {
     }
 
     // Notify callback listeners
-    for (final listener in _formListeners.toList()) {
+    for (final listener in formListeners.toList()) {
       try {
         listener(state);
       } catch (e) {
@@ -145,36 +170,61 @@ class RiverpodFormController extends StateNotifier<FormixData> {
     }
   }
 
-  /// Override state setter to automatically notify listeners
-  @override
+  /// Replaces the whole-form state, recording it in the undo/redo history.
   set state(FormixData value) {
-    if (!mounted) return;
+    if (_isRestoringHistory) {
+      _applyState(value);
+      return;
+    }
 
-    // Add to history if not restoring and values actually changed
-    if (!_isRestoringHistory && !identical(value, state)) {
-      // Identity check on the values map is O(1) and reliable since we lazy-clone
-      final valuesChanged = !identical(value.values, state.values);
+    final valuesChanged = _history.isEmpty || !const MapEquality().equals(_history[_historyIndex].values, value.values);
+    final resetOccurred = _history.isNotEmpty && _history[_historyIndex].resetCount != value.resetCount;
 
-      if (valuesChanged) {
-        if (_historyIndex < _history.length - 1) {
-          // Truncate future history
-          _history = _history.sublist(0, _historyIndex + 1);
-        }
-        _history.add(value);
-        if (_history.length > _maxHistoryLength) {
-          _history.removeAt(0);
-        } else {
-          _historyIndex++;
-        }
+    if (valuesChanged || resetOccurred) {
+      // If we are at the end, just add. If we are in the middle, truncate.
+      if (_historyIndex < _history.length - 1) {
+        _history = _history.sublist(0, _historyIndex + 1);
+      }
+
+      _history.add(value);
+      if (_history.length > _maxHistoryLength) {
+        _history.removeAt(0);
+      } else {
+        _historyIndex++;
       }
     }
 
-    super.state = value;
-    _notifyFormListeners();
+    _applyState(value);
   }
 
-  @override
-  FormixData get state => super.state;
+  /// Internal helper to push a new state into the reactive [Signal].
+  void _applyState(FormixData value) {
+    if (!mounted) return;
+
+    // We only reach here when the state genuinely changed (mutations build a new
+    // instance and batch updates return early on no-op), so force the write to
+    // skip the O(n) FormixData equality check Signal.value would otherwise run
+    // on every keystroke.
+    _stateSignal.set(value, force: true);
+
+    // We notify AFTER setting the state to ensure that listeners (and getValue calls) see the new state.
+    onStateChanged(value);
+  }
+
+  /// The current whole-form state. Reading this inside a [SignalBuilder] (or any
+  /// reactive context) subscribes to every form change; prefer the fine-grained
+  /// slices on [FormixController] for surgical rebuilds.
+  FormixData get state => _stateSignal.value;
+
+  /// The whole-form state as a read-only [Signal], for callers that need to
+  /// subscribe explicitly (e.g. [FormixScope.watchState]).
+  ReadonlySignal<FormixData> get stateSignal => _stateSignal;
+
+  /// Hook for subclasses (like [FormixController]) to react to state changes.
+  @protected
+  void onStateChanged(FormixData state) {
+    _notifyFormListeners();
+  }
 
   static FormixData _createInitialState(
     Map<String, dynamic> initialValues,
@@ -228,10 +278,25 @@ class RiverpodFormController extends StateNotifier<FormixData> {
   /// Updates the messages used for validation errors.
   ///
   /// This will trigger re-validation of all fields to update error messages.
-  void updateMessages(FormixMessages newMessages) {
-    if (messages == newMessages) return;
-    messages = newMessages;
-    validate(); // Re-validate to update error strings
+  void updateMessages(FormixMessages? newMessages) {
+    final effectiveMessages = newMessages ?? const DefaultFormixMessages();
+    if (messages == effectiveMessages) return;
+    messages = effectiveMessages;
+
+    // Defer validation if we are mid-frame (e.g. called from didUpdateWidget or
+    // during a build) to avoid mutating a signal that is being read by a builder.
+    bool isPersistent = false;
+    try {
+      isPersistent = WidgetsBinding.instance.schedulerPhase == SchedulerPhase.persistentCallbacks;
+    } catch (_) {}
+
+    if (isPersistent) {
+      Future.microtask(() {
+        if (mounted) validate();
+      });
+    } else {
+      validate();
+    }
   }
 
   /// Get the validation mode for a specific field.
@@ -244,44 +309,62 @@ class RiverpodFormController extends StateNotifier<FormixData> {
   }
 
   /// The persistence handler for this form
-  final FormixPersistence? persistence;
+  late FormixPersistence? persistence;
 
   /// Unique identifier for this form (required for persistence)
-  final String? formId;
+  late String? formId;
 
   /// Optional analytics hook
-  final FormixAnalytics? analytics;
+  late FormixAnalytics? analytics;
 
-  final String? _registeredDevToolsId;
+  late String? _registeredDevToolsId;
 
-  /// Creates a [RiverpodFormController].
-  ///
-  /// [initialValue] sets the starting values for the form.
-  /// [fields] provides the configuration for form fields.
-  /// [messages] allows overriding the default validation messages.
-  /// [persistence] and [formId] enable state restoration across app restarts.
-  RiverpodFormController({
-    Map<String, dynamic> initialValue = const {},
-    List<FormixField<dynamic>> fields = const [],
-    this.messages = const DefaultFormixMessages(),
-    this.persistence,
-    this.formId,
-    this.analytics,
-    String? namespace,
-    this.autovalidateMode = FormixAutovalidateMode.always,
-    FormixData? initialData,
-  }) : _registeredDevToolsId = formId ?? namespace,
-       super(initialData ?? _createInitialState(initialValue, fields, autovalidateMode)) {
+  /// Builds the initial state, registers fields, and wires reactive listeners.
+  /// Called once from the constructor.
+  void _initialize() {
     _startTime = DateTime.now();
     analytics?.onFormStarted(formId);
-    initialValueMap.addAll(initialValue);
-    registerFields(fields);
-    _history = [state];
+    initialValueMap.addAll(parameter.initialValue);
+
+    final fields = parameter.fields.map((f) => f.toField()).toList();
+    _assertUniqueKeys(fields);
+    final initialState = parameter.initialData ?? _createInitialState(parameter.initialValue, fields, parameter.autovalidateMode);
+
+    // Initial Definitions setup
+    for (final field in fields) {
+      final key = field.id.key;
+      _fieldDefinitions[key] = field;
+      _validationDurations[key] = Duration.zero;
+      for (final dep in field.dependsOn) {
+        _dependentsMap.putIfAbsent(dep.key, () => []).add(key);
+      }
+      if (field.initialValue != null || !initialValueMap.containsKey(key)) {
+        initialValueMap[key] = field.initialValue;
+      }
+    }
+
+    _stateSignal = signal(
+      initialState,
+      options: SignalOptions(name: _registeredDevToolsId ?? 'formixState'),
+    );
+
+    // Set history
+    _history = [initialState];
     _historyIndex = 0;
-    _loadPersistedState();
+
+    // React to global message (language) changes unless overridden per-form.
+    if (parameter.messages == null) {
+      _messagesEffectDispose = effect(() {
+        final next = formixGlobalMessages.value;
+        untracked(() => updateMessages(next));
+      });
+    }
+
+    // Schedule load persisted state
+    Future.microtask(() => _loadPersistedState());
 
     if (_registeredDevToolsId != null) {
-      FormixDevToolsService.registerController(_registeredDevToolsId, this);
+      FormixDevToolsService.registerController(_registeredDevToolsId!, this);
     }
   }
 
@@ -424,6 +507,9 @@ class RiverpodFormController extends StateNotifier<FormixData> {
           values: newValues,
           validations: newValidations,
           dirtyStates: newDirtyStates,
+          // A persisted load can touch many fields; clear the delta so every live
+          // reactive slice re-syncs from the loaded state.
+          clearChangedFields: true,
         );
       }
     }
@@ -435,12 +521,15 @@ class RiverpodFormController extends StateNotifier<FormixData> {
   /// Whether the form is currently being submitted.
   ///
   /// This is true while the `onValid` callback provided to [submit] is executing.
+  // coverage:ignore-line — always overridden by FormixController; base getter never invoked directly
   bool get isSubmitting => state.isSubmitting;
 
   /// Map of all current field keys to their error messages.
+  // coverage:ignore-line — always overridden by FormixController; base getter never invoked directly
   Map<String, String> get errors => state.errors;
 
   /// List of all current validation error messages.
+  // coverage:ignore-line — always overridden by FormixController; base getter never invoked directly
   List<String> get errorMessages => state.errorMessages;
 
   /// Check if a field is registered
@@ -454,12 +543,12 @@ class RiverpodFormController extends StateNotifier<FormixData> {
   /// with keepAlive: true.
   bool preventDisposal = false;
 
-  @override
+  /// Disposes resources used by this controller.
   void dispose() {
-    if (preventDisposal) return;
-
+    if (_isDisposed || preventDisposal) return;
+    _isDisposed = true;
     if (_registeredDevToolsId != null) {
-      FormixDevToolsService.unregisterController(_registeredDevToolsId);
+      FormixDevToolsService.unregisterController(_registeredDevToolsId!);
     }
     if (!_hasSubmittedSuccessfully) {
       final duration = DateTime.now().difference(_startTime ?? DateTime.now());
@@ -473,9 +562,11 @@ class RiverpodFormController extends StateNotifier<FormixData> {
       sub.cancel();
     }
     _bindings.clear();
+    _messagesEffectDispose?.call();
     _stateController.close();
-    _formListeners.clear();
-    super.dispose();
+    formListeners.clear();
+    _stateSignal.dispose();
+    _submission.dispose();
   }
 
   /// Retrieves the current value of a field in a type-safe way.
@@ -497,10 +588,12 @@ class RiverpodFormController extends StateNotifier<FormixData> {
     if (initial is T) return initial;
 
     // 3. Check registered field definitions (last resort for initial values)
+    // coverage:ignore-start — unreachable: registerField always mirrors a field's initialValue into initialValueMap, so branch 2 above catches it first
     final field = _fieldDefinitions[fieldId.key];
     if (field != null && field.initialValue is T) {
       return field.initialValue as T;
     }
+    // coverage:ignore-end
 
     return null;
   }
@@ -555,6 +648,26 @@ class RiverpodFormController extends StateNotifier<FormixData> {
   FormixBatchResult applyBatch(FormixBatch batch, {bool strict = false}) {
     return _batchUpdate(batch.updates, strict: strict);
   }
+
+  /// Builds and applies a [FormixBatch] in one step:
+  /// ```dart
+  /// controller.batchUpdate((b) => b..set(nameId, 'Ada')..set(ageId, 36));
+  /// ```
+  FormixBatchResult batchUpdate(void Function(FormixBatch batch) build, {bool strict = false}) {
+    final batch = FormixBatch();
+    build(batch);
+    return applyBatch(batch, strict: strict);
+  }
+
+  /// Terse value accessor: `controller[fieldId]`.
+  ///
+  /// Returns the value as `dynamic` (operators can't be generic in Dart); prefer
+  /// [getValue] for a statically-typed result. Runtime type safety is preserved.
+  dynamic operator [](FormixFieldID<dynamic> fieldId) => getValue(fieldId);
+
+  /// Terse setter: `controller[fieldId] = value`. Equivalent to [setValue] and
+  /// still type-checked at runtime against the field's declared type.
+  void operator []=(FormixFieldID<dynamic> fieldId, dynamic value) => setValue(fieldId, value);
 
   FormixBatchResult _batchUpdate(
     Map<dynamic, dynamic> updates, {
@@ -678,7 +791,8 @@ class RiverpodFormController extends StateNotifier<FormixData> {
           value = transformer(value);
         }
 
-        if (value != (newValues != null ? newValues[key] : state.values[key])) {
+        final oldValue = newValues != null ? newValues[key] : state.values[key];
+        if (value != oldValue) {
           newValues ??= {...state.values};
           newValues[key] = value;
           changedFieldsInThisUpdate.add(key);
@@ -935,6 +1049,18 @@ class RiverpodFormController extends StateNotifier<FormixData> {
             return messages.maxValue(label, num.tryParse(param) ?? 0);
           }
           break;
+        case FormixValidationKeys.minDate:
+          if (param != null) {
+            return messages.minDate(label, DateTime.fromMillisecondsSinceEpoch(int.tryParse(param) ?? 0));
+          }
+          break;
+        case FormixValidationKeys.maxDate:
+          if (param != null) {
+            return messages.maxDate(label, DateTime.fromMillisecondsSinceEpoch(int.tryParse(param) ?? 0));
+          }
+          break;
+        case FormixValidationKeys.invalidSelection:
+          return messages.invalidSelection(label);
       }
     }
     return messages.format(error, params);
@@ -949,6 +1075,12 @@ class RiverpodFormController extends StateNotifier<FormixData> {
 
     _debouncers[key]?.cancel();
 
+    // Perf/correctness: each scheduled run bumps the field's generation. A run
+    // whose generation is stale by the time it resolves (a newer input arrived)
+    // drops its result instead of overwriting the newer validation state.
+    final generation = (_asyncGeneration[key] ?? 0) + 1;
+    _asyncGeneration[key] = generation;
+
     _debouncers[key] = Timer(
       fieldDef.debounceDuration ?? const Duration(milliseconds: 300),
       () async {
@@ -961,7 +1093,7 @@ class RiverpodFormController extends StateNotifier<FormixData> {
             _validationDurations[key] = sw.elapsed;
           }
 
-          if (!mounted) return;
+          if (!mounted || _asyncGeneration[key] != generation) return;
 
           final latestValidations = Map<String, ValidationResult>.from(
             state.validations,
@@ -973,6 +1105,7 @@ class RiverpodFormController extends StateNotifier<FormixData> {
           if (oldRes.isValid && !newRes.isValid) {
             newErrorCount++;
           } else if (!oldRes.isValid && newRes.isValid) {
+            // coverage:ignore-line — unreachable: a field awaiting async validation is in the `validating` (isValid=true) state, so oldRes is never invalid here
             newErrorCount--;
           }
 
@@ -995,7 +1128,7 @@ class RiverpodFormController extends StateNotifier<FormixData> {
             _validationDurations[key] = sw.elapsed;
           }
 
-          if (!mounted) return;
+          if (!mounted || _asyncGeneration[key] != generation) return;
           final latestValidations = Map<String, ValidationResult>.from(
             state.validations,
           );
@@ -1084,9 +1217,28 @@ class RiverpodFormController extends StateNotifier<FormixData> {
     return count;
   }
 
+  /// Asserts (debug-only) that [fields] contains no duplicate keys — the
+  /// copy-paste mistake of two fields sharing a `FormixFieldID` string key.
+  static void _assertUniqueKeys(List<FormixField> fields) {
+    assert(() {
+      final keys = fields.map((f) => f.id.key).toList();
+      final dupes = keys.where((k) => keys.where((o) => o == k).length > 1).toSet();
+      if (dupes.isNotEmpty) {
+        throw FlutterError(
+          'Duplicate field key(s) in a single Formix registration: ${dupes.join(', ')}.\n'
+          'Each field must have a unique FormixFieldID key. Declare them as static '
+          'consts on a form-holder class to avoid accidental duplicates:\n'
+          '  class LoginForm { static const email = FormixFieldID<String>("email"); }',
+        );
+      }
+      return true;
+    }());
+  }
+
   /// Register multiple fields at once
   void registerFields(List<FormixField> fields) {
     if (fields.isEmpty) return;
+    _assertUniqueKeys(fields);
     _transitiveDependentsCache.clear();
     final isNewMap = <String, bool>{};
 
@@ -1582,6 +1734,36 @@ class RiverpodFormController extends StateNotifier<FormixData> {
     state = state.copyWith(
       validations: currentValidations,
       errorCount: newErrorCount,
+      changedFields: {key},
+    );
+  }
+
+  /// Applies a batch of backend/server validation errors in a single update.
+  ///
+  /// Keys are field keys ([FormixFieldID.key]); values are the error messages to
+  /// display. This is the idiomatic way to surface API validation failures:
+  /// ```dart
+  /// try {
+  ///   await api.save(controller.state.values);
+  /// } on ApiValidationException catch (e) {
+  ///   controller.applyServerErrors(e.fieldErrors); // {'email': 'Already taken'}
+  /// }
+  /// ```
+  void applyServerErrors(Map<String, String> errors) {
+    if (!mounted || errors.isEmpty) return;
+    final currentValidations = {...state.validations};
+    int newErrorCount = state.errorCount;
+
+    for (final entry in errors.entries) {
+      final oldRes = currentValidations[entry.key] ?? ValidationResult.valid;
+      currentValidations[entry.key] = ValidationResult(isValid: false, errorMessage: entry.value);
+      if (oldRes.isValid) newErrorCount++;
+    }
+
+    state = state.copyWith(
+      validations: currentValidations,
+      errorCount: newErrorCount,
+      changedFields: errors.keys.toSet(),
     );
   }
 
@@ -1601,6 +1783,7 @@ class RiverpodFormController extends StateNotifier<FormixData> {
 
     int newErrorCount = state.errorCount;
     if (oldRes.isValid && !newRes.isValid) {
+      // coverage:ignore-line — unreachable: newRes here is either `validating` (isValid=true) or a copy of oldRes, never valid->invalid
       newErrorCount++;
     } else if (!oldRes.isValid && newRes.isValid) {
       newErrorCount--;
@@ -1617,6 +1800,7 @@ class RiverpodFormController extends StateNotifier<FormixData> {
       validations: currentValidations,
       errorCount: newErrorCount,
       pendingCount: newPendingCount,
+      changedFields: {key},
     );
   }
 
@@ -1725,6 +1909,7 @@ class RiverpodFormController extends StateNotifier<FormixData> {
 
     if (validate()) {
       setSubmitting(true);
+      _submission.value = const FormixSubmission.submitting();
 
       // Wait for any pending async validations or fields
       while (state.isPending) {
@@ -1736,6 +1921,7 @@ class RiverpodFormController extends StateNotifier<FormixData> {
       // Re-validate after async completions
       if (!state.isValid) {
         setSubmitting(false);
+        _submission.value = const FormixSubmission.idle();
         if (onError != null) {
           onError(state.validations);
         }
@@ -1758,8 +1944,10 @@ class RiverpodFormController extends StateNotifier<FormixData> {
       try {
         await onValid(state.values);
         _hasSubmittedSuccessfully = true;
+        _submission.value = const FormixSubmission.success();
         analytics?.onSubmitSuccess(formId);
-      } catch (e) {
+      } catch (e, st) {
+        _submission.value = FormixSubmission.error(e, st);
         if (optimistic && previousInitialValues != null && previousState != null) {
           // Revert optimistic changes
           initialValueMap.clear();
@@ -1771,6 +1959,7 @@ class RiverpodFormController extends StateNotifier<FormixData> {
         setSubmitting(false);
       }
     } else {
+      _submission.value = const FormixSubmission.idle();
       if (onError != null) {
         onError(state.validations);
       }
@@ -1897,7 +2086,7 @@ class RiverpodFormController extends StateNotifier<FormixData> {
   /// Returns a function to unbind.
   VoidCallback bindField<T>(
     FormixFieldID<T> targetField, {
-    required RiverpodFormController sourceController,
+    required FormixBaseController sourceController,
     required FormixFieldID<T> sourceField,
     bool twoWay = false,
   }) {
@@ -1941,12 +2130,7 @@ class RiverpodFormController extends StateNotifier<FormixData> {
   }
 }
 
-/// Provider for formix messages
-final formixMessagesProvider = Provider.autoDispose<FormixMessages>((ref) {
-  return const DefaultFormixMessages();
-}, name: 'formixMessagesProvider');
-
-/// Parameter for form controller provider family
+/// Immutable configuration used to create a [FormixController].
 @immutable
 class FormixParameter {
   /// Creates a [FormixParameter] for form initialization.
@@ -1960,7 +2144,11 @@ class FormixParameter {
     this.namespace,
     this.autovalidateMode = FormixAutovalidateMode.always,
     this.initialData,
+    this.messages,
   });
+
+  /// Optional custom messages for validation errors.
+  final FormixMessages? messages;
 
   /// Initial values for the form fields.
   final Map<String, dynamic> initialValue;
@@ -1999,10 +2187,12 @@ class FormixParameter {
 
     return formId == other.formId &&
         namespace == other.namespace &&
+        messages == other.messages &&
         autovalidateMode == other.autovalidateMode &&
         keepAlive == other.keepAlive &&
         deepEquals.equals(initialData, other.initialData) &&
-        (formId != null ? true : deepEquals.equals(initialValue, other.initialValue));
+        (formId != null ? true : deepEquals.equals(initialValue, other.initialValue)) &&
+        ((formId != null || namespace != null) ? true : deepEquals.equals(fields, other.fields));
   }
 
   @override
@@ -2011,9 +2201,11 @@ class FormixParameter {
     return Object.hash(
       formId,
       namespace,
+      messages,
       autovalidateMode,
       keepAlive,
-      formId == null ? deepEquals.hash(initialValue) : 0,
+      formId != null ? null : deepEquals.hash(initialValue),
+      (formId != null || namespace != null) ? null : deepEquals.hash(fields),
       deepEquals.hash(initialData),
     );
   }
@@ -2023,233 +2215,3 @@ class FormixParameter {
     return 'FormixParameter(formId: $formId, namespace: $namespace, keepAlive: $keepAlive, autovalidateMode: $autovalidateMode, initialValue: $initialValue)';
   }
 }
-
-/// Provider for form controller with auto-disposal
-final formControllerProvider = StateNotifierProvider.autoDispose.family<FormixController, FormixData, FormixParameter>((ref, param) {
-  if (param.keepAlive) {
-    ref.keepAlive();
-  }
-
-  // Use listen instead of watch to avoid recreating the controller when messages change.
-  // This prevents resetting the entire form state just because the language changed.
-  final controller = FormixController(
-    initialValue: param.initialValue,
-    fields: param.fields.map((f) => f.toField()).toList(),
-    messages: ref.read(formixMessagesProvider),
-    persistence: param.persistence,
-    formId: param.formId,
-    analytics: param.analytics,
-    namespace: param.namespace,
-    autovalidateMode: param.autovalidateMode,
-    initialData: param.initialData,
-  );
-
-  ref.listen<FormixMessages>(formixMessagesProvider, (previous, next) {
-    controller.updateMessages(next);
-  });
-
-  return controller;
-}, name: 'formControllerProvider');
-
-/// Provider for the current controller provider (can be overridden)
-final currentControllerProvider = Provider.autoDispose<AutoDisposeStateNotifierProvider<FormixController, FormixData>>((ref) {
-  return formControllerProvider(const FormixParameter(initialValue: {}));
-}, name: 'currentControllerProvider');
-
-/// Provider for field value with selector for performance
-final fieldValueProvider = Provider.autoDispose.family<dynamic, FormixFieldID<dynamic>>(
-  (ref, fieldId) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(
-      controllerProvider.select((formState) => formState.getValue(fieldId)),
-    );
-  },
-  dependencies: [currentControllerProvider],
-  name: 'fieldValueProvider',
-);
-
-/// Provider for field validation with selector for performance
-final fieldValidationProvider = Provider.autoDispose.family<ValidationResult, FormixFieldID<dynamic>>(
-  (ref, fieldId) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(
-      controllerProvider.select(
-        (formState) => formState.getValidation(fieldId),
-      ),
-    );
-  },
-  dependencies: [currentControllerProvider],
-  name: 'fieldValidationProvider',
-);
-
-/// Provider for field error message with selector for performance
-final fieldErrorProvider = Provider.autoDispose.family<String?, FormixFieldID<dynamic>>(
-  (ref, fieldId) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(
-      controllerProvider.select(
-        (formState) => formState.getValidation(fieldId).errorMessage,
-      ),
-    );
-  },
-  dependencies: [currentControllerProvider],
-  name: 'fieldErrorProvider',
-);
-
-/// Provider for watching if a field name group is valid.
-final groupValidProvider = Provider.autoDispose.family<bool, String>(
-  (ref, prefix) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(controllerProvider.select((s) => s.isGroupValid(prefix)));
-  },
-  dependencies: [currentControllerProvider],
-  name: 'groupValidProvider',
-);
-
-/// Provider for watching if a field name group contains any modifications.
-final groupDirtyProvider = Provider.autoDispose.family<bool, String>(
-  (ref, prefix) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(controllerProvider.select((s) => s.isGroupDirty(prefix)));
-  },
-  dependencies: [currentControllerProvider],
-  name: 'groupDirtyProvider',
-);
-
-/// Provider for field 'isValidating' state with selector for performance
-final fieldValidatingProvider = Provider.autoDispose.family<bool, FormixFieldID<dynamic>>(
-  (ref, fieldId) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(
-      controllerProvider.select(
-        (formState) => formState.getValidation(fieldId).isValidating,
-      ),
-    );
-  },
-  dependencies: [currentControllerProvider],
-  name: 'fieldValidatingProvider',
-);
-
-/// Provider for field 'isValid' state with selector for performance
-final fieldIsValidProvider = Provider.autoDispose.family<bool, FormixFieldID<dynamic>>(
-  (ref, fieldId) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(
-      controllerProvider.select(
-        (formState) => formState.getValidation(fieldId).isValid,
-      ),
-    );
-  },
-  dependencies: [currentControllerProvider],
-  name: 'fieldIsValidProvider',
-);
-
-/// Provider for field dirty state with selector for performance
-final fieldDirtyProvider = Provider.autoDispose.family<bool, FormixFieldID<dynamic>>(
-  (ref, fieldId) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(
-      controllerProvider.select(
-        (formState) => formState.isFieldDirty(fieldId),
-      ),
-    );
-  },
-  dependencies: [currentControllerProvider],
-  name: 'fieldDirtyProvider',
-);
-
-/// Provider for field touched state with selector for performance
-final fieldTouchedProvider = Provider.autoDispose.family<bool, FormixFieldID<dynamic>>(
-  (ref, fieldId) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(
-      controllerProvider.select(
-        (formState) => formState.isFieldTouched(fieldId),
-      ),
-    );
-  },
-  dependencies: [currentControllerProvider],
-  name: 'fieldTouchedProvider',
-);
-
-/// Provider for form validity with selector for performance
-final formValidProvider = Provider.autoDispose<bool>(
-  (ref) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(
-      controllerProvider.select((formState) => formState.isValid),
-    );
-  },
-  dependencies: [currentControllerProvider],
-  name: 'formValidProvider',
-);
-
-/// Provider for form dirty state with selector for performance
-final formDirtyProvider = Provider.autoDispose<bool>(
-  (ref) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(
-      controllerProvider.select((formState) => formState.isDirty),
-    );
-  },
-  dependencies: [currentControllerProvider],
-  name: 'formDirtyProvider',
-);
-
-/// Provider for field validation mode with selector for performance
-final fieldValidationModeProvider = Provider.autoDispose.family<FormixAutovalidateMode, FormixFieldID<dynamic>>(
-  (ref, fieldId) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(controllerProvider.notifier).getValidationMode(fieldId);
-  },
-  dependencies: [currentControllerProvider],
-  name: 'fieldValidationModeProvider',
-);
-
-/// Provider for form submitting state with selector for performance
-final formSubmittingProvider = Provider.autoDispose<bool>(
-  (ref) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(
-      controllerProvider.select((formState) => formState.isSubmitting),
-    );
-  },
-  dependencies: [currentControllerProvider],
-  name: 'formSubmittingProvider',
-);
-
-/// Provider for field pending state with selector for performance
-final fieldPendingProvider = Provider.autoDispose.family<bool, FormixFieldID<dynamic>>(
-  (ref, fieldId) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(
-      controllerProvider.select(
-        (formState) => formState.isFieldPending(fieldId),
-      ),
-    );
-  },
-  dependencies: [currentControllerProvider],
-  name: 'fieldPendingProvider',
-);
-
-/// Provider for form current step with selector for performance
-final formCurrentStepProvider = Provider.autoDispose<int>(
-  (ref) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(
-      controllerProvider.select((formState) => formState.currentStep),
-    );
-  },
-  dependencies: [currentControllerProvider],
-  name: 'formCurrentStepProvider',
-);
-
-/// Provider for the entire form data state.
-final formDataProvider = Provider.autoDispose<FormixData>(
-  (ref) {
-    final controllerProvider = ref.watch(currentControllerProvider);
-    return ref.watch(controllerProvider);
-  },
-  dependencies: [currentControllerProvider],
-  name: 'formDataProvider',
-);

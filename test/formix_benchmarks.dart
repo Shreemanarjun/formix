@@ -53,14 +53,12 @@ void main() {
         late VoidCallback triggerRebuild;
 
         await tester.pumpWidget(
-          ProviderScope(
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: Formix(
-                child: _BenchmarkContainer(
-                  onRebuildCallback: (callback) => triggerRebuild = callback,
-                  child: const MinimalFormField(fieldId: fieldId),
-                ),
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Formix(
+              child: _BenchmarkContainer(
+                onRebuildCallback: (callback) => triggerRebuild = callback,
+                child: const MinimalFormField(fieldId: fieldId),
               ),
             ),
           ),
@@ -106,21 +104,19 @@ void main() {
         late VoidCallback triggerRebuild;
 
         await tester.pumpWidget(
-          ProviderScope(
-            child: Directionality(
-              textDirection: TextDirection.ltr,
-              child: Formix(
-                child: _BenchmarkContainer(
-                  onRebuildCallback: (callback) => triggerRebuild = callback,
-                  child: Builder(
-                    builder: (context) {
-                      rebuildCount++;
-                      return MinimalFormField(
-                        fieldId: fieldId,
-                        key: ValueKey('field_$rebuildCount'),
-                      );
-                    },
-                  ),
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Formix(
+              child: _BenchmarkContainer(
+                onRebuildCallback: (callback) => triggerRebuild = callback,
+                child: Builder(
+                  builder: (context) {
+                    rebuildCount++;
+                    return MinimalFormField(
+                      fieldId: fieldId,
+                      key: ValueKey('field_$rebuildCount'),
+                    );
+                  },
                 ),
               ),
             ),
@@ -299,28 +295,26 @@ void main() {
         int rebuildCount = 0;
 
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              theme: ThemeData(useMaterial3: false),
-              home: Scaffold(
-                body: Formix(
-                  child: StatefulBuilder(
-                    builder: (context, setState) {
-                      rebuildCount++;
-                      return Column(
-                        children: [
-                          FormixTextFormField(
-                            fieldId: fieldId,
-                            key: ValueKey('field_$rebuildCount'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () => setState(() {}),
-                            child: const Text('Rebuild'),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+          MaterialApp(
+            theme: ThemeData(useMaterial3: false),
+            home: Scaffold(
+              body: Formix(
+                child: StatefulBuilder(
+                  builder: (context, setState) {
+                    rebuildCount++;
+                    return Column(
+                      children: [
+                        FormixTextFormField(
+                          fieldId: fieldId,
+                          key: ValueKey('field_$rebuildCount'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => setState(() {}),
+                          child: const Text('Rebuild'),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -371,27 +365,25 @@ void main() {
         );
 
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              theme: ThemeData(useMaterial3: false),
-              home: Scaffold(
-                body: Formix(
-                  child: StatefulBuilder(
-                    builder: (context, setState) {
-                      return Column(
-                        children: [
-                          const FormixTextFormField(
-                            fieldId: fieldId,
-                            decoration: decoration,
-                          ),
-                          ElevatedButton(
-                            onPressed: () => setState(() {}),
-                            child: const Text('Rebuild'),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+          MaterialApp(
+            theme: ThemeData(useMaterial3: false),
+            home: Scaffold(
+              body: Formix(
+                child: StatefulBuilder(
+                  builder: (context, setState) {
+                    return Column(
+                      children: [
+                        const FormixTextFormField(
+                          fieldId: fieldId,
+                          decoration: decoration,
+                        ),
+                        ElevatedButton(
+                          onPressed: () => setState(() {}),
+                          child: const Text('Rebuild'),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -437,17 +429,15 @@ void main() {
         final showField = ValueNotifier(true);
 
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              theme: ThemeData(useMaterial3: false),
-              home: Scaffold(
-                body: Formix(
-                  child: ValueListenableBuilder<bool>(
-                    valueListenable: showField,
-                    builder: (context, show, _) {
-                      return show ? const FormixTextFormField(fieldId: fieldId) : const SizedBox();
-                    },
-                  ),
+          MaterialApp(
+            theme: ThemeData(useMaterial3: false),
+            home: Scaffold(
+              body: Formix(
+                child: ValueListenableBuilder<bool>(
+                  valueListenable: showField,
+                  builder: (context, show, _) {
+                    return show ? const FormixTextFormField(fieldId: fieldId) : const SizedBox();
+                  },
                 ),
               ),
             ),

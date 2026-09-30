@@ -11,33 +11,31 @@ void main() {
   Widget buildTestApp({
     required Future<List<String>> Function(String?) fetchCities,
   }) {
-    return ProviderScope(
-      child: MaterialApp(
-        home: Scaffold(
-          body: Formix(
-            initialValue: const {'country': 'USA', 'city': 'New York'},
-            fields: const [
-              FormixFieldConfig<String>(id: countryField),
-              FormixFieldConfig<String>(id: cityField),
+    return MaterialApp(
+      home: Scaffold(
+        body: Formix(
+          initialValue: const {'country': 'USA', 'city': 'New York'},
+          fields: const [
+            FormixFieldConfig<String>(id: countryField),
+            FormixFieldConfig<String>(id: cityField),
+          ],
+          child: Column(
+            children: [
+              const FormixTextFormField(fieldId: countryField),
+              FormixDependentAsyncField<List<String>, String>(
+                fieldId: cityOptionsField,
+                dependency: countryField,
+                resetField: cityField,
+                future: fetchCities,
+                builder: (context, state) {
+                  final cities = state.asyncState.value ?? [];
+                  return Column(
+                    children: cities.map((c) => Text('Option: $c')).toList(),
+                  );
+                },
+              ),
+              const FormixTextFormField(fieldId: cityField),
             ],
-            child: Column(
-              children: [
-                const FormixTextFormField(fieldId: countryField),
-                FormixDependentAsyncField<List<String>, String>(
-                  fieldId: cityOptionsField,
-                  dependency: countryField,
-                  resetField: cityField,
-                  future: fetchCities,
-                  builder: (context, state) {
-                    final cities = state.asyncState.value ?? [];
-                    return Column(
-                      children: cities.map((c) => Text('Option: $c')).toList(),
-                    );
-                  },
-                ),
-                const FormixTextFormField(fieldId: cityField),
-              ],
-            ),
           ),
         ),
       ),
@@ -90,30 +88,28 @@ void main() {
     }
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              initialValue: const {'country': 'USA', 'city': 'NYC'},
-              child: Column(
-                children: [
-                  const FormixTextFormField(
-                    fieldId: countryField,
-                    key: Key('country_input'),
-                  ),
-                  const FormixTextFormField(
-                    fieldId: cityField,
-                    key: Key('city_input'),
-                  ),
-                  FormixDependentAsyncField<List<String>, String>(
-                    fieldId: cityOptionsField,
-                    dependency: countryField,
-                    resetField: cityField,
-                    future: fetchCities,
-                    builder: (context, state) => Container(),
-                  ),
-                ],
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            initialValue: const {'country': 'USA', 'city': 'NYC'},
+            child: Column(
+              children: [
+                const FormixTextFormField(
+                  fieldId: countryField,
+                  key: Key('country_input'),
+                ),
+                const FormixTextFormField(
+                  fieldId: cityField,
+                  key: Key('city_input'),
+                ),
+                FormixDependentAsyncField<List<String>, String>(
+                  fieldId: cityOptionsField,
+                  dependency: countryField,
+                  resetField: cityField,
+                  future: fetchCities,
+                  builder: (context, state) => Container(),
+                ),
+              ],
             ),
           ),
         ),
@@ -157,38 +153,36 @@ void main() {
       }
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'country': 'USA', 'city': 'NY'},
-                child: Column(
-                  children: [
-                    const FormixTextFormField(
-                      fieldId: countryField,
-                      key: Key('country'),
-                    ),
-                    FormixDependentAsyncField<List<String>, String>(
-                      fieldId: cityOptionsField,
-                      dependency: countryField,
-                      resetField: cityField,
-                      future: fetchCities,
-                      keepPreviousData: false,
-                      loadingBuilder: (context) => const Text('Loading...'),
-                      builder: (context, state) {
-                        return FormixDropdownFormField<String>(
-                          fieldId: cityField,
-                          key: const Key('city_dropdown'),
-                          items: (state.asyncState.value ?? [])
-                              .map(
-                                (c) => DropdownMenuItem(value: c, child: Text(c)),
-                              )
-                              .toList(),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'country': 'USA', 'city': 'NY'},
+              child: Column(
+                children: [
+                  const FormixTextFormField(
+                    fieldId: countryField,
+                    key: Key('country'),
+                  ),
+                  FormixDependentAsyncField<List<String>, String>(
+                    fieldId: cityOptionsField,
+                    dependency: countryField,
+                    resetField: cityField,
+                    future: fetchCities,
+                    keepPreviousData: false,
+                    loadingBuilder: (context) => const Text('Loading...'),
+                    builder: (context, state) {
+                      return FormixDropdownFormField<String>(
+                        fieldId: cityField,
+                        key: const Key('city_dropdown'),
+                        items: (state.asyncState.value ?? [])
+                            .map(
+                              (c) => DropdownMenuItem(value: c, child: Text(c)),
+                            )
+                            .toList(),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ),
@@ -260,38 +254,36 @@ void main() {
     }
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              initialValue: const {'country': 'USA', 'city': 'NY'},
-              child: Column(
-                children: [
-                  const FormixTextFormField(
-                    fieldId: countryField,
-                    key: Key('country'),
-                  ),
-                  FormixDependentAsyncField<List<String>, String>(
-                    fieldId: cityOptionsField,
-                    dependency: countryField,
-                    resetField: cityField,
-                    future: fetchCities,
-                    keepPreviousData: false,
-                    loadingBuilder: (context) => const Text('Loading...'),
-                    builder: (context, state) {
-                      return FormixDropdownFormField<String>(
-                        fieldId: cityField,
-                        key: const Key('city_dropdown'),
-                        items: (state.asyncState.value ?? [])
-                            .map(
-                              (c) => DropdownMenuItem(value: c, child: Text(c)),
-                            )
-                            .toList(),
-                      );
-                    },
-                  ),
-                ],
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            initialValue: const {'country': 'USA', 'city': 'NY'},
+            child: Column(
+              children: [
+                const FormixTextFormField(
+                  fieldId: countryField,
+                  key: Key('country'),
+                ),
+                FormixDependentAsyncField<List<String>, String>(
+                  fieldId: cityOptionsField,
+                  dependency: countryField,
+                  resetField: cityField,
+                  future: fetchCities,
+                  keepPreviousData: false,
+                  loadingBuilder: (context) => const Text('Loading...'),
+                  builder: (context, state) {
+                    return FormixDropdownFormField<String>(
+                      fieldId: cityField,
+                      key: const Key('city_dropdown'),
+                      items: (state.asyncState.value ?? [])
+                          .map(
+                            (c) => DropdownMenuItem(value: c, child: Text(c)),
+                          )
+                          .toList(),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ),
@@ -340,32 +332,30 @@ void main() {
     }
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              initialValue: const {'country': 'USA'},
-              child: Column(
-                children: [
-                  const FormixTextFormField(
-                    fieldId: countryField,
-                    key: Key('country'),
-                  ),
-                  FormixDependentAsyncField<List<String>, String>(
-                    fieldId: cityOptionsField,
-                    dependency: countryField,
-                    future: fetchCities,
-                    debounce: const Duration(milliseconds: 500),
-                    loadingBuilder: (context) => const Text('Loading...'),
-                    builder: (context, state) {
-                      final cities = state.asyncState.value ?? [];
-                      return Column(
-                        children: cities.map((c) => Text('Option: $c')).toList(),
-                      );
-                    },
-                  ),
-                ],
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            initialValue: const {'country': 'USA'},
+            child: Column(
+              children: [
+                const FormixTextFormField(
+                  fieldId: countryField,
+                  key: Key('country'),
+                ),
+                FormixDependentAsyncField<List<String>, String>(
+                  fieldId: cityOptionsField,
+                  dependency: countryField,
+                  future: fetchCities,
+                  debounce: const Duration(milliseconds: 500),
+                  loadingBuilder: (context) => const Text('Loading...'),
+                  builder: (context, state) {
+                    final cities = state.asyncState.value ?? [];
+                    return Column(
+                      children: cities.map((c) => Text('Option: $c')).toList(),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ),

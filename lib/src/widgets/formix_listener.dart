@@ -31,7 +31,7 @@ import 'ancestor_validator.dart';
 ///   child: Container(),
 /// )
 /// ```
-class FormixListener extends ConsumerStatefulWidget {
+class FormixListener extends StatefulWidget {
   /// Creates a [FormixListener].
   const FormixListener({
     super.key,
@@ -56,10 +56,10 @@ class FormixListener extends ConsumerStatefulWidget {
   final Widget child;
 
   @override
-  ConsumerState<FormixListener> createState() => _FormixListenerState();
+  State<FormixListener> createState() => _FormixListenerState();
 }
 
-class _FormixListenerState extends ConsumerState<FormixListener> {
+class _FormixListenerState extends State<FormixListener> {
   VoidCallback? _removeListener;
   Object? _initializationError;
   FormixData? _previousState;
@@ -105,11 +105,13 @@ class _FormixListenerState extends ConsumerState<FormixListener> {
         });
       }
     } catch (e) {
+      // coverage:ignore-start — defensive: _resolveController resolves via inherited-widget lookup / key access and does not throw in practice
       if (mounted) {
         setState(() {
           _initializationError = e;
         });
       }
+      // coverage:ignore-end
     }
   }
 
@@ -117,14 +119,7 @@ class _FormixListenerState extends ConsumerState<FormixListener> {
     if (widget.formKey != null) {
       return widget.formKey!.currentState?.controller;
     }
-    final provider = Formix.of(context);
-    if (provider != null) {
-      // Keep provider alive efficiently without watching state changes.
-      // This only triggers a rebuild if the controller instance itself changes.
-      ref.watch(provider.notifier);
-      return ref.read(provider.notifier);
-    }
-    return null;
+    return Formix.controllerOf(context);
   }
 
   void _onStateChanged(FormixData state) {
@@ -172,9 +167,7 @@ class _FormixListenerState extends ConsumerState<FormixListener> {
     if (_initializationError != null) {
       return FormixConfigurationErrorWidget(
         message: _initializationError is String ? _initializationError as String : 'Failed to initialize FormixListener',
-        details: _initializationError.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application in a ProviderScope widget.'
-            : 'Error: $_initializationError',
+        details: 'Error: $_initializationError',
       );
     }
     return widget.child;

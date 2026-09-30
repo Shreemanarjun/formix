@@ -7,34 +7,32 @@ void main() {
     const id = FormixFieldID<String>('text_field');
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-            useMaterial3: true,
-            inputDecorationTheme: const InputDecorationTheme(
-              border: OutlineInputBorder(),
-            ),
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          useMaterial3: true,
+          inputDecorationTheme: const InputDecorationTheme(
+            border: OutlineInputBorder(),
           ),
-          home: Scaffold(
-            body: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Formix(
-                  fields: [
-                    FormixFieldConfig(
-                      id: id,
-                      initialValue: '',
-                      validator: (v) => (v?.isEmpty ?? true) ? 'This field is required' : null,
-                    ),
-                  ],
-                  child: const FormixTextFormField(
-                    fieldId: id,
-                    autovalidateMode: FormixAutovalidateMode.always,
-                    decoration: InputDecoration(
-                      labelText: 'Standard Text Field',
-                    ),
+        ),
+        home: Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Formix(
+                fields: [
+                  FormixFieldConfig(
+                    id: id,
+                    initialValue: '',
+                    validator: (v) => (v?.isEmpty ?? true) ? 'This field is required' : null,
+                  ),
+                ],
+                child: const FormixTextFormField(
+                  fieldId: id,
+                  autovalidateMode: FormixAutovalidateMode.always,
+                  decoration: InputDecoration(
+                    labelText: 'Standard Text Field',
                   ),
                 ),
               ),

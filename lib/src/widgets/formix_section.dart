@@ -27,7 +27,7 @@ import 'ancestor_validator.dart';
 ///   ),
 /// )
 /// ```
-class FormixSection extends ConsumerStatefulWidget {
+class FormixSection extends StatefulWidget {
   /// Creates a [FormixSection].
   const FormixSection({
     super.key,
@@ -49,57 +49,27 @@ class FormixSection extends ConsumerStatefulWidget {
   final bool keepAlive;
 
   @override
-  ConsumerState<FormixSection> createState() => _FormixSectionState();
+  State<FormixSection> createState() => _FormixSectionState();
 }
 
-class _FormixSectionState extends ConsumerState<FormixSection> {
-  FormixController? _controller;
-  Object? _initializationError;
+class _FormixSectionState extends State<FormixSection> with FormixControllerHost<FormixSection> {
+  @override
+  String get formixWidgetName => 'FormixSection';
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _initController();
-    _registerFields();
-  }
+  void onControllerChanged(FormixController controller) => _registerFields();
 
   @override
   void didUpdateWidget(FormixSection oldWidget) {
     super.didUpdateWidget(oldWidget);
     // If fields changed, register the new ones.
-    // controller.registerFields handles already-registered fields gracefully.
+    // registerFields handles already-registered fields gracefully.
     _registerFields();
   }
 
-  void _initController() {
-    final provider = Formix.of(context);
-
-    if (provider == null) {
-      return;
-    }
-
-    // Keep provider alive efficiently without watching state changes.
-    // This only triggers a rebuild if the controller instance itself changes.
-    ref.watch(provider.notifier);
-
-    try {
-      _controller = ref.read(provider.notifier);
-      _initializationError = null;
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _initializationError = e;
-        });
-      }
-    }
-  }
-
   void _registerFields() {
-    if (_controller == null) return;
-    final controller = _controller!;
-
+    if (!hasController) return;
     final fieldsToRegister = widget.fields.where((f) => !controller.isFieldRegistered(f.id)).map((f) => f.toField()).toList();
-
     if (fieldsToRegister.isNotEmpty) {
       controller.registerFields(fieldsToRegister);
     }
@@ -107,14 +77,13 @@ class _FormixSectionState extends ConsumerState<FormixSection> {
 
   @override
   void dispose() {
-    if (!widget.keepAlive && _controller != null) {
-      final controller = _controller!;
+    if (!widget.keepAlive && hasController) {
+      final c = controller;
       final ids = widget.fields.map((f) => f.id).toList();
-
-      // Defer unregistration to avoid issues if state is being updated
+      // Defer unregistration to avoid issues if state is being updated.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (controller.mounted) {
-          controller.unregisterFields(ids);
+        if (c.mounted) {
+          c.unregisterFields(ids);
         }
       });
     }
@@ -127,17 +96,7 @@ class _FormixSectionState extends ConsumerState<FormixSection> {
       context,
       widgetName: 'FormixSection',
     );
-
     if (errorWidget != null) return errorWidget;
-
-    if (_initializationError != null) {
-      return FormixConfigurationErrorWidget(
-        message: 'Failed to initialize FormixSection',
-        details: _initializationError.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.\n\nExample:\nvoid main() {\n  runApp(ProviderScope(child: MyApp()));\n}'
-            : 'Error: $_initializationError',
-      );
-    }
     return widget.child;
   }
 }

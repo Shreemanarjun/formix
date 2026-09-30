@@ -23,7 +23,7 @@ import '../../formix.dart';
 ///   ]
 /// )
 /// ```
-class FormixFieldRegistry extends ConsumerStatefulWidget {
+class FormixFieldRegistry extends StatefulWidget {
   /// Creates a [FormixFieldRegistry].
   const FormixFieldRegistry({
     super.key,
@@ -45,12 +45,15 @@ class FormixFieldRegistry extends ConsumerStatefulWidget {
   final bool preserveStateOnDispose;
 
   @override
-  ConsumerState<FormixFieldRegistry> createState() => _FormixFieldRegistryState();
+  State<FormixFieldRegistry> createState() => _FormixFieldRegistryState();
 }
 
-class _FormixFieldRegistryState extends ConsumerState<FormixFieldRegistry> {
-  FormixController? _controller;
-  Object? _initializationError;
+class _FormixFieldRegistryState extends State<FormixFieldRegistry> with FormixControllerHost<FormixFieldRegistry> {
+  @override
+  String get formixWidgetName => 'FormixFieldRegistry';
+
+  @override
+  void onControllerChanged(FormixController controller) => _registerFields();
 
   @override
   void didUpdateWidget(FormixFieldRegistry oldWidget) {
@@ -61,88 +64,41 @@ class _FormixFieldRegistryState extends ConsumerState<FormixFieldRegistry> {
   }
 
   void _updateFields(List<FormixFieldConfig<dynamic>> oldFields) {
-    if (_controller == null || !mounted) return;
+    if (!hasController || !mounted) return;
 
     final oldIds = oldFields.map((f) => f.id).toList();
     final newIds = widget.fields.map((f) => f.id).toList();
 
-    // Find fields to unregister (removed from new list)
+    // Unregister fields removed from the new list.
     final idsToRemove = oldIds.where((id) => !newIds.contains(id)).toList();
     if (idsToRemove.isNotEmpty) {
       Future.microtask(() {
-        if (mounted && _controller != null && _controller!.mounted) {
-          _controller!.unregisterFields(
-            idsToRemove,
-            preserveState: widget.preserveStateOnDispose,
-          );
+        if (mounted && hasController && controller.mounted) {
+          controller.unregisterFields(idsToRemove, preserveState: widget.preserveStateOnDispose);
         }
       });
     }
 
-    // Register new fields
     _registerFields();
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    var provider = Formix.of(context);
-    if (provider == null) {
-      try {
-        provider = ref.watch(currentControllerProvider);
-      } catch (_) {
-        // ProviderScope missing
-      }
-    }
-
-    if (provider == null) {
-      if (mounted) {
-        setState(() {
-          _initializationError = 'FormixFieldRegistry used outside of Formix';
-        });
-      }
-      return;
-    }
-
-    // Keep provider alive
-    ref.watch(provider);
-    try {
-      final newController = ref.read(provider.notifier);
-      if (newController != _controller) {
-        _controller = newController;
-        _registerFields();
-      }
-      _initializationError = null;
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _initializationError = e;
-        });
-      }
-    }
-  }
-
   void _registerFields() {
-    if (_controller == null || !mounted) return;
-
-    final fieldsToRegister = widget.fields.where((f) => !_controller!.isFieldRegistered(f.id)).map((f) => f.toField()).toList();
-
+    if (!hasController || !mounted) return;
+    final fieldsToRegister = widget.fields.where((f) => !controller.isFieldRegistered(f.id)).map((f) => f.toField()).toList();
     if (fieldsToRegister.isNotEmpty) {
-      _controller!.registerFields(fieldsToRegister);
+      controller.registerFields(fieldsToRegister);
     }
   }
 
   @override
   void dispose() {
-    if (_controller != null && _controller!.mounted) {
-      final controller = _controller!;
+    if (hasController && controller.mounted) {
+      final c = controller;
       final fieldIds = widget.fields.map((f) => f.id).toList();
       final preserve = widget.preserveStateOnDispose;
-
       Future.microtask(() {
-        // Double check mounting before updating
-        if (controller.mounted) {
-          controller.unregisterFields(fieldIds, preserveState: preserve);
+        if (c.mounted) {
+          c.unregisterFields(fieldIds, preserveState: preserve);
         }
       });
     }
@@ -151,14 +107,6 @@ class _FormixFieldRegistryState extends ConsumerState<FormixFieldRegistry> {
 
   @override
   Widget build(BuildContext context) {
-    if (_initializationError != null) {
-      return FormixConfigurationErrorWidget(
-        message: _initializationError is String ? _initializationError as String : 'Failed to initialize FormixFieldRegistry',
-        details: _initializationError.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.'
-            : 'Error: $_initializationError',
-      );
-    }
-    return widget.child;
+    return formixErrorOrNull() ?? widget.child;
   }
 }

@@ -4,14 +4,14 @@ import 'package:formix/formix.dart';
 const usernameField = FormixFieldID<String>('username');
 const passwordField = FormixFieldID<String>('password');
 
-class LoginFormTestPage extends ConsumerStatefulWidget {
+class LoginFormTestPage extends StatefulWidget {
   const LoginFormTestPage({super.key});
 
   @override
-  ConsumerState<LoginFormTestPage> createState() => _LoginFormTestPageState();
+  State<LoginFormTestPage> createState() => _LoginFormTestPageState();
 }
 
-class _LoginFormTestPageState extends ConsumerState<LoginFormTestPage> {
+class _LoginFormTestPageState extends State<LoginFormTestPage> {
   final formKey = GlobalKey<FormixState>();
   bool _isPasswordVisible = false;
   bool _isLoading = false;

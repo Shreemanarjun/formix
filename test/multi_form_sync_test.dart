@@ -7,18 +7,15 @@ void main() {
     const fieldB = FormixFieldID<String>('fieldB');
 
     testWidgets('One-way binding updates target field', (tester) async {
-      late RiverpodFormController controllerA;
-      late RiverpodFormController controllerB;
+      late FormixController controllerA;
+      late FormixController controllerB;
 
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
-      controllerA = RiverpodFormController(
+      controllerA = FormixController(
         fields: [
           const FormixFieldConfig<String>(id: fieldA, initialValue: 'A').toField(),
         ],
       );
-      controllerB = RiverpodFormController(
+      controllerB = FormixController(
         fields: [
           const FormixFieldConfig<String>(id: fieldB, initialValue: 'B').toField(),
         ],
@@ -50,15 +47,15 @@ void main() {
     });
 
     testWidgets('Two-way binding updates both fields', (tester) async {
-      late RiverpodFormController controllerA;
-      late RiverpodFormController controllerB;
+      late FormixController controllerA;
+      late FormixController controllerB;
 
-      controllerA = RiverpodFormController(
+      controllerA = FormixController(
         fields: [
           const FormixFieldConfig<String>(id: fieldA, initialValue: 'A').toField(),
         ],
       );
-      controllerB = RiverpodFormController(
+      controllerB = FormixController(
         fields: [
           const FormixFieldConfig<String>(id: fieldB, initialValue: 'B').toField(),
         ],

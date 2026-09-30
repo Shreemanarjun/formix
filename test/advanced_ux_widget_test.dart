@@ -15,43 +15,41 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'fieldA': 'initial'},
-                fields: const [
-                  FormixFieldConfig<String>(
-                    id: fieldA,
-                    initialValue: 'initial',
-                  ),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = Formix.controllerOf(context)!;
-                    final isPending = scope.watchIsPending(fieldA);
-
-                    return Column(
-                      children: [
-                        const FormixTextFormField(fieldId: fieldA),
-                        if (isPending)
-                          const CircularProgressIndicator(
-                            key: Key('pending_indicator'),
-                          ),
-                        ElevatedButton(
-                          onPressed: () {
-                            controller.optimisticUpdate(
-                              fieldId: fieldA,
-                              value: 'optimistic',
-                              action: () => completer.future,
-                            );
-                          },
-                          child: const Text('Sync'),
-                        ),
-                      ],
-                    );
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'fieldA': 'initial'},
+              fields: const [
+                FormixFieldConfig<String>(
+                  id: fieldA,
+                  initialValue: 'initial',
                 ),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = Formix.controllerOf(context)!;
+                  final isPending = scope.watchIsPending(fieldA);
+
+                  return Column(
+                    children: [
+                      const FormixTextFormField(fieldId: fieldA),
+                      if (isPending)
+                        const CircularProgressIndicator(
+                          key: Key('pending_indicator'),
+                        ),
+                      ElevatedButton(
+                        onPressed: () {
+                          controller.optimisticUpdate(
+                            fieldId: fieldA,
+                            value: 'optimistic',
+                            action: () => completer.future,
+                          );
+                        },
+                        child: const Text('Sync'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -93,35 +91,33 @@ void main() {
       final keyB = GlobalKey<FormixState>();
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Column(
-                children: [
-                  Formix(
-                    key: keyA,
-                    initialValue: const {'fieldA': 'A'},
-                    fields: const [
-                      FormixFieldConfig<String>(id: fieldA, initialValue: 'A'),
-                    ],
-                    child: const FormixTextFormField(
-                      fieldId: fieldA,
-                      decoration: InputDecoration(labelText: 'Form A'),
-                    ),
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                Formix(
+                  key: keyA,
+                  initialValue: const {'fieldA': 'A'},
+                  fields: const [
+                    FormixFieldConfig<String>(id: fieldA, initialValue: 'A'),
+                  ],
+                  child: const FormixTextFormField(
+                    fieldId: fieldA,
+                    decoration: InputDecoration(labelText: 'Form A'),
                   ),
-                  Formix(
-                    key: keyB,
-                    initialValue: const {'fieldB': 'B'},
-                    fields: const [
-                      FormixFieldConfig<String>(id: fieldB, initialValue: 'B'),
-                    ],
-                    child: const FormixTextFormField(
-                      fieldId: fieldB,
-                      decoration: InputDecoration(labelText: 'Form B'),
-                    ),
+                ),
+                Formix(
+                  key: keyB,
+                  initialValue: const {'fieldB': 'B'},
+                  fields: const [
+                    FormixFieldConfig<String>(id: fieldB, initialValue: 'B'),
+                  ],
+                  child: const FormixTextFormField(
+                    fieldId: fieldB,
+                    decoration: InputDecoration(labelText: 'Form B'),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

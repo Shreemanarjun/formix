@@ -6,8 +6,18 @@ import '../enums.dart';
 import 'form_state.dart';
 import '../validators/validators.dart';
 
+/// Common interface for anything that can define a form field.
+///
+/// Both [FormixFieldConfig] and `FormixField` implement it, so APIs that take a
+/// list of fields (`Formix(fields: ...)`, `FormixController(fields: ...)`) can
+/// accept either — statically typed, no `List<dynamic>` or runtime type checks.
+abstract interface class FormixFieldDefinition {
+  /// Normalizes this definition to a [FormixFieldConfig].
+  FormixFieldConfig<dynamic> toConfig();
+}
+
 /// Configuration for a form field
-class FormixFieldConfig<T> {
+class FormixFieldConfig<T> implements FormixFieldDefinition {
   /// Creates a configuration for a form field.
   const FormixFieldConfig({
     required this.id,
@@ -19,6 +29,8 @@ class FormixFieldConfig<T> {
     this.hint,
     this.asyncValidator,
     this.debounceDuration,
+    this.transformer,
+    this.emptyValue,
     this.validationMode = FormixAutovalidateMode.auto,
     this.initialValueStrategy = FormixInitialValueStrategy.preferLocal,
     this.inputFormatters,
@@ -93,8 +105,18 @@ class FormixFieldConfig<T> {
   /// Keyboard action (e.g. next, done)
   final TextInputAction? textInputAction;
 
+  /// Optional transformer to convert raw input to specific type
+  final T Function(dynamic value)? transformer;
+
+  /// Value to use when the field is cleared or reset
+  final T? emptyValue;
+
   /// Callback when field is submitted
   final void Function(String)? onSubmitted;
+
+  /// A [FormixFieldConfig] is already a config; returns itself.
+  @override
+  FormixFieldConfig<T> toConfig() => this;
 
   /// Converts this configuration into a [FormixField].
   FormixField<T> toField() {
@@ -117,6 +139,8 @@ class FormixFieldConfig<T> {
       initialValueStrategy: initialValueStrategy,
       inputFormatters: inputFormatters,
       textInputAction: textInputAction,
+      transformer: transformer,
+      emptyValue: emptyValue,
       onSubmitted: onSubmitted,
     );
   }
@@ -139,6 +163,8 @@ class FormixFieldConfig<T> {
           initialValueStrategy == other.initialValueStrategy &&
           inputFormatters == other.inputFormatters &&
           textInputAction == other.textInputAction &&
+          transformer == other.transformer &&
+          emptyValue == other.emptyValue &&
           onSubmitted == other.onSubmitted;
 
   @override
@@ -156,6 +182,8 @@ class FormixFieldConfig<T> {
       initialValueStrategy.hashCode ^
       inputFormatters.hashCode ^
       textInputAction.hashCode ^
+      transformer.hashCode ^
+      emptyValue.hashCode ^
       onSubmitted.hashCode;
 
   @override

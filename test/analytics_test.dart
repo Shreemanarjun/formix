@@ -47,7 +47,7 @@ void main() {
 
     test('Tracks basic lifecycle events', () async {
       final analytics = FakeFormixAnalytics();
-      final controller = RiverpodFormController(
+      final controller = FormixController(
         fields: [
           const FormixFieldConfig<String>(id: fieldA, initialValue: 'A').toField(),
         ],
@@ -81,7 +81,7 @@ void main() {
 
     test('Tracks abandonment', () async {
       final analytics = FakeFormixAnalytics();
-      final controller = RiverpodFormController(
+      final controller = FormixController(
         fields: [
           const FormixFieldConfig<String>(id: fieldA, initialValue: 'A').toField(),
         ],
@@ -98,7 +98,7 @@ void main() {
 
     test('Tracks submission failure', () async {
       final analytics = FakeFormixAnalytics();
-      final controller = RiverpodFormController(
+      final controller = FormixController(
         fields: [
           FormixFieldConfig<String>(
             id: fieldA,

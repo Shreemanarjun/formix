@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'ui/basic_form/basic_form_page.dart';
 import 'ui/schema_form/schema_form_page.dart';
 import 'ui/conditional_form/conditional_form_page.dart';
@@ -22,7 +21,7 @@ import 'ui/dependency_graph_example.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {

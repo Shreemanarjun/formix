@@ -10,28 +10,26 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig<String>(
-                    id: nameField,
-                    initialValue: '',
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Name is required';
-                      }
-                      return null;
-                    },
-                  ),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = Formix.controllerOf(context)!;
-                    return const FormixTextFormField(fieldId: nameField);
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig<String>(
+                  id: nameField,
+                  initialValue: '',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Name is required';
+                    }
+                    return null;
                   },
                 ),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = Formix.controllerOf(context)!;
+                  return const FormixTextFormField(fieldId: nameField);
+                },
               ),
             ),
           ),
@@ -82,24 +80,22 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                autovalidateMode: FormixAutovalidateMode.onUserInteraction,
-                fields: [
-                  FormixFieldConfig<String>(
-                    id: nameField,
-                    initialValue: '',
-                    validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
-                  ),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = Formix.controllerOf(context)!;
-                    return const FormixTextFormField(fieldId: nameField);
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              autovalidateMode: FormixAutovalidateMode.onUserInteraction,
+              fields: [
+                FormixFieldConfig<String>(
+                  id: nameField,
+                  initialValue: '',
+                  validator: (value) => (value == null || value.isEmpty) ? 'Required' : null,
                 ),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = Formix.controllerOf(context)!;
+                  return const FormixTextFormField(fieldId: nameField);
+                },
               ),
             ),
           ),

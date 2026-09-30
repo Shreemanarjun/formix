@@ -1,13 +1,13 @@
 name: formix
-description: "An elite, type-safe, and ultra-reactive form engine for Flutter powered by Riverpod."
-version: 0.1.2
+description: "An elite, type-safe, and ultra-reactive form engine for Flutter powered by Signals."
+version: 0.2.0
 homepage: https://www.shreeman.dev
 repository: https://github.com/Shreemanarjun/formix
 issue_tracker: https://github.com/Shreemanarjun/formix/issues
 topics:
   - form
   - validation
-  - riverpod
+  - signals
   - type-safe
   - state-management
 
@@ -19,22 +19,20 @@ dependencies:
   collection: ^1.19.1
   flutter:
     sdk: flutter
-  flutter_riverpod: ^2.6.1
-  index_generator: ^4.1.2
+  signals_flutter: ^7.1.0
 
-  meta: ^1.17.0
+  meta: ^1.16.0
   stream_transform: ^2.1.1
-dev_dependencies:
+  # Powers the optional `package:formix/formix_test.dart` test helpers. It is a
+  # separate entry point (not exported by the main library), so it is tree-shaken
+  # out of production apps that don't import it.
   flutter_test:
     sdk: flutter
+dev_dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_lints: ^5.0.0
   test: ^1.26.2
-
-
-dependency_overrides:
-  dwds: ^26.2.3
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

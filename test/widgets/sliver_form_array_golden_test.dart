@@ -7,49 +7,47 @@ void main() {
     const arrayId = FormixArrayID<String>('tags');
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            useMaterial3: true,
-            inputDecorationTheme: const InputDecorationTheme(
-              border: OutlineInputBorder(),
-            ),
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          useMaterial3: true,
+          inputDecorationTheme: const InputDecorationTheme(
+            border: OutlineInputBorder(),
           ),
-          home: Scaffold(
-            body: Formix(
-              fields: const [
-                FormixFieldConfig(
-                  id: arrayId,
-                  initialValue: ['Flutter', 'React', 'Vue'],
+        ),
+        home: Scaffold(
+          body: Formix(
+            fields: const [
+              FormixFieldConfig(
+                id: arrayId,
+                initialValue: ['Flutter', 'React', 'Vue'],
+              ),
+            ],
+            child: CustomScrollView(
+              slivers: [
+                const SliverAppBar(
+                  title: Text('Sliver Form Array'),
+                  floating: true,
                 ),
-              ],
-              child: CustomScrollView(
-                slivers: [
-                  const SliverAppBar(
-                    title: Text('Sliver Form Array'),
-                    floating: true,
-                  ),
-                  SliverFormixArray<String>(
-                    id: arrayId,
-                    itemBuilder: (context, index, itemId, scope) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: FormixTextFormField(
-                          fieldId: itemId,
-                          decoration: InputDecoration(
-                            labelText: 'Tag ${index + 1}',
-                            suffixIcon: IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () => scope.removeArrayItemAt(arrayId, index),
-                            ),
+                SliverFormixArray<String>(
+                  id: arrayId,
+                  itemBuilder: (context, index, itemId, scope) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: FormixTextFormField(
+                        fieldId: itemId,
+                        decoration: InputDecoration(
+                          labelText: 'Tag ${index + 1}',
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () => scope.removeArrayItemAt(arrayId, index),
                           ),
                         ),
-                      );
-                    },
-                  ),
-                ],
-              ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
         ),

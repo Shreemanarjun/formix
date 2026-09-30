@@ -2,9 +2,10 @@ import 'package:flutter/services.dart';
 import 'field_id.dart';
 import '../enums.dart';
 import 'form_state.dart';
+import 'field_config.dart';
 
 /// Form field definition with validation and type information
-class FormixField<T> {
+class FormixField<T> implements FormixFieldDefinition {
   /// Creates a [FormixField] definition.
   const FormixField({
     required this.id,
@@ -73,6 +74,29 @@ class FormixField<T> {
   /// Callback when field is submitted
   final void Function(String)? onSubmitted;
 
+  /// Creates a configuration object that correctly preserves type `<T>`
+  @override
+  FormixFieldConfig<T> toConfig() {
+    return FormixFieldConfig<T>(
+      id: id,
+      initialValue: initialValue,
+      validator: wrappedValidator,
+      crossFieldValidator: wrappedCrossFieldValidator,
+      dependsOn: dependsOn,
+      label: label,
+      hint: hint,
+      asyncValidator: wrappedAsyncValidator,
+      debounceDuration: debounceDuration,
+      validationMode: validationMode,
+      initialValueStrategy: initialValueStrategy,
+      inputFormatters: inputFormatters,
+      textInputAction: textInputAction,
+      transformer: transformer,
+      emptyValue: emptyValue,
+      onSubmitted: onSubmitted,
+    );
+  }
+
   /// Returns a wrapped version of the validator that accepts dynamic input.
   String? Function(dynamic)? get wrappedValidator {
     final v = validator;
@@ -104,10 +128,7 @@ class FormixField<T> {
   /// Checks if the given value matches the field's type [T].
   /// This is more robust than runtimeType comparison as it handles
   /// inheritance and generic type compatibility correctly.
-  bool isTypeValid(dynamic value) {
-    if (value == null) return isNullableType;
-    return value is T;
-  }
+  bool isTypeValid(dynamic value) => value is T;
 
   /// Returns true if [T] is a nullable type.
   bool get isNullableType => null is T;

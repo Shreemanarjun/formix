@@ -174,20 +174,18 @@ void main() {
       FormixFieldStateSnapshot<String>? capturedSnapshot;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'test_field': 'initial'},
-                fields: const [FormixFieldConfig(id: id, initialValue: 'initial')],
-                child: FormixRawFormField<String>(
-                  fieldId: id,
-                  initialValue: 'initial',
-                  builder: (context, snapshot) {
-                    capturedSnapshot = snapshot;
-                    return Text('Value: ${snapshot.value}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'test_field': 'initial'},
+              fields: const [FormixFieldConfig(id: id, initialValue: 'initial')],
+              child: FormixRawFormField<String>(
+                fieldId: id,
+                initialValue: 'initial',
+                builder: (context, snapshot) {
+                  capturedSnapshot = snapshot;
+                  return Text('Value: ${snapshot.value}');
+                },
               ),
             ),
           ),
@@ -210,20 +208,18 @@ void main() {
       FormixFieldStateSnapshot<String>? capturedSnapshot;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'test_field': 'initial'},
-                fields: const [FormixFieldConfig(id: id, initialValue: 'initial')],
-                child: FormixRawFormField<String>(
-                  fieldId: id,
-                  initialValue: 'initial',
-                  builder: (context, snapshot) {
-                    capturedSnapshot = snapshot;
-                    return Text('Value: ${snapshot.value}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'test_field': 'initial'},
+              fields: const [FormixFieldConfig(id: id, initialValue: 'initial')],
+              child: FormixRawFormField<String>(
+                fieldId: id,
+                initialValue: 'initial',
+                builder: (context, snapshot) {
+                  capturedSnapshot = snapshot;
+                  return Text('Value: ${snapshot.value}');
+                },
               ),
             ),
           ),
@@ -245,28 +241,26 @@ void main() {
       FormixFieldStateSnapshot<String>? capturedSnapshot;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {
-                  'test_field': '',
-                }, // Start with empty string
-                fields: [
-                  FormixFieldConfig(
-                    id: id,
-                    initialValue: '',
-                    validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
-                  ),
-                ],
-                child: FormixRawFormField<String>(
-                  fieldId: id,
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {
+                'test_field': '',
+              }, // Start with empty string
+              fields: [
+                FormixFieldConfig(
+                  id: id,
                   initialValue: '',
-                  builder: (context, snapshot) {
-                    capturedSnapshot = snapshot;
-                    return Text('Valid: ${snapshot.validation.isValid}');
-                  },
+                  validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
                 ),
+              ],
+              child: FormixRawFormField<String>(
+                fieldId: id,
+                initialValue: '',
+                builder: (context, snapshot) {
+                  capturedSnapshot = snapshot;
+                  return Text('Valid: ${snapshot.validation.isValid}');
+                },
               ),
             ),
           ),
@@ -290,18 +284,16 @@ void main() {
       FormixFieldStateSnapshot<String>? capturedSnapshot;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [FormixFieldConfig(id: id)],
-                child: FormixRawFormField<String>(
-                  fieldId: id,
-                  builder: (context, snapshot) {
-                    capturedSnapshot = snapshot;
-                    return Text('Touched: ${snapshot.isTouched}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [FormixFieldConfig(id: id)],
+              child: FormixRawFormField<String>(
+                fieldId: id,
+                builder: (context, snapshot) {
+                  capturedSnapshot = snapshot;
+                  return Text('Touched: ${snapshot.isTouched}');
+                },
               ),
             ),
           ),
@@ -326,18 +318,16 @@ void main() {
       FormixFieldStateSnapshot<String>? capturedSnapshot;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [FormixFieldConfig(id: id)],
-                child: FormixRawFormField<String>(
-                  fieldId: id,
-                  builder: (context, snapshot) {
-                    capturedSnapshot = snapshot;
-                    return Text('Submitting: ${snapshot.isSubmitting}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [FormixFieldConfig(id: id)],
+              child: FormixRawFormField<String>(
+                fieldId: id,
+                builder: (context, snapshot) {
+                  capturedSnapshot = snapshot;
+                  return Text('Submitting: ${snapshot.isSubmitting}');
+                },
               ),
             ),
           ),
@@ -349,13 +339,10 @@ void main() {
       expect(capturedSnapshot!.isSubmitting, false);
 
       // Set submitting
-      final provider = Formix.of(
-        tester.element(find.text('Submitting: false')),
-      )!;
-      final container = ProviderScope.containerOf(
+      final controller = Formix.of(
         tester.element(find.text('Submitting: false')),
       );
-      (container.read(provider.notifier)).setSubmitting(true);
+      controller.setSubmitting(true);
       await tester.pump();
 
       expect(capturedSnapshot!.isSubmitting, true);
@@ -370,22 +357,20 @@ void main() {
       FormixTextFieldStateSnapshot<String>? capturedSnapshot;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'text_field': 'initial'},
-                fields: const [FormixFieldConfig(id: id, initialValue: 'initial')],
-                child: FormixRawTextField<String>(
-                  fieldId: id,
-                  initialValue: 'initial',
-                  valueToString: (v) => v ?? '',
-                  stringToValue: (s) => s.isEmpty ? null : s,
-                  builder: (context, snapshot) {
-                    capturedSnapshot = snapshot;
-                    return Text('Value: ${snapshot.value}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'text_field': 'initial'},
+              fields: const [FormixFieldConfig(id: id, initialValue: 'initial')],
+              child: FormixRawTextField<String>(
+                fieldId: id,
+                initialValue: 'initial',
+                valueToString: (v) => v ?? '',
+                stringToValue: (s) => s.isEmpty ? null : s,
+                builder: (context, snapshot) {
+                  capturedSnapshot = snapshot;
+                  return Text('Value: ${snapshot.value}');
+                },
               ),
             ),
           ),
@@ -407,22 +392,20 @@ void main() {
       FormixTextFieldStateSnapshot<String>? capturedSnapshot;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'text_field': 'initial'},
-                fields: const [FormixFieldConfig(id: id, initialValue: 'initial')],
-                child: FormixRawTextField<String>(
-                  fieldId: id,
-                  initialValue: 'initial',
-                  valueToString: (v) => v ?? '',
-                  stringToValue: (s) => s.isEmpty ? null : s,
-                  builder: (context, snapshot) {
-                    capturedSnapshot = snapshot;
-                    return Text('Controller: ${snapshot.textController.text}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'text_field': 'initial'},
+              fields: const [FormixFieldConfig(id: id, initialValue: 'initial')],
+              child: FormixRawTextField<String>(
+                fieldId: id,
+                initialValue: 'initial',
+                valueToString: (v) => v ?? '',
+                stringToValue: (s) => s.isEmpty ? null : s,
+                builder: (context, snapshot) {
+                  capturedSnapshot = snapshot;
+                  return Text('Controller: ${snapshot.textController.text}');
+                },
               ),
             ),
           ),
@@ -434,13 +417,10 @@ void main() {
       expect(capturedSnapshot!.textController.text, 'initial');
 
       // Change value externally
-      final provider = Formix.of(
-        tester.element(find.text('Controller: initial')),
-      )!;
-      final container = ProviderScope.containerOf(
+      final controller = Formix.of(
         tester.element(find.text('Controller: initial')),
       );
-      container.read(provider.notifier).setValue(id, 'external');
+      controller.setValue(id, 'external');
       await tester.pump();
 
       expect(capturedSnapshot!.textController.text, 'external');
@@ -451,22 +431,20 @@ void main() {
       FormixTextFieldStateSnapshot<String>? capturedSnapshot;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'text_field': 'initial'},
-                fields: const [FormixFieldConfig(id: id, initialValue: 'initial')],
-                child: FormixRawTextField<String>(
-                  fieldId: id,
-                  initialValue: 'initial',
-                  valueToString: (v) => v ?? '',
-                  stringToValue: (s) => s.isEmpty ? null : s,
-                  builder: (context, snapshot) {
-                    capturedSnapshot = snapshot;
-                    return Text('Value: ${snapshot.value}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'text_field': 'initial'},
+              fields: const [FormixFieldConfig(id: id, initialValue: 'initial')],
+              child: FormixRawTextField<String>(
+                fieldId: id,
+                initialValue: 'initial',
+                valueToString: (v) => v ?? '',
+                stringToValue: (s) => s.isEmpty ? null : s,
+                builder: (context, snapshot) {
+                  capturedSnapshot = snapshot;
+                  return Text('Value: ${snapshot.value}');
+                },
               ),
             ),
           ),
@@ -491,22 +469,20 @@ void main() {
       FormixTextFieldStateSnapshot<int>? capturedSnapshot;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'number_field': 42},
-                fields: const [FormixFieldConfig(id: id, initialValue: 42)],
-                child: FormixRawTextField<int>(
-                  fieldId: id,
-                  initialValue: 42,
-                  valueToString: (v) => v?.toString() ?? '',
-                  stringToValue: (s) => int.tryParse(s),
-                  builder: (context, snapshot) {
-                    capturedSnapshot = snapshot;
-                    return Text('Value: ${snapshot.value}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'number_field': 42},
+              fields: const [FormixFieldConfig(id: id, initialValue: 42)],
+              child: FormixRawTextField<int>(
+                fieldId: id,
+                initialValue: 42,
+                valueToString: (v) => v?.toString() ?? '',
+                stringToValue: (s) => int.tryParse(s),
+                builder: (context, snapshot) {
+                  capturedSnapshot = snapshot;
+                  return Text('Value: ${snapshot.value}');
+                },
               ),
             ),
           ),
@@ -526,24 +502,22 @@ void main() {
     });
 
     testWidgets('handles null values correctly', (tester) async {
-      const id = FormixFieldID<String>('nullable_field');
-      FormixTextFieldStateSnapshot<String>? capturedSnapshot;
+      const id = FormixFieldID<String?>('nullable_field');
+      FormixTextFieldStateSnapshot<String?>? capturedSnapshot;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [FormixFieldConfig(id: id)],
-                child: FormixRawTextField<String>(
-                  fieldId: id,
-                  valueToString: (v) => v ?? '',
-                  stringToValue: (s) => s.isEmpty ? null : s,
-                  builder: (context, snapshot) {
-                    capturedSnapshot = snapshot;
-                    return Text('Value: ${snapshot.value ?? "null"}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [FormixFieldConfig<String?>(id: id)],
+              child: FormixRawTextField<String?>(
+                fieldId: id,
+                valueToString: (v) => v ?? '',
+                stringToValue: (s) => s.isEmpty ? null : s,
+                builder: (context, snapshot) {
+                  capturedSnapshot = snapshot;
+                  return Text('Value: ${snapshot.value ?? "null"}');
+                },
               ),
             ),
           ),
@@ -578,26 +552,24 @@ void main() {
       const id = FormixFieldID<String>('standalone');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'standalone': 'Initial'},
-                fields: const <FormixFieldConfig<dynamic>>[
-                  FormixFieldConfig<String>(id: id, initialValue: 'Initial'),
-                ],
-                child: FormixRawTextField<String>(
-                  fieldId: id,
-                  initialValue: 'Initial',
-                  valueToString: (v) => v ?? '',
-                  stringToValue: (s) => s.isEmpty ? null : s,
-                  builder: (context, state) {
-                    return Container(
-                      key: const Key('my_headless_container'),
-                      child: Text('Value: ${state.value}'),
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'standalone': 'Initial'},
+              fields: const <FormixFieldConfig<dynamic>>[
+                FormixFieldConfig<String>(id: id, initialValue: 'Initial'),
+              ],
+              child: FormixRawTextField<String>(
+                fieldId: id,
+                initialValue: 'Initial',
+                valueToString: (v) => v ?? '',
+                stringToValue: (s) => s.isEmpty ? null : s,
+                builder: (context, state) {
+                  return Container(
+                    key: const Key('my_headless_container'),
+                    child: Text('Value: ${state.value}'),
+                  );
+                },
               ),
             ),
           ),
@@ -632,19 +604,17 @@ void main() {
       FormixTextFieldStateSnapshot<String>? capturedSnapshot;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'string_field': 'initial'},
-                fields: const [FormixFieldConfig(id: id, initialValue: 'initial')],
-                child: FormixRawStringField(
-                  fieldId: id,
-                  builder: (context, snapshot) {
-                    capturedSnapshot = snapshot;
-                    return Text('Value: ${snapshot.value}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'string_field': 'initial'},
+              fields: const [FormixFieldConfig(id: id, initialValue: 'initial')],
+              child: FormixRawStringField(
+                fieldId: id,
+                builder: (context, snapshot) {
+                  capturedSnapshot = snapshot;
+                  return Text('Value: ${snapshot.value}');
+                },
               ),
             ),
           ),
@@ -669,24 +639,22 @@ void main() {
       FormixFieldStateSnapshot<String>? capturedSnapshot;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'notifier_field': 'start'},
-                fields: const [FormixFieldConfig(id: id, initialValue: 'start')],
-                child: FormixRawNotifierField<String>(
-                  fieldId: id,
-                  builder: (context, snapshot) {
-                    capturedSnapshot = snapshot;
-                    return ValueListenableBuilder<String?>(
-                      valueListenable: snapshot.valueNotifier,
-                      builder: (context, value, _) {
-                        return Text('NotifierValue: $value');
-                      },
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'notifier_field': 'start'},
+              fields: const [FormixFieldConfig(id: id, initialValue: 'start')],
+              child: FormixRawNotifierField<String>(
+                fieldId: id,
+                builder: (context, snapshot) {
+                  capturedSnapshot = snapshot;
+                  return ValueListenableBuilder<String?>(
+                    valueListenable: snapshot.valueNotifier,
+                    builder: (context, value, _) {
+                      return Text('NotifierValue: $value');
+                    },
+                  );
+                },
               ),
             ),
           ),
@@ -721,18 +689,16 @@ void main() {
       const id = FormixFieldID<String>('reset_test');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'reset_test': 'initial'},
-                fields: const [FormixFieldConfig(id: id, initialValue: 'initial')],
-                child: FormixRawStringField(
-                  fieldId: id,
-                  builder: (context, snapshot) {
-                    return Text('CurrentValue: ${snapshot.value}');
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'reset_test': 'initial'},
+              fields: const [FormixFieldConfig(id: id, initialValue: 'initial')],
+              child: FormixRawStringField(
+                fieldId: id,
+                builder: (context, snapshot) {
+                  return Text('CurrentValue: ${snapshot.value}');
+                },
               ),
             ),
           ),
@@ -761,26 +727,24 @@ void main() {
       const id = FormixFieldID<String>('validation_test');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'validation_test': ''},
-                fields: [
-                  FormixFieldConfig(
-                    id: id,
-                    initialValue: '',
-                    validator: (v) => (v?.isEmpty ?? true) ? 'REQUIRED' : null,
-                  ),
-                ],
-                child: FormixRawFormField<String>(
-                  fieldId: id,
-                  builder: (context, snapshot) {
-                    return Text(
-                      snapshot.validation.isValid ? 'STATE: VALID' : 'STATE: INVALID',
-                    );
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'validation_test': ''},
+              fields: [
+                FormixFieldConfig(
+                  id: id,
+                  initialValue: '',
+                  validator: (v) => (v?.isEmpty ?? true) ? 'REQUIRED' : null,
                 ),
+              ],
+              child: FormixRawFormField<String>(
+                fieldId: id,
+                builder: (context, snapshot) {
+                  return Text(
+                    snapshot.validation.isValid ? 'STATE: VALID' : 'STATE: INVALID',
+                  );
+                },
               ),
             ),
           ),
@@ -803,28 +767,26 @@ void main() {
       const id = FormixFieldID<String>('autovalidate_test');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(
-                    id: id,
-                    initialValue: '',
-                    validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
-                  ),
-                ],
-                child: FormixRawTextField<String>(
-                  fieldId: id,
-                  autovalidateMode: FormixAutovalidateMode.always,
-                  valueToString: (v) => v ?? '',
-                  stringToValue: (s) => s,
-                  builder: (context, snapshot) {
-                    return Text(
-                      snapshot.shouldShowError ? 'ERROR: ${snapshot.validation.errorMessage}' : 'NO ERROR',
-                    );
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(
+                  id: id,
+                  initialValue: '',
+                  validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
                 ),
+              ],
+              child: FormixRawTextField<String>(
+                fieldId: id,
+                autovalidateMode: FormixAutovalidateMode.always,
+                valueToString: (v) => v ?? '',
+                stringToValue: (s) => s,
+                builder: (context, snapshot) {
+                  return Text(
+                    snapshot.shouldShowError ? 'ERROR: ${snapshot.validation.errorMessage}' : 'NO ERROR',
+                  );
+                },
               ),
             ),
           ),

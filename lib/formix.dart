@@ -1,7 +1,11 @@
 /// A type-safe form package for Flutter
 library;
 
-export 'package:flutter_riverpod/flutter_riverpod.dart';
+// Re-export the signals primitives used across the Formix API and docs, so
+// `import 'package:formix/formix.dart'` is all you need to read reactive slices
+// (e.g. `SignalBuilder`, `controller.valueSignal(id)`). Same declarations as
+// signals_flutter, so importing both packages does not conflict.
+export 'package:signals_flutter/signals_flutter.dart' show SignalBuilder, Signal, ReadonlySignal, Computed, signal, computed, effect, batch, untracked;
 
 // Core classes
 export 'src/controllers/field_id.dart';
@@ -10,8 +14,9 @@ export 'src/controllers/field_config.dart';
 export 'src/controllers/validation.dart';
 export 'src/controllers/form_state.dart';
 export 'src/controllers/formix_controller.dart';
-export 'src/controllers/riverpod_controller.dart';
+export 'src/controllers/formix_base_controller.dart';
 export 'src/controllers/batch.dart';
+export 'src/controllers/submission.dart';
 export 'src/utils/type_utils.dart';
 export 'src/enums.dart';
 export 'src/form_schema.dart';
@@ -21,6 +26,10 @@ export 'src/i18n.dart';
 export 'src/widgets/formix.dart';
 export 'src/widgets/formix_listener.dart';
 export 'src/widgets/base_form_field.dart';
+export 'src/widgets/formix_controller_host.dart' show FormixControllerHost;
+export 'src/widgets/formix_form_field.dart';
+export 'src/widgets/formix_value.dart';
+export 'src/formix_context.dart';
 export 'src/widgets/checkbox_form_field.dart';
 export 'src/widgets/dropdown_form_field.dart';
 export 'src/widgets/form_status.dart';
@@ -48,6 +57,7 @@ export 'src/widgets/field_selector/formix_field_performance_monitor.dart';
 export 'src/widgets/field_selector/formix_field_selector.dart';
 export 'src/widgets/field_selector/formix_field_value_selector.dart';
 export 'src/validators/validators.dart';
+export 'src/validators/validation_keys.dart';
 export 'src/analytics/form_analytics.dart';
 export 'src/analytics/logging_form_analytics.dart';
 export 'src/widgets/dependent_async_field.dart';

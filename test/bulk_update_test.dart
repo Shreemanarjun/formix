@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:formix/formix.dart';
 
 void main() {
-  group('RiverpodFormController Bulk Updates', () {
+  group('FormixController Bulk Updates', () {
     test(
       'setValues updates multiple fields and triggers dependent validation in one round',
       () {

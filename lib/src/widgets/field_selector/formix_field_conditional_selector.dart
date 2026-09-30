@@ -1,5 +1,5 @@
 import 'package:formix/src/controllers/field_id.dart';
-import 'package:formix/src/controllers/riverpod_controller.dart';
+import 'package:formix/src/controllers/formix_base_controller.dart';
 import 'package:formix/src/widgets/field_selector.dart';
 import 'package:formix/src/widgets/field_selector/formix_field_selector.dart';
 import 'package:flutter/material.dart';

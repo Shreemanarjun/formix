@@ -12,37 +12,35 @@ void main() {
       final scrollController = ScrollController();
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig<String>(
-                    id: field1,
-                    initialValue: '',
-                    validator: (v) => v!.isEmpty ? 'Error' : null,
-                  ),
-                  FormixFieldConfig<String>(
-                    id: field2,
-                    initialValue: '',
-                    validator: (v) => v!.isEmpty ? 'Error' : null,
-                  ),
-                ],
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  child: Column(
-                    children: [
-                      const FormixTextFormField(fieldId: field1),
-                      const SizedBox(height: 1000), // Make it long
-                      const FormixTextFormField(fieldId: field2),
-                      FormixBuilder(
-                        builder: (context, scope) {
-                          controller = Formix.controllerOf(context)!;
-                          return const SizedBox();
-                        },
-                      ),
-                    ],
-                  ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig<String>(
+                  id: field1,
+                  initialValue: '',
+                  validator: (v) => v!.isEmpty ? 'Error' : null,
+                ),
+                FormixFieldConfig<String>(
+                  id: field2,
+                  initialValue: '',
+                  validator: (v) => v!.isEmpty ? 'Error' : null,
+                ),
+              ],
+              child: SingleChildScrollView(
+                controller: scrollController,
+                child: Column(
+                  children: [
+                    const FormixTextFormField(fieldId: field1),
+                    const SizedBox(height: 1000), // Make it long
+                    const FormixTextFormField(fieldId: field2),
+                    FormixBuilder(
+                      builder: (context, scope) {
+                        controller = Formix.controllerOf(context)!;
+                        return const SizedBox();
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -79,30 +77,28 @@ void main() {
       final scrollController = ScrollController();
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [
-                  FormixFieldConfig<String>(id: field1, initialValue: ''),
-                  FormixFieldConfig<String>(id: field2, initialValue: ''),
-                ],
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  child: Column(
-                    children: [
-                      const FormixTextFormField(fieldId: field1),
-                      const SizedBox(height: 1200),
-                      const FormixTextFormField(fieldId: field2),
-                      const SizedBox(height: 1000), // Add padding here
-                      FormixBuilder(
-                        builder: (context, scope) {
-                          controller = Formix.controllerOf(context)!;
-                          return const SizedBox();
-                        },
-                      ),
-                    ],
-                  ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [
+                FormixFieldConfig<String>(id: field1, initialValue: ''),
+                FormixFieldConfig<String>(id: field2, initialValue: ''),
+              ],
+              child: SingleChildScrollView(
+                controller: scrollController,
+                child: Column(
+                  children: [
+                    const FormixTextFormField(fieldId: field1),
+                    const SizedBox(height: 1200),
+                    const FormixTextFormField(fieldId: field2),
+                    const SizedBox(height: 1000), // Add padding here
+                    FormixBuilder(
+                      builder: (context, scope) {
+                        controller = Formix.controllerOf(context)!;
+                        return const SizedBox();
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -129,34 +125,32 @@ void main() {
       final scrollController = ScrollController();
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: SizedBox(
-                height: 600,
-                child: Formix(
-                  fields: [
-                    FormixFieldConfig<String>(
-                      id: field1,
-                      initialValue: '',
-                      validator: (v) => 'Error',
-                    ),
-                  ],
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 1000),
-                        const FormixTextFormField(fieldId: field1),
-                        const SizedBox(height: 1000),
-                        FormixBuilder(
-                          builder: (context, scope) {
-                            controller = Formix.controllerOf(context)!;
-                            return const SizedBox();
-                          },
-                        ),
-                      ],
-                    ),
+        MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              height: 600,
+              child: Formix(
+                fields: [
+                  FormixFieldConfig<String>(
+                    id: field1,
+                    initialValue: '',
+                    validator: (v) => 'Error',
+                  ),
+                ],
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 1000),
+                      const FormixTextFormField(fieldId: field1),
+                      const SizedBox(height: 1000),
+                      FormixBuilder(
+                        builder: (context, scope) {
+                          controller = Formix.controllerOf(context)!;
+                          return const SizedBox();
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),

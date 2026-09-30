@@ -35,45 +35,43 @@ void main() {
       const fieldcOptions = FormixFieldID<String>('fieldC_Options'); // Placeholder for async result
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                onChanged: (_) {},
-                child: Column(
-                  children: [
-                    // Field A (Async Source)
-                    FormixAsyncField<String>(
-                      fieldId: fieldA,
-                      future: fetchA(),
-                      builder: (context, state) {
-                        return Text('A: ${state.asyncState.value}');
-                      },
-                    ),
-                    // Field B (Depends on A)
-                    FormixDependentAsyncField<String, String>(
-                      fieldId: fieldbOptions,
-                      dependency: fieldA,
-                      resetField: fieldB,
-                      future: fetchB,
-                      onData: (context, controller, data) {
-                        controller.setValue(fieldB, data);
-                      },
-                      builder: (context, state) => Text('B Options: ${state.asyncState.value}'),
-                    ),
-                    // Field C (Depends on B)
-                    FormixDependentAsyncField<String, String>(
-                      fieldId: fieldcOptions,
-                      dependency: fieldB,
-                      resetField: fieldC,
-                      future: fetchC,
-                      onData: (context, controller, data) {
-                        controller.setValue(fieldC, data);
-                      },
-                      builder: (context, state) => Text('C Options: ${state.asyncState.value}'),
-                    ),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              onChanged: (_) {},
+              child: Column(
+                children: [
+                  // Field A (Async Source)
+                  FormixAsyncField<String>(
+                    fieldId: fieldA,
+                    future: fetchA(),
+                    builder: (context, state) {
+                      return Text('A: ${state.asyncState.value}');
+                    },
+                  ),
+                  // Field B (Depends on A)
+                  FormixDependentAsyncField<String, String>(
+                    fieldId: fieldbOptions,
+                    dependency: fieldA,
+                    resetField: fieldB,
+                    future: fetchB,
+                    onData: (context, controller, data) {
+                      controller.setValue(fieldB, data);
+                    },
+                    builder: (context, state) => Text('B Options: ${state.asyncState.value}'),
+                  ),
+                  // Field C (Depends on B)
+                  FormixDependentAsyncField<String, String>(
+                    fieldId: fieldcOptions,
+                    dependency: fieldB,
+                    resetField: fieldC,
+                    future: fetchC,
+                    onData: (context, controller, data) {
+                      controller.setValue(fieldC, data);
+                    },
+                    builder: (context, state) => Text('C Options: ${state.asyncState.value}'),
+                  ),
+                ],
               ),
             ),
           ),
@@ -130,55 +128,53 @@ void main() {
 
       // Rebuild widget tree by interacting or simplified pump
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                onChanged: (_) {},
-                child: Column(
-                  children: [
-                    // Field A (Async Source) - Use same future to avoid A re-fetching loop for now?
-                    // Or let's see if A re-fetches.
-                    FormixAsyncField<String>(
-                      fieldId: fieldA,
-                      // We need to keep A stable or dependent tests will be noisy?
-                      // Actually, if A re-fetches, it sets value 'A_Value' again.
-                      // controller.setValue('fieldA', 'A_Value').
-                      // If value is identical, does it notify?
-                      // FormixController checks for equality.
-                      // If equal, no notification. A doesn't "change".
-                      // So B dependency "value" doesn't change.
-                      // So B should NOT re-fetch.
-                      future: fetchA(),
-                      builder: (context, state) {
-                        return Text('A: ${state.asyncState.value}');
-                      },
-                      onData: (context, controller, data) {
-                        controller.setValue(fieldA, data);
-                      },
-                    ),
-                    FormixDependentAsyncField<String, String>(
-                      fieldId: fieldbOptions,
-                      dependency: fieldA,
-                      resetField: fieldB,
-                      future: fetchB,
-                      onData: (context, controller, data) {
-                        controller.setValue(fieldB, data);
-                      },
-                      builder: (context, state) => Text('B Options: ${state.asyncState.value}'),
-                    ),
-                    FormixDependentAsyncField<String, String>(
-                      fieldId: fieldcOptions,
-                      dependency: fieldB,
-                      resetField: fieldC,
-                      future: fetchC,
-                      onData: (context, controller, data) {
-                        controller.setValue(fieldC, data);
-                      },
-                      builder: (context, state) => Text('C Options: ${state.asyncState.value}'),
-                    ),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              onChanged: (_) {},
+              child: Column(
+                children: [
+                  // Field A (Async Source) - Use same future to avoid A re-fetching loop for now?
+                  // Or let's see if A re-fetches.
+                  FormixAsyncField<String>(
+                    fieldId: fieldA,
+                    // We need to keep A stable or dependent tests will be noisy?
+                    // Actually, if A re-fetches, it sets value 'A_Value' again.
+                    // controller.setValue('fieldA', 'A_Value').
+                    // If value is identical, does it notify?
+                    // FormixController checks for equality.
+                    // If equal, no notification. A doesn't "change".
+                    // So B dependency "value" doesn't change.
+                    // So B should NOT re-fetch.
+                    future: fetchA(),
+                    builder: (context, state) {
+                      return Text('A: ${state.asyncState.value}');
+                    },
+                    onData: (context, controller, data) {
+                      controller.setValue(fieldA, data);
+                    },
+                  ),
+                  FormixDependentAsyncField<String, String>(
+                    fieldId: fieldbOptions,
+                    dependency: fieldA,
+                    resetField: fieldB,
+                    future: fetchB,
+                    onData: (context, controller, data) {
+                      controller.setValue(fieldB, data);
+                    },
+                    builder: (context, state) => Text('B Options: ${state.asyncState.value}'),
+                  ),
+                  FormixDependentAsyncField<String, String>(
+                    fieldId: fieldcOptions,
+                    dependency: fieldB,
+                    resetField: fieldC,
+                    future: fetchC,
+                    onData: (context, controller, data) {
+                      controller.setValue(fieldC, data);
+                    },
+                    builder: (context, state) => Text('C Options: ${state.asyncState.value}'),
+                  ),
+                ],
               ),
             ),
           ),
@@ -192,46 +188,44 @@ void main() {
       // Pump again to trigger rebuilds
       await tester.pump();
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                onChanged: (_) {},
-                child: Column(
-                  children: [
-                    FormixAsyncField<String>(
-                      fieldId: fieldA,
-                      future: fetchA(), // This passes a NEW future
-                      builder: (context, state) {
-                        return Text('A: ${state.asyncState.value}');
-                      },
-                      onData: (context, controller, data) {
-                        controller.setValue(fieldA, data);
-                      },
-                    ),
-                    // ... B and C (same code)
-                    FormixDependentAsyncField<String, String>(
-                      fieldId: fieldbOptions,
-                      dependency: fieldA,
-                      resetField: fieldB,
-                      future: fetchB,
-                      onData: (context, controller, data) {
-                        controller.setValue(fieldB, data);
-                      },
-                      builder: (context, state) => Text('B Options: ${state.asyncState.value}'),
-                    ),
-                    FormixDependentAsyncField<String, String>(
-                      fieldId: fieldcOptions,
-                      dependency: fieldB,
-                      resetField: fieldC,
-                      future: fetchC,
-                      onData: (context, controller, data) {
-                        controller.setValue(fieldC, data);
-                      },
-                      builder: (context, state) => Text('C Options: ${state.asyncState.value}'),
-                    ),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              onChanged: (_) {},
+              child: Column(
+                children: [
+                  FormixAsyncField<String>(
+                    fieldId: fieldA,
+                    future: fetchA(), // This passes a NEW future
+                    builder: (context, state) {
+                      return Text('A: ${state.asyncState.value}');
+                    },
+                    onData: (context, controller, data) {
+                      controller.setValue(fieldA, data);
+                    },
+                  ),
+                  // ... B and C (same code)
+                  FormixDependentAsyncField<String, String>(
+                    fieldId: fieldbOptions,
+                    dependency: fieldA,
+                    resetField: fieldB,
+                    future: fetchB,
+                    onData: (context, controller, data) {
+                      controller.setValue(fieldB, data);
+                    },
+                    builder: (context, state) => Text('B Options: ${state.asyncState.value}'),
+                  ),
+                  FormixDependentAsyncField<String, String>(
+                    fieldId: fieldcOptions,
+                    dependency: fieldB,
+                    resetField: fieldC,
+                    future: fetchC,
+                    onData: (context, controller, data) {
+                      controller.setValue(fieldC, data);
+                    },
+                    builder: (context, state) => Text('C Options: ${state.asyncState.value}'),
+                  ),
+                ],
               ),
             ),
           ),

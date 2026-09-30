@@ -6,7 +6,9 @@
 
 **An elite, type-safe, and ultra-reactive form engine for Flutter.**
 
-Powered by **Riverpod**, Formix delivers lightning-fast performance, zero boilerplate, and effortless state management. Whether it's a simple login screen or a complex multi-step wizard, Formix scales with you.
+Powered by **[Signals](https://pub.dev/packages/signals_flutter)**, Formix delivers lightning-fast surgical rebuilds, zero boilerplate, and effortless state management — with **no `ProviderScope` or other setup required**. Whether it's a simple login screen or a complex multi-step wizard, Formix scales with you.
+
+> **Upgrading from 0.1.x (Riverpod)?** See [`MIGRATION.md`](MIGRATION.md).
 
 
 
@@ -56,19 +58,6 @@ flutter pub add formix
 ---
 
 ## ⚡ Quick Start
-
-### 0. Requirement: ProviderScope
-Formix is powered by Riverpod for its high-performance state management. You **must** wrap your application (or at least your form) in a `ProviderScope`.
-
-```dart
-void main() {
-  runApp(
-    ProviderScope( // Required for Formix to function
-      child: MyApp(),
-    ),
-  );
-}
-```
 
 ### 1. Define Fields
 Always use `FormixFieldID<T>` for type-safe field identification.
@@ -284,7 +273,7 @@ FormixFieldAsyncTransformer<String, String>(
 | Pattern | Best For | Usage |
 | :--- | :--- | :--- |
 | **Reactive UI** | Updating buttons, labels, or visibility. | `FormixBuilder(builder: (c, scope) => ...)` |
-| **External Control** | Logic outside the widget tree (AppBar buttons). | `ref.read(formControllerProvider(...).notifier)` |
+| **External Control** | Logic outside the widget tree (AppBar buttons). | `Formix.controllerOf(context)` or a `GlobalKey<FormixState>` |
 | **Side Effects** | Navigation, Snackbars, Logging. | `FormixListener` |
 
 ### Side Effects (`FormixListener`)
@@ -326,6 +315,8 @@ Formix includes high-performance widgets out of the box:
 - **`FormixFieldRegistry`**: Lazily registers fields (vital for PageViews/Tabs).
 
 ### Reactive & Transformers
+- **`FormixValue<T>`**: One-field reactive builder — `(context, value) => ...`, rebuilds only when that field changes.
+- **`FormixSubmitButton`**: Submit button that auto-disables while invalid/submitting and shows a spinner.
 - **`FormixBuilder`**: Access `FormixScope` for reactive UI (isSubmitting, isValid).
 - **`FormixListener`**: Execute side effects (navigation, snackbars) on state change.
 - **`FormixFormStatus`**: Debug dashboard showing dirty/error counts.
@@ -484,8 +475,23 @@ FormixValidators.number<int>()
   .positive()
   .min(18, 'Must be an adult')
   .max(99)
+  .between(1, 100)
   .build()
+
+// Date Validation
+FormixValidators.date()
+  .after(DateTime(2000))
+  .before(DateTime.now())
+  .between(DateTime(2000), DateTime.now())
+  .build()
+
+// One-of (enums, allow-lists)
+FormixValidators.any<Role>().oneOf([Role.admin, Role.user]).build()
 ```
+
+> **Correct-by-construction:** the chains are type-scoped, so the compiler stops mistakes —
+> `FormixValidators.number().minLength(3)` and `FormixValidators.string().before(...)` won't
+> compile. No codegen involved.
 
 ### Async Validation
 Async validators are debounced automatically to optimize server performance.
@@ -528,14 +534,125 @@ void submitFromAppBar() {
 }
 ```
 
-#### 3. Using Riverpod (`WidgetRef`)
-Best for complex logic, side effects, or extracting logic to separate providers.
+#### 3. Using Signals directly
+Best for complex logic or extracting reactive reads outside a `FormixBuilder`. Every
+controller exposes memoized signal slices — read `.value` inside a `SignalBuilder`.
 ```dart
-// Reading properties
-final isValid = ref.watch(formControllerProvider(param).select((s) => s.isValid));
+final controller = Formix.controllerOf(context)!;
+
+// Reading properties reactively (rebuilds only when validity changes)
+SignalBuilder(builder: (context) => Text('${controller.isValidSignal.value}'));
 
 // Executing actions
-ref.read(formControllerProvider(param).notifier).reset();
+controller.reset();
+```
+
+#### 4. Own the controller (context-free, signals-native) — recommended for imperative seeding
+`Formix.of`/`context.formix` read an `InheritedWidget`, so they can't be used in
+`initState`. If you need to touch the controller in `initState` (or want zero context
+lookups), just **own it** — it's a plain object holding signals. Create it in your
+`State`, read its signals directly, pass it to fields explicitly, and dispose it yourself.
+No `Formix` ancestor required.
+
+```dart
+class _LoginState extends State<Login> {
+  late final form = FormixController(
+    fields: const [FormixFieldConfig<String>(id: emailId), FormixFieldConfig<int>(id: ageId)],
+    initialValue: const {'email': ''},          // declarative seed
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    form.batchUpdate((b) => b..set(ageId, 18));  // imperative seed — safe, you own it
+  }
+
+  @override
+  void dispose() { form.dispose(); super.dispose(); }  // you own it → you dispose it
+
+  @override
+  Widget build(BuildContext context) => Column(children: [
+    FormixTextFormField(fieldId: emailId, controller: form),          // pass explicitly
+    SignalBuilder(builder: (_) =>                                     // read signals directly
+      Text(form.isValidSignal.value ? 'Ready' : 'Fill it in')),
+    FormixSubmitButton(controller: form, onValid: save, child: const Text('Save')),
+  ]);
+}
+```
+
+Every field and ergonomic widget accepts an explicit `controller:`, so the whole form
+works without a `Formix` ancestor. (Wrap in `Formix(controller: form, child: ...)` only if
+you'd rather descendants resolve it from context.)
+
+> **Reaching the controller:** `Formix.of(context)` returns a **non-null** controller
+> (throws a `FlutterError` if there is no `Formix` ancestor). Use `Formix.maybeOf(context)`
+> — or the `context.maybeFormix` extension — when a form may be absent, and
+> `context.formix` as a shorthand for `Formix.of(context)`.
+
+### ✨ Ergonomic shortcuts
+Common patterns without the `FormixBuilder`/`SignalBuilder` boilerplate:
+
+```dart
+// React to ONE field (rebuilds only when it changes):
+FormixValue<String>(emailId, builder: (context, value) => Text(value ?? ''));
+
+// A submit button that disables while invalid/submitting and shows a spinner:
+FormixSubmitButton(
+  onValid: (values) => api.save(values),
+  child: const Text('Save'),
+);
+
+// Terse get/set + one-shot batch.
+// Reads are fine in build(); WRITES belong in event handlers / async callbacks
+// (never build(), which reruns). For seeding, use Formix(initialValue: {...}).
+final name = context.formix[nameId];        // subscript read (ok in build)
+void onSave() {
+  context.formix[nameId] = 'Ada';            // subscript write (in a handler)
+  context.formix.batchUpdate((b) => b        // one state transition
+    ..set(nameId, 'Ada')
+    ..set(ageId, 36));
+}
+
+// Read several typed fields as one destructurable record:
+SignalBuilder(builder: (context) {
+  final (email, password) = controller.group2(emailId, passwordId).value;
+  return Text('$email / $password');
+});
+
+// ...and write them back symmetrically, in one batch:
+controller.setGroup2(emailId, passwordId, ('a@b.c', 'secret'));
+```
+
+`Formix(fields: [...])` and `FormixController(fields: [...])` accept either `FormixField`
+or `FormixFieldConfig` (both implement `FormixFieldDefinition`). A field's nullability
+follows its ID's type: `FormixFieldID<String>` rejects `null`, `FormixFieldID<String?>`
+accepts `null` as a cleared value.
+
+### 🚦 Submission state (sealed)
+The submit lifecycle is a sealed `FormixSubmission` — `switch` over it exhaustively instead
+of juggling `isSubmitting`/`hasError`/`isSuccess` flags:
+
+```dart
+SignalBuilder(builder: (context) {
+  return switch (controller.submissionSignal.value) {
+    FormixSubmissionIdle()       => const Text('Ready'),
+    FormixSubmissionSubmitting() => const CircularProgressIndicator(),
+    FormixSubmissionSuccess()    => const Text('Saved!'),
+    FormixSubmissionError(:final error) => Text('Failed: $error'),
+  };
+});
+```
+
+### 🧩 Typed form model (no codegen)
+Want a single typed model instead of loose field reads? Compose one with `derived` — it's a
+memoized, reactive view; no build step:
+
+```dart
+final user = controller.derived((s) => (
+  name: s.getValue(nameId),
+  age: s.getValue(ageId),
+));
+// user.value is a typed record: (name: String?, age: int?)
 ```
 
 ### 🎮 Controller API Reference
@@ -814,6 +931,98 @@ Updates no longer crash on type mismatches or missing fields. They return a resu
 - `updatedFields`: Successfully updated keys.
 - `typeMismatches`: Map of field keys to error messages.
 - `missingFields`: Fields provided but not registered in the form.
+
+---
+
+## ✨ New in 0.2.0 (Signals extras)
+
+### Server-side errors
+Map backend validation failures onto fields in one call:
+```dart
+try {
+  await api.save(scope.values);
+} on ApiValidationException catch (e) {
+  // e.fieldErrors == {'email': 'Already taken', 'username': 'Too short'}
+  scope.controller.applyServerErrors(e.fieldErrors);
+}
+```
+
+### Derived signals
+A memoized read-only signal computed from form state — rebuilds only when its result changes:
+```dart
+final total = controller.derived((s) => (s.getValue(qtyId) ?? 0) * (s.getValue(priceId) ?? 0));
+
+// In the tree:
+SignalBuilder(builder: (context) => Text('Total: ${total.value}'));
+```
+
+### Debounced values (search-as-you-type)
+```dart
+final query = controller.debouncedValueSignal(searchField, const Duration(milliseconds: 300));
+SignalBuilder(builder: (context) => ResultsList(query: query.value));
+```
+
+### Reactive enable / read-only / visibility
+Toggle fields from anywhere; built-in fields react automatically:
+```dart
+controller.setEnabled(couponField, hasCoupon);   // built-in fields disable reactively
+controller.setReadOnly(idField, true);            // text field becomes read-only
+// Watch visibility to show/hide:
+FormixBuilder(
+  builder: (context, scope) =>
+    scope.controller.visibleSignal(extraField).value ? MyExtra() : const SizedBox.shrink(),
+);
+```
+
+### Drop Formix into a native Flutter `Form`
+`FormixFormField` makes `Form.validate()/save()/reset()` participate with Formix:
+```dart
+Form(
+  key: formKey,
+  child: Formix(
+    fields: [FormixFieldConfig<String>(id: emailField, validator: FormixValidators.string().required().email().build())],
+    child: FormixFormField<String>(
+      fieldId: emailField,
+      builder: (context, value, error, onChanged) =>
+        TextField(onChanged: onChanged, decoration: InputDecoration(errorText: error)),
+    ),
+  ),
+)
+// formKey.currentState!.validate() now runs Formix validation.
+```
+
+### Reusable controller-bound widgets (`FormixControllerHost`)
+Mix into your own `State` to get controller resolution + a config-error widget for free:
+```dart
+class _MyWidgetState extends State<MyWidget> with FormixControllerHost<MyWidget> {
+  @override
+  String get formixWidgetName => 'MyWidget';
+  @override
+  void onControllerChanged(FormixController controller) {/* wire effects */}
+
+  @override
+  Widget build(BuildContext context) => formixErrorOrNull() ?? _content();
+}
+```
+
+### Testing helpers
+```dart
+import 'package:formix/formix_test.dart';
+
+testWidgets('only the watched field rebuilds', (tester) async {
+  final counter = RebuildCounter();
+  final c = await pumpFormix(tester,
+    initialValue: {'name': '', 'email': ''},
+    child: FormixBuilder(
+      builder: (context, scope) => counter.wrap((_) => Text('${scope.watchValue(nameId)}')),
+    ),
+  );
+
+  c.setValue(emailId, 'x@y.com');          // unwatched field
+  await tester.pump();
+  expect(counter, rebuiltExactly(1));      // no rebuild for the name text
+});
+```
 
 ---
 
@@ -1121,56 +1330,29 @@ Formix integrates deep into Flutter DevTools.
 
 ## ⚡ Performance
 
-Formix is engineered for massive scale with continuous performance optimizations.
+The signals core gives **surgical rebuilds**: changing a field only rebuilds the widgets
+that read *that* field — aggregates (`isValid`, counts) are memoized `Computed`s, and
+per-keystroke updates are O(changed), not O(fields). No `ProviderScope`, no setup cost.
 
-### Core Performance Features
-- **Granular Rebuilds**: Uses `select` to only rebuild exact widgets that change.
-- **O(1) Updates**: Field updates are constant time, regardless of form size.
-- **Scalability**: Tested with **5000+ active fields** maintaining 60fps interaction.
-- **Lazy Evaluation**: Validation and dependency chains are optimized to run only when necessary.
+### Benchmark Results — Riverpod (0.1.x) vs Signals (0.2.0)
 
-### Recent Optimizations (v0.1.0)
+Same benchmark suite, same machine. The signals core is faster across the board.
+See [`BENCHMARKS.md`](BENCHMARKS.md) for the full methodology and comparison.
 
-#### 1. Cached InputDecoration
-- **What**: Intelligent caching of `InputDecoration` to avoid redundant theme resolution
-- **Impact**: Decoration only rebuilds when widget properties or theme actually changes
-- **Applied to**: `FormixTextFormField` and `FormixNumberFormField`
+| Metric | 0.1.x (Riverpod) | 0.2.0 (Signals) | Change |
+|--------|-----------------:|----------------:|--------|
+| **Pure Formix overhead / rebuild** | 0.097ms | **0.088ms** | −9.3% |
+| **Pure Formix mount/unmount** | 0.054ms | **0.049ms** | −9.3% |
+| **Full widget passive rebuild** | 9.548ms | **9.392ms** | −1.6% |
+| **Field mount/unmount cycle** | 1.584ms | **1.189ms** | −24.9% |
+| **Bulk-update 1000 fields (one batch)** | ~1000ms | **286ms** | ~3.5× |
+| **100,000-field dependency chain** | — | **~196ms** | — |
 
-#### 2. Combined Field State Notifier
-- **What**: Consolidated 4 separate `ValueNotifier`s into a single combined notifier
-- **Impact**: Reduces `AnimatedBuilder` overhead from 4 listenables to 1
-- **Benefit**: Significantly faster rebuild performance for rapid state changes
+Pure Formix overhead is ~0.1ms/rebuild vs Flutter's own `TextFormField` at ~12ms — negligible.
 
-#### 3. Optimized Controller Subscription
-- **What**: Early return optimization for explicit controllers
-- **Impact**: Avoids unnecessary Riverpod subscription setup
-- **Benefit**: Cleaner, more efficient code path for common use cases
-
-### Benchmark Results (M1 Pro, Averaged over 3 runs × 1000 iterations)
-
-| Metric | Time | Notes |
-|--------|------|-------|
-| **Pure Formix Overhead (Rebuild)** | **0.097ms** | Minimal overhead per rebuild |
-| **Pure Formix (Mount/Unmount)** | **0.054ms** | Efficient lifecycle management |
-| **Full Widget Passive Rebuild** | **9.548ms** | Includes Material widgets |
-| **Full Widget Mount/Unmount** | **13.133ms** | Complete widget lifecycle |
-| **Mount/Unmount Cycles** | **1.584ms** | Field creation/disposal |
-
-### Performance Improvements
-
-| Test | Before | After | Improvement |
-|------|--------|-------|-------------|
-| **100 Widget Rebuilds** | 1388ms | 847ms | **39% faster** 🔥 |
-| **Passive Rebuild** | 7.20ms | 5.87ms | **18.5% faster** |
-| **50 Keystrokes** | 401ms | 395ms | **1.5% faster** |
-
-### Stress Test Results (M1 Pro)
-- **1000 Fields Mount**: <10ms
-- **Bulk Updates**: ~50ms for 1000 fields. Single frame execution for `setValues`.
-- **Dependency Scale**: **~160ms** for 100,000 dependents. Ultra-fast traversal for deep chains.
-- **Memory Efficient**: Uses **lazy-cloning** and **shared validation contexts** to minimize GC pressure and O(N) overhead during validation.
-
-> **Note**: All benchmarks run with 200 warmup iterations and 3000 total samples (3 runs × 1000 iterations) for statistical accuracy.
+**Surgical guarantee:** updating one field among 1000 rebuilds exactly one widget
+(verified in `test/benchmark_surgical_rebuild_test.dart`). Numbers vary by machine;
+run with 200 warmup + 3000 samples.
 
 
 ---

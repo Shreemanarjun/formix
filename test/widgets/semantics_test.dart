@@ -9,11 +9,9 @@ void main() {
       final handle = tester.ensureSemantics();
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(child: SizedBox(height: 100, width: 100)),
-            ),
+        const MaterialApp(
+          home: Scaffold(
+            body: Formix(child: SizedBox(height: 100, width: 100)),
           ),
         ),
       );
@@ -33,29 +31,27 @@ void main() {
       const fieldId = FormixFieldID<String>('name');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig<String>(
-                    id: fieldId,
-                    initialValue: '',
-                    validator: (v) => v!.isEmpty ? 'Required' : null,
-                    validationMode: FormixAutovalidateMode.always,
-                  ),
-                ],
-                child: FormixRawFormField<String>(
-                  fieldId: fieldId,
-                  builder: (context, state) {
-                    return TextField(
-                      focusNode: state.focusNode,
-                      decoration: InputDecoration(
-                        errorText: state.shouldShowError ? state.validation.errorMessage : null,
-                      ),
-                    );
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig<String>(
+                  id: fieldId,
+                  initialValue: '',
+                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                  validationMode: FormixAutovalidateMode.always,
                 ),
+              ],
+              child: FormixRawFormField<String>(
+                fieldId: fieldId,
+                builder: (context, state) {
+                  return TextField(
+                    focusNode: state.focusNode,
+                    decoration: InputDecoration(
+                      errorText: state.shouldShowError ? state.validation.errorMessage : null,
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -74,28 +70,26 @@ void main() {
       expect(data.flagsCollection.isTextField, isTrue);
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig<String>(
-                    id: fieldId,
-                    initialValue: '',
-                    validator: (v) => v!.isEmpty ? 'Error' : null,
-                    validationMode: FormixAutovalidateMode.always,
-                  ),
-                ],
-                child: FormixRawFormField<String>(
-                  fieldId: fieldId,
-                  builder: (context, state) {
-                    return const SizedBox(
-                      height: 50,
-                      width: 50,
-                      child: Text('Custom Field'),
-                    );
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig<String>(
+                  id: fieldId,
+                  initialValue: '',
+                  validator: (v) => v!.isEmpty ? 'Error' : null,
+                  validationMode: FormixAutovalidateMode.always,
                 ),
+              ],
+              child: FormixRawFormField<String>(
+                fieldId: fieldId,
+                builder: (context, state) {
+                  return const SizedBox(
+                    height: 50,
+                    width: 50,
+                    child: Text('Custom Field'),
+                  );
+                },
               ),
             ),
           ),
@@ -127,23 +121,21 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig<String>(
-                    id: fieldId,
-                    initialValue: '',
-                    validator: (v) => v!.isEmpty ? 'Critical Error' : null,
-                  ),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = scope.controller;
-                    return const Text('Form');
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig<String>(
+                  id: fieldId,
+                  initialValue: '',
+                  validator: (v) => v!.isEmpty ? 'Critical Error' : null,
                 ),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = scope.controller;
+                  return const Text('Form');
+                },
               ),
             ),
           ),

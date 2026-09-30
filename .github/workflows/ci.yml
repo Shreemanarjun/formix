@@ -1,6 +1,10 @@
 name: Formix CI
 
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
     inputs:
       update_goldens:
@@ -18,7 +22,7 @@ jobs:
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.35.2'
+          flutter-version: '3.47.5'
           channel: 'stable'
 
       - name: Install dependencies
@@ -43,3 +47,46 @@ jobs:
       - name: Run tests
         if: github.event.inputs.update_goldens != 'true'
         run: flutter test
+
+  coverage:
+    runs-on: ubuntu-latest
+    # Best-effort: `flutter test --coverage` can hang (flutter_tools
+    # CoverageCollector defect on some 3.47.x setups — observed hanging >30min on
+    # CI). Keep this job non-blocking; the `build` job's full `flutter test` is
+    # the real gate. Bounded so a hang can't stall the run.
+    continue-on-error: true
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Bounded so a hang self-terminates instead of stalling the run.
+      - name: Run tests with coverage
+        run: timeout 600 flutter test --coverage || echo "coverage run did not complete (tolerated)"
+
+      - name: Report coverage %
+        run: |
+          if [ ! -f coverage/lcov.info ]; then
+            echo "No coverage produced (run hung or timed out) — skipping report."
+            echo "### 🧪 Coverage: not collected (run hung/timed out)" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          PCT=$(awk -F: '/^LF:/{lf+=$2} /^LH:/{lh+=$2} END{if(lf>0) printf "%.2f", lh/lf*100}' coverage/lcov.info)
+          echo "Line coverage: ${PCT}%"
+          echo "### 🧪 Line coverage: ${PCT}%" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload lcov artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-lcov
+          path: coverage/lcov.info
+          if-no-files-found: ignore

@@ -6,7 +6,7 @@ import 'ancestor_validator.dart';
 ///
 /// Use [FormixArray] when you need to render a list of fields that can be
 /// dynamically added or removed.
-class FormixArray<T> extends ConsumerStatefulWidget {
+class FormixArray<T> extends StatefulWidget {
   /// Creates a form array widget.
   const FormixArray({
     super.key,
@@ -38,10 +38,10 @@ class FormixArray<T> extends ConsumerStatefulWidget {
   final bool scrollable;
 
   @override
-  ConsumerState<FormixArray<T>> createState() => _FormixArrayState<T>();
+  State<FormixArray<T>> createState() => _FormixArrayState<T>();
 }
 
-class _FormixArrayState<T> extends ConsumerState<FormixArray<T>> {
+class _FormixArrayState<T> extends State<FormixArray<T>> {
   @override
   Widget build(BuildContext context) {
     final errorWidget = FormixAncestorValidator.validate(
@@ -52,59 +52,55 @@ class _FormixArrayState<T> extends ConsumerState<FormixArray<T>> {
 
     if (errorWidget != null) return errorWidget;
 
-    final provider = (Formix.of(context) ?? ref.watch(currentControllerProvider))!;
-
-    // Keep provider alive efficiently without watching state changes.
-    // This only triggers a rebuild if the controller instance itself changes.
-    ref.watch(provider.notifier);
-
-    try {
-      final controller = ref.read(provider.notifier);
-      final scope = FormixScope(
-        context: context,
-        ref: ref,
-        controller: controller,
-      );
-
-      // Resolve the array ID based on surrounding form groups
-      final resolvedId = FormixGroup.resolve(context, widget.id) as FormixArrayID<T>;
-
-      // Watch the array value reactively
-      final items = scope.watchArray(resolvedId);
-
-      if (items.isEmpty && widget.emptyBuilder != null) {
-        return widget.emptyBuilder!(context, scope);
-      }
-
-      Widget buildItem(int index) {
-        final itemId = resolvedId.item(index);
-        return FormixGroup(
-          prefix: '${widget.id.key}[$index]',
-          child: widget.itemBuilder(context, index, itemId, scope),
-        );
-      }
-
-      if (widget.scrollable) {
-        return ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: items.length,
-          itemBuilder: (context, index) => buildItem(index),
-        );
-      }
-
-      return Column(
-        children: List.generate(items.length, (index) {
-          return buildItem(index);
-        }),
-      );
-    } catch (e) {
-      return FormixConfigurationErrorWidget(
+    final controller = Formix.controllerOf(context);
+    if (controller == null) {
+      return const FormixConfigurationErrorWidget(
         message: 'Failed to initialize FormixArray',
-        details: e.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.\n\nExample:\nvoid main() {\n  runApp(ProviderScope(child: MyApp()));\n}'
-            : 'Error: $e',
+        details: 'FormixArray must be used inside a Formix widget.',
       );
     }
+
+    final scope = FormixScope(
+      context: context,
+      controller: controller,
+    );
+
+    // Resolve the array ID based on surrounding form groups
+    final resolvedId = FormixGroup.resolve(context, widget.id) as FormixArrayID<T>;
+
+    // Watch the array value reactively inside a SignalBuilder so this rebuilds
+    // only when the array length/content changes.
+    return SignalBuilder(
+      builder: (context) {
+        final items = scope.watchArray(resolvedId);
+
+        if (items.isEmpty && widget.emptyBuilder != null) {
+          return widget.emptyBuilder!(context, scope);
+        }
+
+        Widget buildItem(int index) {
+          final itemId = resolvedId.item(index);
+          return FormixGroup(
+            prefix: '${widget.id.key}[$index]',
+            child: widget.itemBuilder(context, index, itemId, scope),
+          );
+        }
+
+        if (widget.scrollable) {
+          return ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: items.length,
+            itemBuilder: (context, index) => buildItem(index),
+          );
+        }
+
+        return Column(
+          children: List.generate(items.length, (index) {
+            return buildItem(index);
+          }),
+        );
+      },
+    );
   }
 }

@@ -31,18 +31,18 @@ class ProgrammaticControlPage extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: Row(
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
                       ElevatedButton(
                         onPressed: () => scope.focusField(field5Id),
                         child: const Text('Focus Last'),
                       ),
-                      const SizedBox(width: 8),
                       ElevatedButton(
                         onPressed: () => scope.scrollToField(field5Id),
                         child: const Text('Scroll Last'),
                       ),
-                      const SizedBox(width: 8),
                       ElevatedButton(
                         onPressed: () => scope.focusFirstError(),
                         child: const Text('Focus Error'),

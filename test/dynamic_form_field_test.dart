@@ -11,114 +11,112 @@ void main() {
       const contactsCountField = FormixFieldID<int>('contactsCount');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'contactsCount': 0},
-                fields: const [
-                  FormixFieldConfig<int>(
-                    id: contactsCountField,
-                    initialValue: 0,
-                  ),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    // Use watchValue for reactivity
-                    final int count = scope.watchValue(contactsCountField) ?? 0;
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'contactsCount': 0},
+              fields: const [
+                FormixFieldConfig<int>(
+                  id: contactsCountField,
+                  initialValue: 0,
+                ),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  // Use watchValue for reactivity
+                  final int count = scope.watchValue(contactsCountField) ?? 0;
 
-                    return Column(
-                      children: [
-                        ...List.generate(count, (index) {
-                          final nameId = FormixFieldID<String>(
-                            'contact_${index}_name',
-                          );
-                          final phoneId = FormixFieldID<String>(
-                            'contact_${index}_phone',
-                          );
+                  return Column(
+                    children: [
+                      ...List.generate(count, (index) {
+                        final nameId = FormixFieldID<String>(
+                          'contact_${index}_name',
+                        );
+                        final phoneId = FormixFieldID<String>(
+                          'contact_${index}_phone',
+                        );
 
-                          return FormixSection(
-                            key: ValueKey('contact_$index'),
-                            fields: [
-                              FormixFieldConfig<String>(
-                                id: nameId,
-                                initialValue: '',
-                                validator: (v) => (v?.isEmpty ?? true) ? 'Name required' : null,
+                        return FormixSection(
+                          key: ValueKey('contact_$index'),
+                          fields: [
+                            FormixFieldConfig<String>(
+                              id: nameId,
+                              initialValue: '',
+                              validator: (v) => (v?.isEmpty ?? true) ? 'Name required' : null,
+                            ),
+                            FormixFieldConfig<String>(
+                              id: phoneId,
+                              initialValue: '',
+                              validator: (v) => (v?.isEmpty ?? true) ? 'Phone required' : null,
+                            ),
+                          ],
+                          child: Column(
+                            children: [
+                              FormixTextFormField(
+                                fieldId: nameId,
+                                decoration: InputDecoration(
+                                  labelText: 'Name $index',
+                                ),
                               ),
-                              FormixFieldConfig<String>(
-                                id: phoneId,
-                                initialValue: '',
-                                validator: (v) => (v?.isEmpty ?? true) ? 'Phone required' : null,
+                              FormixTextFormField(
+                                fieldId: phoneId,
+                                decoration: InputDecoration(
+                                  labelText: 'Phone $index',
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  // Remove contact: In a real app we'd shift data, but here we just decrement count
+                                  // and rely on unregistering the last one for simplicity of this test structure,
+                                  // or we can implement real removal logic if we want to be fancy.
+                                  // For this test, let's just test ADDING and VALIDATING specific items.
+                                },
+                                child: Text('Remove $index'),
                               ),
                             ],
-                            child: Column(
-                              children: [
-                                FormixTextFormField(
-                                  fieldId: nameId,
-                                  decoration: InputDecoration(
-                                    labelText: 'Name $index',
-                                  ),
-                                ),
-                                FormixTextFormField(
-                                  fieldId: phoneId,
-                                  decoration: InputDecoration(
-                                    labelText: 'Phone $index',
-                                  ),
-                                ),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    // Remove contact: In a real app we'd shift data, but here we just decrement count
-                                    // and rely on unregistering the last one for simplicity of this test structure,
-                                    // or we can implement real removal logic if we want to be fancy.
-                                    // For this test, let's just test ADDING and VALIDATING specific items.
-                                  },
-                                  child: Text('Remove $index'),
-                                ),
-                              ],
-                            ),
+                          ),
+                        );
+                      }),
+                      ElevatedButton(
+                        onPressed: () {
+                          scope.controller.setValue(
+                            contactsCountField,
+                            count + 1,
                           );
-                        }),
-                        ElevatedButton(
-                          onPressed: () {
+                        },
+                        child: const Text('Add Contact'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (count > 0) {
+                            // Start unregistering from the end
+                            final nameId = FormixFieldID<String>(
+                              'contact_${count - 1}_name',
+                            );
+                            final phoneId = FormixFieldID<String>(
+                              'contact_${count - 1}_phone',
+                            );
+                            scope.controller.unregisterFields([
+                              nameId,
+                              phoneId,
+                            ]);
                             scope.controller.setValue(
                               contactsCountField,
-                              count + 1,
+                              count - 1,
                             );
-                          },
-                          child: const Text('Add Contact'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            if (count > 0) {
-                              // Start unregistering from the end
-                              final nameId = FormixFieldID<String>(
-                                'contact_${count - 1}_name',
-                              );
-                              final phoneId = FormixFieldID<String>(
-                                'contact_${count - 1}_phone',
-                              );
-                              scope.controller.unregisterFields([
-                                nameId,
-                                phoneId,
-                              ]);
-                              scope.controller.setValue(
-                                contactsCountField,
-                                count - 1,
-                              );
-                            }
-                          },
-                          child: const Text('Remove Last'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            scope.controller.submit(onValid: (_) async {});
-                          },
-                          child: const Text('Submit'),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                          }
+                        },
+                        child: const Text('Remove Last'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          scope.controller.submit(onValid: (_) async {});
+                        },
+                        child: const Text('Submit'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -191,84 +189,82 @@ void main() {
       const cityField = FormixFieldID<String>('city');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'step': 1},
-                fields: const [
-                  FormixFieldConfig<int>(id: stepField, initialValue: 1),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    final step = scope.watchValue(stepField) ?? 1;
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'step': 1},
+              fields: const [
+                FormixFieldConfig<int>(id: stepField, initialValue: 1),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  final step = scope.watchValue(stepField) ?? 1;
 
-                    return Column(
-                      children: [
-                        if (step == 1)
-                          FormixSection(
-                            keepAlive: true, // IMPORTANT: Keep state when switching away
-                            fields: [
-                              FormixFieldConfig<String>(
-                                id: nameField,
-                                initialValue: '',
-                                validator: (v) => (v?.isEmpty ?? true) ? 'Name required' : null,
-                              ),
-                            ],
-                            child: const FormixTextFormField(
-                              fieldId: nameField,
-                              decoration: InputDecoration(labelText: 'Name'),
-                            ),
-                          ),
-                        if (step == 2)
-                          FormixSection(
-                            keepAlive: true,
-                            fields: [
-                              FormixFieldConfig<String>(
-                                id: cityField,
-                                initialValue: '',
-                                validator: (v) => (v?.isEmpty ?? true) ? 'City required' : null,
-                              ),
-                            ],
-                            child: const FormixTextFormField(
-                              fieldId: cityField,
-                              decoration: InputDecoration(labelText: 'City'),
-                            ),
-                          ),
-                        Row(
-                          children: [
-                            Text('Current Step: $step'),
-                            ElevatedButton(
-                              onPressed: () => scope.controller.setValue(stepField, 1),
-                              child: const Text('Go Step 1'),
-                            ),
-                            ElevatedButton(
-                              onPressed: () => scope.controller.setValue(stepField, 2),
-                              child: const Text('Go Step 2'),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                scope.controller.validate();
-                              },
-                              child: const Text('Validate All'),
+                  return Column(
+                    children: [
+                      if (step == 1)
+                        FormixSection(
+                          keepAlive: true, // IMPORTANT: Keep state when switching away
+                          fields: [
+                            FormixFieldConfig<String>(
+                              id: nameField,
+                              initialValue: '',
+                              validator: (v) => (v?.isEmpty ?? true) ? 'Name required' : null,
                             ),
                           ],
+                          child: const FormixTextFormField(
+                            fieldId: nameField,
+                            decoration: InputDecoration(labelText: 'Name'),
+                          ),
                         ),
-                        FormixBuilder(
-                          builder: (context, innerScope) {
-                            return Text('Is Valid: ${innerScope.watchIsValid}');
-                          },
+                      if (step == 2)
+                        FormixSection(
+                          keepAlive: true,
+                          fields: [
+                            FormixFieldConfig<String>(
+                              id: cityField,
+                              initialValue: '',
+                              validator: (v) => (v?.isEmpty ?? true) ? 'City required' : null,
+                            ),
+                          ],
+                          child: const FormixTextFormField(
+                            fieldId: cityField,
+                            decoration: InputDecoration(labelText: 'City'),
+                          ),
                         ),
-                        FormixBuilder(
-                          builder: (context, innerScope) {
-                            final nameVal = innerScope.watchValue(nameField);
-                            return Text('Name Value: $nameVal');
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                      Row(
+                        children: [
+                          Text('Current Step: $step'),
+                          ElevatedButton(
+                            onPressed: () => scope.controller.setValue(stepField, 1),
+                            child: const Text('Go Step 1'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => scope.controller.setValue(stepField, 2),
+                            child: const Text('Go Step 2'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              scope.controller.validate();
+                            },
+                            child: const Text('Validate All'),
+                          ),
+                        ],
+                      ),
+                      FormixBuilder(
+                        builder: (context, innerScope) {
+                          return Text('Is Valid: ${innerScope.watchIsValid}');
+                        },
+                      ),
+                      FormixBuilder(
+                        builder: (context, innerScope) {
+                          final nameVal = innerScope.watchValue(nameField);
+                          return Text('Name Value: $nameVal');
+                        },
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:formix/formix.dart';
+import 'package:signals_flutter/signals_flutter.dart' show AsyncState;
 
 void main() {
   group('FormixAsyncField Production Tests', () {
@@ -12,16 +13,14 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixAsyncField<String>(
-                  fieldId: fieldId,
-                  future: future,
-                  builder: (context, state) => Text(state.value ?? 'No Data'),
-                  loadingBuilder: (context) => const Text('Custom Loading...'),
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixAsyncField<String>(
+                fieldId: fieldId,
+                future: future,
+                builder: (context, state) => Text(state.value ?? 'No Data'),
+                loadingBuilder: (context) => const Text('Custom Loading...'),
               ),
             ),
           ),
@@ -41,16 +40,14 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixAsyncField<String>(
-                  fieldId: fieldId,
-                  future: future,
-                  builder: (context, state) => Text(state.value ?? 'No Data'),
-                  asyncErrorBuilder: (context, error) => Text('Error: $error'),
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixAsyncField<String>(
+                fieldId: fieldId,
+                future: future,
+                builder: (context, state) => Text(state.value ?? 'No Data'),
+                asyncErrorBuilder: (context, error) => Text('Error: $error'),
               ),
             ),
           ),
@@ -66,20 +63,18 @@ void main() {
       final future = Future.value('invalid_value');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixAsyncField<String>(
-                  fieldId: fieldId,
-                  future: future,
-                  validator: (value) => value == 'invalid_value' ? 'Invalid Value' : null,
-                  builder: (context, state) => Column(
-                    children: [
-                      Text('Value: ${state.value}'),
-                      if (state.validation.errorMessage != null) Text(state.validation.errorMessage!),
-                    ],
-                  ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixAsyncField<String>(
+                fieldId: fieldId,
+                future: future,
+                validator: (value) => value == 'invalid_value' ? 'Invalid Value' : null,
+                builder: (context, state) => Column(
+                  children: [
+                    Text('Value: ${state.value}'),
+                    if (state.validation.errorMessage != null) Text(state.validation.errorMessage!),
+                  ],
                 ),
               ),
             ),
@@ -105,31 +100,29 @@ void main() {
       Map<String, dynamic>? submittedData;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: Column(
-                  children: [
-                    FormixAsyncField<String>(
-                      fieldId: fieldId,
-                      future: future,
-                      builder: (context, state) => Text(state.value ?? ''),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: Column(
+                children: [
+                  FormixAsyncField<String>(
+                    fieldId: fieldId,
+                    future: future,
+                    builder: (context, state) => Text(state.value ?? ''),
+                  ),
+                  Builder(
+                    builder: (context) => ElevatedButton(
+                      onPressed: () {
+                        Formix.controllerOf(context)!.submit(
+                          onValid: (data) async {
+                            submittedData = data;
+                          },
+                        );
+                      },
+                      child: const Text('Submit'),
                     ),
-                    Builder(
-                      builder: (context) => ElevatedButton(
-                        onPressed: () {
-                          Formix.controllerOf(context)!.submit(
-                            onValid: (data) async {
-                              submittedData = data;
-                            },
-                          );
-                        },
-                        child: const Text('Submit'),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -152,20 +145,18 @@ void main() {
       final valueNotifier = ValueNotifier<Future<String>>(future1);
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: ValueListenableBuilder<Future<String>>(
-                  valueListenable: valueNotifier,
-                  builder: (context, future, _) {
-                    return FormixAsyncField<String>(
-                      fieldId: fieldId,
-                      future: future,
-                      builder: (context, state) => Text(state.value ?? 'No Data'),
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: ValueListenableBuilder<Future<String>>(
+                valueListenable: valueNotifier,
+                builder: (context, future, _) {
+                  return FormixAsyncField<String>(
+                    fieldId: fieldId,
+                    future: future,
+                    builder: (context, state) => Text(state.value ?? 'No Data'),
+                  );
+                },
               ),
             ),
           ),
@@ -185,15 +176,13 @@ void main() {
       const fieldId = FormixFieldID<String>('async_value_direct');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixAsyncField<String>(
-                  fieldId: fieldId,
-                  asyncValue: const AsyncValue.data('Direct Value'),
-                  builder: (context, state) => Text(state.value ?? 'No Data'),
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixAsyncField<String>(
+                fieldId: fieldId,
+                asyncValue: AsyncState.data('Direct Value'),
+                builder: (context, state) => Text(state.value ?? 'No Data'),
               ),
             ),
           ),

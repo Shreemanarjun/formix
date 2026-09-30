@@ -1,33 +1,270 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/semantics.dart';
-import 'riverpod_controller.dart';
+import 'package:signals_flutter/signals_flutter.dart';
+import 'formix_base_controller.dart';
 import 'field_id.dart';
 import 'validation.dart';
 import '../enums.dart';
+import '../persistence/form_persistence.dart';
+import '../analytics/form_analytics.dart';
 import '../i18n.dart';
 import 'batch.dart';
 
-/// A controller for managing form state that is compatible with vanilla Flutter.
+/// The form controller: the object you hold to drive a form.
 ///
-/// While [RiverpodFormController] is pure Riverpod, [FormixController] adds
-/// a compatibility layer that exposes [ValueNotifier]s and [ValueListenable]s.
-/// This allows non-Riverpod widgets within your app to react to form changes
-/// without needing access to [WidgetRef].
-class FormixController extends RiverpodFormController {
-  /// Creates a [FormixController].
+/// State lives in a single [Signal] (see [FormixBaseController]); this class adds
+/// fine-grained [Computed] slices ([valueSignal], [validationSignal], …) for
+/// surgical widget rebuilds, plus focus/scroll/accessibility helpers and a
+/// [ValueNotifier]/[ValueListenable] compatibility layer for non-signal widgets.
+class FormixController extends FormixBaseController {
+  /// Creates a [FormixController] with optional configuration.
   FormixController({
-    super.initialValue,
-    super.fields,
-    super.messages = const DefaultFormixMessages(),
-    super.persistence,
-    super.formId,
-    super.analytics,
-    super.namespace,
-    super.autovalidateMode = FormixAutovalidateMode.always,
-    super.initialData,
-  }) {
-    addListener(_onStateChanged);
+    Map<String, dynamic> initialValue = const {},
+    List<FormixFieldDefinition> fields = const [],
+    FormixPersistence? persistence,
+    String? formId,
+    FormixAnalytics? analytics,
+    bool keepAlive = false,
+    String? namespace,
+    FormixAutovalidateMode autovalidateMode = FormixAutovalidateMode.always,
+    FormixData? initialData,
+    FormixMessages? messages,
+  }) : super(
+         FormixParameter(
+           initialValue: initialValue,
+           messages: messages,
+           fields: fields.map((f) => f.toConfig()).toList(),
+           persistence: persistence,
+           formId: formId,
+           analytics: analytics,
+           keepAlive: keepAlive,
+           namespace: namespace,
+           autovalidateMode: autovalidateMode,
+           initialData: initialData,
+         ),
+       );
+
+  /// Creates a [FormixController] directly from a [FormixParameter].
+  FormixController.fromParameter(super.parameter);
+
+  // --- Reactive slices (surgical rebuilds) ---
+  // A widget reading a slice inside a `SignalBuilder` only rebuilds when THAT
+  // slice's value changes.
+  //
+  // Per-field slices are plain [Signal]s kept in sync via the `changedFields`
+  // delta in [onStateChanged], so a single field update only touches that field's
+  // signals — O(changed) — instead of re-evaluating every mounted watcher.
+  // Raw per-field value signals (type-erased), updated via the changedFields
+  // delta. Kept dynamic so a field's runtime type can change without a cast error.
+  final Map<String, Signal<dynamic>> _valueSignals = {};
+  // Typed, type-change-safe views over the raw value signals, cached per (key, T).
+  final Map<String, ReadonlySignal<dynamic>> _valueViews = {};
+  final Map<String, Signal<ValidationResult>> _validationSignals = {};
+  final Map<String, Signal<bool>> _dirtySignals = {};
+  final Map<String, Signal<bool>> _touchedSignals = {};
+  final Map<String, Signal<bool>> _pendingSignals = {};
+  // Group + form-level slices are computed over the whole state (rare, and O(1)
+  // to evaluate), so a plain computed is the right tool.
+  final Map<String, ReadonlySignal<bool>> _groupValidSignals = {};
+  final Map<String, ReadonlySignal<bool>> _groupDirtySignals = {};
+  ReadonlySignal<bool>? _isValidSignal;
+  ReadonlySignal<bool>? _isDirtySignal;
+  ReadonlySignal<bool>? _isSubmittingSignal;
+  ReadonlySignal<bool>? _isPendingSignal;
+  ReadonlySignal<int>? _currentStepSignal;
+
+  /// Reactive value of a field. Read `.value` inside a [SignalBuilder] for a
+  /// rebuild that fires only when this field's value changes.
+  ///
+  /// Type-change safe: the value is stored type-erased, and this returns a view
+  /// typed as `T?` that yields the value when it matches `T` (else null). A field
+  /// can therefore change its runtime type without ever throwing a cast error.
+  ReadonlySignal<T?> valueSignal<T>(FormixFieldID<T> id) {
+    final raw = _valueSignals.putIfAbsent(id.key, () => signal<dynamic>(stateSignal.peek().values[id.key]));
+    final viewKey = '${id.key}/$T';
+    final existing = _valueViews[viewKey];
+    if (existing != null) return existing as ReadonlySignal<T?>;
+    final view = computed<T?>(() {
+      final v = raw.value;
+      return v is T ? v : null;
+    });
+    _valueViews[viewKey] = view;
+    return view;
+  }
+
+  /// Reactive validation result of a field.
+  ReadonlySignal<ValidationResult> validationSignal<T>(FormixFieldID<T> id) => _validationSignals.putIfAbsent(id.key, () => signal(stateSignal.peek().getValidation(id)));
+
+  /// Reactive dirty flag of a field.
+  ReadonlySignal<bool> dirtySignal<T>(FormixFieldID<T> id) => _dirtySignals.putIfAbsent(id.key, () => signal(stateSignal.peek().isFieldDirty(id)));
+
+  /// Reactive touched flag of a field.
+  ReadonlySignal<bool> touchedSignal<T>(FormixFieldID<T> id) => _touchedSignals.putIfAbsent(id.key, () => signal(stateSignal.peek().isFieldTouched(id)));
+
+  /// Reactive pending (async) flag of a field.
+  ReadonlySignal<bool> pendingSignal<T>(FormixFieldID<T> id) => _pendingSignals.putIfAbsent(id.key, () => signal(stateSignal.peek().isFieldPending(id)));
+
+  /// Reactive validity of a field-name group (e.g. `'user'`).
+  ReadonlySignal<bool> groupValidSignal(String prefix) => _groupValidSignals.putIfAbsent(prefix, () => computed(() => state.isGroupValid(prefix)));
+
+  /// Reactive dirtiness of a field-name group.
+  ReadonlySignal<bool> groupDirtySignal(String prefix) => _groupDirtySignals.putIfAbsent(prefix, () => computed(() => state.isGroupDirty(prefix)));
+
+  // --- Typed record groups (Dart 3 records) ---
+  // Read several typed fields as one destructurable record inside a
+  // [SignalBuilder]; the record signal composes the per-field value signals, so
+  // it rebuilds only when one of its members changes — no cast, full type safety.
+  final Map<String, ReadonlySignal<dynamic>> _recordGroupSignals = {};
+
+  /// Two typed fields as a reactive `(A?, B?)` record.
+  ///
+  /// ```dart
+  /// final (email, password) = c.group2(emailId, passwordId).value;
+  /// ```
+  ReadonlySignal<(A?, B?)> group2<A, B>(FormixFieldID<A> a, FormixFieldID<B> b) {
+    return _recordGroupSignals.putIfAbsent('2:${a.key}<$A>|${b.key}<$B>', () {
+          final sa = valueSignal(a), sb = valueSignal(b);
+          return computed<(A?, B?)>(() => (sa.value, sb.value));
+        })
+        as ReadonlySignal<(A?, B?)>;
+  }
+
+  /// Three typed fields as a reactive `(A?, B?, C?)` record.
+  ReadonlySignal<(A?, B?, C?)> group3<A, B, C>(FormixFieldID<A> a, FormixFieldID<B> b, FormixFieldID<C> c) {
+    return _recordGroupSignals.putIfAbsent('3:${a.key}<$A>|${b.key}<$B>|${c.key}<$C>', () {
+          final sa = valueSignal(a), sb = valueSignal(b), sc = valueSignal(c);
+          return computed<(A?, B?, C?)>(() => (sa.value, sb.value, sc.value));
+        })
+        as ReadonlySignal<(A?, B?, C?)>;
+  }
+
+  /// Four typed fields as a reactive `(A?, B?, C?, D?)` record.
+  // ponytail: arity capped at 4 (covers login/name/address forms); for 5+
+  // compose a `derived((s) => (...))` reading each field.
+  ReadonlySignal<(A?, B?, C?, D?)> group4<A, B, C, D>(FormixFieldID<A> a, FormixFieldID<B> b, FormixFieldID<C> c, FormixFieldID<D> d) {
+    return _recordGroupSignals.putIfAbsent('4:${a.key}<$A>|${b.key}<$B>|${c.key}<$C>|${d.key}<$D>', () {
+          final sa = valueSignal(a), sb = valueSignal(b), sc = valueSignal(c), sd = valueSignal(d);
+          return computed<(A?, B?, C?, D?)>(() => (sa.value, sb.value, sc.value, sd.value));
+        })
+        as ReadonlySignal<(A?, B?, C?, D?)>;
+  }
+
+  /// Write two typed fields from a record in one batch (symmetric to [group2]).
+  ///
+  /// ```dart
+  /// c.setGroup2(emailId, passwordId, ('a@b.c', 'secret'));
+  /// ```
+  FormixBatchResult setGroup2<A, B>(FormixFieldID<A> a, FormixFieldID<B> b, (A?, B?) values) {
+    return setValues({a: values.$1, b: values.$2});
+  }
+
+  /// Write three typed fields from a record in one batch (symmetric to [group3]).
+  FormixBatchResult setGroup3<A, B, C>(FormixFieldID<A> a, FormixFieldID<B> b, FormixFieldID<C> c, (A?, B?, C?) values) {
+    return setValues({a: values.$1, b: values.$2, c: values.$3});
+  }
+
+  /// Write four typed fields from a record in one batch (symmetric to [group4]).
+  FormixBatchResult setGroup4<A, B, C, D>(FormixFieldID<A> a, FormixFieldID<B> b, FormixFieldID<C> c, FormixFieldID<D> d, (A?, B?, C?, D?) values) {
+    return setValues({a: values.$1, b: values.$2, c: values.$3, d: values.$4});
+  }
+
+  /// Reactive form validity.
+  ReadonlySignal<bool> get isValidSignal => _isValidSignal ??= computed(() => state.isValid);
+
+  /// Reactive form dirtiness.
+  ReadonlySignal<bool> get isDirtySignal => _isDirtySignal ??= computed(() => state.isDirty);
+
+  /// Reactive submitting flag.
+  ReadonlySignal<bool> get isSubmittingSignal => _isSubmittingSignal ??= computed(() => state.isSubmitting);
+
+  /// Reactive pending (any async in-flight) flag.
+  ReadonlySignal<bool> get isPendingSignal => _isPendingSignal ??= computed(() => state.isPending);
+
+  /// Reactive current step (multi-step forms).
+  ReadonlySignal<int> get currentStepSignal => _currentStepSignal ??= computed(() => state.currentStep);
+
+  // --- Derived signals & reactive UI flags (signals-native extras) ---
+
+  final List<ReadonlySignal<dynamic>> _derivedSignals = [];
+  final Map<String, Signal<bool>> _enabledSignals = {};
+  final Map<String, Signal<bool>> _readOnlySignals = {};
+  final Map<String, Signal<bool>> _visibleSignals = {};
+  final Map<String, ReadonlySignal<dynamic>> _debouncedSignals = {};
+  final List<VoidCallback> _debouncedDisposers = [];
+
+  /// Creates a memoized, read-only signal derived from the whole form [state].
+  ///
+  /// Read `.value` inside a [SignalBuilder] to rebuild only when the derived
+  /// value changes. Example:
+  /// ```dart
+  /// final total = controller.derived((s) => s.getValue(qtyId)! * s.getValue(priceId)!);
+  /// ```
+  ReadonlySignal<R> derived<R>(R Function(FormixData state) compute) {
+    final c = computed(() => compute(state));
+    _derivedSignals.add(c);
+    return c;
+  }
+
+  /// A debounced view of a field's value: it only emits [duration] after the
+  /// field stops changing. Ideal for search-as-you-type. Cached per (field, duration).
+  ReadonlySignal<T?> debouncedValueSignal<T>(FormixFieldID<T> id, Duration duration) {
+    final key = '${id.key}@${duration.inMicroseconds}';
+    final existing = _debouncedSignals[key];
+    if (existing != null) return existing as ReadonlySignal<T?>;
+
+    final source = valueSignal(id);
+    final out = signal<T?>(source.peek());
+    Timer? timer;
+    final disposeEffect = effect(() {
+      final v = source.value;
+      timer?.cancel();
+      timer = Timer(duration, () => out.value = v);
+    });
+    _debouncedSignals[key] = out;
+    _debouncedDisposers.add(() {
+      timer?.cancel();
+      disposeEffect();
+      out.dispose();
+    });
+    return out;
+  }
+
+  /// Reactive "enabled" flag for a field (default true). Built-in field widgets
+  /// combine this with their own `enabled` property.
+  ReadonlySignal<bool> enabledSignal<T>(FormixFieldID<T> id) => _enabledSignals.putIfAbsent(id.key, () => signal(true));
+
+  /// Reactive "read-only" flag for a field (default false).
+  ReadonlySignal<bool> readOnlySignal<T>(FormixFieldID<T> id) => _readOnlySignals.putIfAbsent(id.key, () => signal(false));
+
+  /// Reactive "visible" flag for a field (default true). Watch it (e.g. in a
+  /// [FormixBuilder]) to show/hide fields reactively.
+  ReadonlySignal<bool> visibleSignal<T>(FormixFieldID<T> id) => _visibleSignals.putIfAbsent(id.key, () => signal(true));
+
+  /// Enable/disable a field reactively.
+  void setEnabled<T>(FormixFieldID<T> id, bool enabled) => _enabledSignals.putIfAbsent(id.key, () => signal(true)).value = enabled;
+
+  /// Mark a field read-only (or not) reactively.
+  void setReadOnly<T>(FormixFieldID<T> id, bool readOnly) => _readOnlySignals.putIfAbsent(id.key, () => signal(false)).value = readOnly;
+
+  /// Show/hide a field reactively.
+  void setVisible<T>(FormixFieldID<T> id, bool visible) => _visibleSignals.putIfAbsent(id.key, () => signal(true)).value = visible;
+
+  /// Adds a listener to be notified when the form state changes.
+  VoidCallback addListener(void Function(FormixData) listener, {bool fireImmediately = true}) {
+    final removeListenerFunc = addFormListener(listener);
+    if (fireImmediately) {
+      try {
+        listener(state);
+      } catch (_) {}
+    }
+    return removeListenerFunc;
+  }
+
+  /// Removes a previously registered listener.
+  void removeListener(void Function(FormixData) listener) {
+    removeFormListener(listener);
   }
 
   // Cache notifiers to ensure consistency
@@ -44,10 +281,37 @@ class FormixController extends RiverpodFormController {
   ValueNotifier<bool>? _isSubmittingNotifier;
   ValueNotifier<bool>? _isPendingNotifier;
 
-  void _onStateChanged(FormixData state) {
+  /// Pushes the latest state into the per-field signal slices. Uses the
+  /// `changedFields` delta for O(changed) updates; falls back to syncing every
+  /// live slice when the delta is absent (e.g. reset / initial load).
+  void _syncFieldSignals(FormixData state, Set<String>? changedKeys) {
+    void sync<T>(Map<String, Signal<T>> signals, T Function(String key) read) {
+      if (signals.isEmpty) return;
+      final keys = changedKeys != null ? changedKeys.where(signals.containsKey) : signals.keys;
+      for (final key in keys) {
+        signals[key]!.value = read(key);
+      }
+    }
+
+    batch(() {
+      sync<dynamic>(_valueSignals, (k) => state.values[k]);
+      sync<ValidationResult>(_validationSignals, (k) => state.validations[k] ?? ValidationResult.valid);
+      sync<bool>(_dirtySignals, (k) => state.dirtyStates[k] ?? false);
+      sync<bool>(_touchedSignals, (k) => state.touchedStates[k] ?? false);
+      sync<bool>(_pendingSignals, (k) => state.pendingStates[k] ?? false);
+    });
+  }
+
+  @override
+  void onStateChanged(FormixData state) {
+    super.onStateChanged(state);
     // Optimization: If changedFields is present, only update notifiers for those keys.
     // If null, we fall back to checking all cached notifiers (e.g. initial load).
     final changedKeys = state.changedFields;
+
+    // Sync the per-field reactive slices from the delta, coalesced into a single
+    // batch so dependent widgets rebuild at most once per state change.
+    _syncFieldSignals(state, changedKeys);
 
     // Helper to update a specific notifier map
     void updateNotifiers<T>(
@@ -204,6 +468,38 @@ class FormixController extends RiverpodFormController {
     _isValidNotifier?.dispose();
     _isSubmittingNotifier?.dispose();
     _isPendingNotifier?.dispose();
+
+    // Tear down debounced-signal timers/effects first.
+    for (final d in _debouncedDisposers) {
+      d();
+    }
+    _debouncedDisposers.clear();
+    _debouncedSignals.clear();
+
+    // Dispose reactive slices (per-field signals + group/form-level computeds +
+    // derived signals + reactive UI-flag signals).
+    for (final ReadonlySignal<dynamic>? c in <ReadonlySignal<dynamic>?>[
+      ..._valueSignals.values,
+      ..._valueViews.values,
+      ..._validationSignals.values,
+      ..._dirtySignals.values,
+      ..._touchedSignals.values,
+      ..._pendingSignals.values,
+      ..._groupValidSignals.values,
+      ..._groupDirtySignals.values,
+      ..._recordGroupSignals.values,
+      ..._derivedSignals,
+      ..._enabledSignals.values,
+      ..._readOnlySignals.values,
+      ..._visibleSignals.values,
+      _isValidSignal,
+      _isDirtySignal,
+      _isSubmittingSignal,
+      _isPendingSignal,
+      _currentStepSignal,
+    ]) {
+      c?.dispose();
+    }
 
     _focusNodes.clear();
     _contexts.clear();
@@ -383,11 +679,14 @@ class FormixController extends RiverpodFormController {
       final context = _contexts[firstErrorKey];
 
       if (error != null && context != null && context.mounted) {
-        final view = View.of(context);
         final directionality = Directionality.of(context);
 
-        SemanticsService.sendAnnouncement(
-          view,
+        // `announce` is available across old and current stable Flutter (the
+        // view-scoped `sendAnnouncement` only exists on newer versions). It is
+        // deprecated on the newest Flutter, but kept intentionally for broad
+        // compatibility.
+        // ignore: deprecated_member_use
+        SemanticsService.announce(
           error,
           directionality,
           assertiveness: Assertiveness.assertive,

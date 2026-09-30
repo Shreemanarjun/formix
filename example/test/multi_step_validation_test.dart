@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:example/ui/multi_step_form/multi_step_form_page.dart';
 
 void main() {
   group('MultiStepFormPage Validation Tests', () {
     testWidgets('Step 1 validation', (tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: MultiStepFormPage())),
-      );
+      await tester.pumpWidget(const MaterialApp(home: MultiStepFormPage()));
       await tester.pumpAndSettle();
 
       // Skip initial continue tap for now to debug finding
@@ -41,9 +38,7 @@ void main() {
     });
 
     testWidgets('Step 2 validation', (tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: MultiStepFormPage())),
-      );
+      await tester.pumpWidget(const MaterialApp(home: MultiStepFormPage()));
       await tester.pumpAndSettle();
 
       // Pass Step 1
@@ -72,9 +67,7 @@ void main() {
     });
 
     testWidgets('Step 4 validation', (tester) async {
-      await tester.pumpWidget(
-        const ProviderScope(child: MaterialApp(home: MultiStepFormPage())),
-      );
+      await tester.pumpWidget(const MaterialApp(home: MultiStepFormPage()));
       await tester.pumpAndSettle();
 
       // Pass Step 1

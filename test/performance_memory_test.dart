@@ -9,16 +9,14 @@ void main() {
     testWidgets('Large Form Performance & Memory Leak Check', (tester) async {
       final watcher = Stopwatch()..start();
 
-      late RiverpodFormController controller;
+      late FormixController controller;
       await tester.pumpWidget(
-        ProviderScope(
-          child: Formix(
-            child: FormixBuilder(
-              builder: (context, _) {
-                controller = Formix.controllerOf(context) as RiverpodFormController;
-                return Container();
-              },
-            ),
+        Formix(
+          child: FormixBuilder(
+            builder: (context, _) {
+              controller = Formix.controllerOf(context) as FormixController;
+              return Container();
+            },
           ),
         ),
       );
@@ -91,24 +89,22 @@ void main() {
       final showRegistry = ValueNotifier<bool>(true);
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: Formix(
-            child: FormixBuilder(
-              builder: (context, _) {
-                controller = Formix.controllerOf(context) as RiverpodFormController;
-                return ValueListenableBuilder<bool>(
-                  valueListenable: showRegistry,
-                  builder: (context, show, child) {
-                    if (!show) return const SizedBox();
-                    return FormixFieldRegistry(
-                      fields: cycleFields,
-                      preserveStateOnDispose: false, // Ensure full cleanup
-                      child: const SizedBox(),
-                    );
-                  },
-                );
-              },
-            ),
+        Formix(
+          child: FormixBuilder(
+            builder: (context, _) {
+              controller = Formix.controllerOf(context) as FormixController;
+              return ValueListenableBuilder<bool>(
+                valueListenable: showRegistry,
+                builder: (context, show, child) {
+                  if (!show) return const SizedBox();
+                  return FormixFieldRegistry(
+                    fields: cycleFields,
+                    preserveStateOnDispose: false, // Ensure full cleanup
+                    child: const SizedBox(),
+                  );
+                },
+              );
+            },
           ),
         ),
       );
@@ -143,16 +139,14 @@ void main() {
     });
 
     testWidgets('Undo/Redo History Memory & Performance', (tester) async {
-      late RiverpodFormController controller;
+      late FormixController controller;
       await tester.pumpWidget(
-        ProviderScope(
-          child: Formix(
-            child: FormixBuilder(
-              builder: (context, _) {
-                controller = Formix.controllerOf(context) as RiverpodFormController;
-                return Container();
-              },
-            ),
+        Formix(
+          child: FormixBuilder(
+            builder: (context, _) {
+              controller = Formix.controllerOf(context) as FormixController;
+              return Container();
+            },
           ),
         ),
       );
@@ -195,33 +189,31 @@ void main() {
     });
 
     testWidgets('Multi-Form Sync Performance & Cleanup', (tester) async {
-      late RiverpodFormController formA;
-      late RiverpodFormController formB;
+      late FormixController formA;
+      late FormixController formB;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: Column(
-            children: [
-              Formix(
-                formId: 'formA',
-                child: FormixBuilder(
-                  builder: (c, _) {
-                    formA = Formix.controllerOf(c) as RiverpodFormController;
-                    return Container();
-                  },
-                ),
+        Column(
+          children: [
+            Formix(
+              formId: 'formA',
+              child: FormixBuilder(
+                builder: (c, _) {
+                  formA = Formix.controllerOf(c) as FormixController;
+                  return Container();
+                },
               ),
-              Formix(
-                formId: 'formB',
-                child: FormixBuilder(
-                  builder: (c, _) {
-                    formB = Formix.controllerOf(c) as RiverpodFormController;
-                    return Container();
-                  },
-                ),
+            ),
+            Formix(
+              formId: 'formB',
+              child: FormixBuilder(
+                builder: (c, _) {
+                  formB = Formix.controllerOf(c) as FormixController;
+                  return Container();
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
 
@@ -269,25 +261,23 @@ void main() {
       // 3. Cleanup / Dispose
       // Remove FormB from tree to trigger auto-dispose
       await tester.pumpWidget(
-        ProviderScope(
-          child: Column(
-            children: [
-              Formix(
-                formId: 'formA',
-                child: FormixBuilder(
-                  builder: (c, _) {
-                    formA = Formix.controllerOf(c) as RiverpodFormController;
-                    return Container();
-                  },
-                ),
+        Column(
+          children: [
+            Formix(
+              formId: 'formA',
+              child: FormixBuilder(
+                builder: (c, _) {
+                  formA = Formix.controllerOf(c) as FormixController;
+                  return Container();
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
 
       // Allow disposal hooks to run
-      await tester.pump();
+      await tester.pumpAndSettle();
 
       expect(
         formB.activeBindingsCount,

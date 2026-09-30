@@ -8,25 +8,23 @@ void main() {
       const nameField = FormixFieldID<String>('name');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'name': 'Default Name'},
-                child: Column(
-                  children: [
-                    const FormixTextFormField(
-                      fieldId: nameField,
-                      decoration: InputDecoration(labelText: 'Name'),
-                    ),
-                    Consumer(
-                      builder: (context, ref, child) {
-                        final controller = Formix.controllerOf(context);
-                        return Text('Controller Ready: ${controller != null}');
-                      },
-                    ),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'name': 'Default Name'},
+              child: Column(
+                children: [
+                  const FormixTextFormField(
+                    fieldId: nameField,
+                    decoration: InputDecoration(labelText: 'Name'),
+                  ),
+                  Builder(
+                    builder: (context) {
+                      final controller = Formix.controllerOf(context);
+                      return Text('Controller Ready: ${controller != null}');
+                    },
+                  ),
+                ],
               ),
             ),
           ),
@@ -44,33 +42,28 @@ void main() {
       const emailField = FormixFieldID<String>('email');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig<String>(
-                    id: emailField,
-                    initialValue: '',
-                    validator: (value) => (value?.contains('@') ?? false) ? null : 'Invalid email',
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig<String>(
+                  id: emailField,
+                  initialValue: '',
+                  validator: (value) => (value?.contains('@') ?? false) ? null : 'Invalid email',
+                ),
+              ],
+              child: Column(
+                children: [
+                  const FormixTextFormField(
+                    fieldId: emailField,
+                    decoration: InputDecoration(labelText: 'Email'),
+                  ),
+                  FormixBuilder(
+                    builder: (context, scope) {
+                      return Text('Is Valid: ${scope.watchIsValid}');
+                    },
                   ),
                 ],
-                child: Column(
-                  children: [
-                    const FormixTextFormField(
-                      fieldId: emailField,
-                      decoration: InputDecoration(labelText: 'Email'),
-                    ),
-                    Consumer(
-                      builder: (context, ref, child) {
-                        final provider = Formix.of(context);
-                        if (provider == null) return const Text('No Provider');
-                        final formState = ref.watch(provider);
-                        return Text('Is Valid: ${formState.isValid}');
-                      },
-                    ),
-                  ],
-                ),
               ),
             ),
           ),
@@ -93,29 +86,24 @@ void main() {
       const nameField = FormixFieldID<String>('name');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'name': 'Original'},
-                child: Column(
-                  children: [
-                    const FormixTextFormField(fieldId: nameField),
-                    Consumer(
-                      builder: (context, ref, child) {
-                        return ElevatedButton(
-                          onPressed: () {
-                            final provider = Formix.of(context);
-                            if (provider != null) {
-                              ref.read(provider.notifier).reset();
-                            }
-                          },
-                          child: const Text('Reset Form'),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'name': 'Original'},
+              child: Column(
+                children: [
+                  const FormixTextFormField(fieldId: nameField),
+                  Builder(
+                    builder: (context) {
+                      return ElevatedButton(
+                        onPressed: () {
+                          Formix.of(context).reset();
+                        },
+                        child: const Text('Reset Form'),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ),
@@ -142,34 +130,32 @@ void main() {
       const fieldB = FormixFieldID<String>('field');
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Column(
-                children: [
-                  Formix(
-                    key: Key('form_a'),
-                    initialValue: {'field': 'Form A'},
-                    child: Column(
-                      children: [
-                        Text('Scope A'),
-                        FormixTextFormField(fieldId: fieldA),
-                      ],
-                    ),
+        const MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                Formix(
+                  key: Key('form_a'),
+                  initialValue: {'field': 'Form A'},
+                  child: Column(
+                    children: [
+                      Text('Scope A'),
+                      FormixTextFormField(fieldId: fieldA),
+                    ],
                   ),
-                  Divider(),
-                  Formix(
-                    key: Key('form_b'),
-                    initialValue: {'field': 'Form B'},
-                    child: Column(
-                      children: [
-                        Text('Scope B'),
-                        FormixTextFormField(fieldId: fieldB),
-                      ],
-                    ),
+                ),
+                Divider(),
+                Formix(
+                  key: Key('form_b'),
+                  initialValue: {'field': 'Form B'},
+                  child: Column(
+                    children: [
+                      Text('Scope B'),
+                      FormixTextFormField(fieldId: fieldB),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

@@ -650,27 +650,27 @@ void main() {
     });
   });
 
-  group('Providers', () {
-    test('formControllerProvider creates controller correctly', () {
+  group('Controller construction', () {
+    test('fromParameter creates controller correctly', () {
       const param = FormixParameter(
         initialValue: {'field1': 'value1'},
         fields: [FormixFieldConfig(id: FormixFieldID<String>('field1'))],
       );
 
-      final container = ProviderContainer();
-      final provider = formControllerProvider(param);
-      final controller = container.read(provider.notifier);
+      final controller = FormixController.fromParameter(param);
+      addTearDown(controller.dispose);
 
       expect(controller.getValue(const FormixFieldID<String>('field1')), 'value1');
-      container.dispose();
     });
 
-    test('currentControllerProvider provides default controller', () {
-      final container = ProviderContainer();
-      final provider = container.read(currentControllerProvider);
+    test('default controller is usable', () {
+      final controller = FormixController();
+      addTearDown(controller.dispose);
 
-      expect(provider, isNotNull);
-      container.dispose();
+      expect(controller, isNotNull);
+      expect(controller.values, isEmpty);
+      expect(controller.isDirty, false);
+      expect(controller.isSubmitting, false);
     });
   });
 }

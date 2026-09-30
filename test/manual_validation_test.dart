@@ -30,19 +30,17 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [
-                  FormixFieldConfig<String>(id: nameField, initialValue: ''),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = Formix.controllerOf(context)!;
-                    return const FormixTextFormField(fieldId: nameField);
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [
+                FormixFieldConfig<String>(id: nameField, initialValue: ''),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = Formix.controllerOf(context)!;
+                  return const FormixTextFormField(fieldId: nameField);
+                },
               ),
             ),
           ),
@@ -70,19 +68,17 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [
-                  FormixFieldConfig<String>(id: nameField, initialValue: ''),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = Formix.controllerOf(context)!;
-                    return const SizedBox.shrink();
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [
+                FormixFieldConfig<String>(id: nameField, initialValue: ''),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = Formix.controllerOf(context)!;
+                  return const SizedBox.shrink();
+                },
               ),
             ),
           ),
@@ -106,19 +102,17 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: const [
-                  FormixFieldConfig<bool>(id: toggleField, initialValue: false),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = Formix.controllerOf(context)!;
-                    return const CustomToggleField(fieldId: toggleField);
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: const [
+                FormixFieldConfig<bool>(id: toggleField, initialValue: false),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = Formix.controllerOf(context)!;
+                  return const CustomToggleField(fieldId: toggleField);
+                },
               ),
             ),
           ),

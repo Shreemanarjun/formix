@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:meta/meta.dart';
 
 import '../../formix.dart';
-import 'ancestor_validator.dart';
 
 /// Base class for custom form field widgets that automatically handle controller
 /// registration and value synchronization.
 ///
 /// Most built-in fields like [FormixTextFormField] extend this.
-abstract class FormixFieldWidget<T> extends ConsumerStatefulWidget {
+abstract class FormixFieldWidget<T> extends StatefulWidget {
   /// Creates a [FormixFieldWidget].
   const FormixFieldWidget({
     super.key,
@@ -78,70 +76,17 @@ abstract class FormixFieldWidget<T> extends ConsumerStatefulWidget {
 
   @override
   FormixFieldWidgetState<T> createState();
-
-  @override
-  ConsumerStatefulElement createElement() => FormixFieldWidgetElement<T>(this);
-}
-
-/// Element for [FormixFieldWidget] that intercepts building to show errors.
-class FormixFieldWidgetElement<T> extends ConsumerStatefulElement {
-  /// Creates a [FormixFieldWidgetElement].
-  FormixFieldWidgetElement(FormixFieldWidget<T> super.widget);
-
-  @override
-  Widget build() {
-    // Check for ProviderScope first
-    if (getElementForInheritedWidgetOfExactType<UncontrolledProviderScope>() == null) {
-      return const FormixConfigurationErrorWidget(
-        message: 'Missing ProviderScope',
-        details:
-            'Formix requires a ProviderScope at the root of your application to manage form state using Riverpod.\n\nExample:\nvoid main() {\n  runApp(ProviderScope(child: MyApp()));\n}',
-      );
-    }
-
-    // Check for Formix ancestor or explicit controller
-    // We cast widget because Element.widget is typed as Widget
-    final fieldWidget = widget as FormixFieldWidget<T>;
-
-    final errorWidget = FormixAncestorValidator.validate(
-      this,
-      widgetName: widget.runtimeType.toString(),
-      hasExplicitController: fieldWidget.controller != null,
-    );
-
-    if (errorWidget != null) return errorWidget;
-
-    final state = this.state as FormixFieldWidgetState<T>;
-
-    if (state.initializationError != null) {
-      return FormixConfigurationErrorWidget(
-        message: 'Failed to initialize ${widget.runtimeType}',
-        details: state.initializationError.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.\n\nExample:\nvoid main() {\n  runApp(ProviderScope(child: MyApp()));\n}'
-            : 'Error: ${state.initializationError}',
-      );
-    }
-
-    // Check for explicit controller or fallback to default provider (implicit usage)
-    if (!state.hasController) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    return super.build();
-  }
 }
 
 /// State class that provides simplified APIs for form field management
-abstract class FormixFieldWidgetState<T> extends ConsumerState<FormixFieldWidget<T>> {
+abstract class FormixFieldWidgetState<T> extends State<FormixFieldWidget<T>> {
   FormixController? _controller;
   FormixFieldID<T>? _currentAttachedFieldId;
   T? _currentValue;
   late FocusNode _focusNode;
   bool _isMounted = false;
   bool _createdOwnFocusNode = false;
-  ProviderSubscription? _controllerSub;
   bool _wasDirty = false;
-  Object? _initializationError;
 
   /// The current value of this field from the controller.
   T? get value => _currentValue;
@@ -164,6 +109,15 @@ abstract class FormixFieldWidgetState<T> extends ConsumerState<FormixFieldWidget
 
   /// Whether the field is enabled.
   bool get enabled => widget.enabled;
+
+  /// The effective enabled state: the widget's [enabled] AND the controller's
+  /// reactive [FormixController.enabledSignal]. Read inside a reactive builder
+  /// (e.g. [SignalBuilder]) so `controller.setEnabled(id, ...)` toggles the field.
+  bool get effectiveEnabled => widget.enabled && (hasController ? controller.enabledSignal(widget.fieldId).value : true);
+
+  /// The effective read-only state, driven reactively by the controller's
+  /// [FormixController.readOnlySignal]. Read inside a reactive builder.
+  bool get effectiveReadOnly => hasController && controller.readOnlySignal(widget.fieldId).value;
 
   /// Whether the form is currently submitting.
   bool get isSubmitting => controller.isSubmitting;
@@ -191,70 +145,20 @@ abstract class FormixFieldWidgetState<T> extends ConsumerState<FormixFieldWidget
   @override
   bool get mounted => _isMounted;
 
-  /// Internal access to initialization error for the element
-  @internal
-  Object? get initializationError => _initializationError;
-
-  ProviderSubscription? _innerProviderSub;
-
   @override
   void initState() {
     super.initState();
     _isMounted = true;
     _initFocusNode();
-    _setupControllerSubscription();
   }
 
-  void _setupControllerSubscription() {
-    // Early return if explicit controller is provided (optimization)
-    if (widget.controller != null) {
-      // Close any existing subscriptions first
-      _controllerSub?.close();
-      _innerProviderSub?.close();
-      _setupController(widget.controller);
-      return;
-    }
-
-    // Close existing subscriptions
-    _controllerSub?.close();
-    _innerProviderSub?.close();
-
-    try {
-      _controllerSub = ref.listenManual(
-        currentControllerProvider,
-        (
-          previous,
-          next,
-        ) {
-          // Close inner subscription before creating new one
-          _innerProviderSub?.close();
-
-          // Listen to the inner provider to keep the controller alive
-          if (widget.controller == null) {
-            _innerProviderSub = ref.listenManual(next, (_, __) {});
-          }
-
-          try {
-            final newController = widget.controller ?? ref.read(next.notifier);
-            _setupController(newController);
-            if (mounted) {
-              setState(() {
-                _initializationError = null;
-              });
-            }
-          } catch (e) {
-            if (mounted) {
-              setState(() {
-                _initializationError = e;
-              });
-            }
-          }
-        },
-        fireImmediately: true,
-      );
-    } catch (e) {
-      _initializationError = e;
-    }
+  /// Resolves the effective controller: an explicit one if provided, otherwise
+  /// the nearest [Formix] ancestor via [Formix.controllerOf]. Called from
+  /// [didChangeDependencies] so it re-resolves if the ancestor controller changes.
+  void _resolveController() {
+    final newController = widget.controller ?? Formix.controllerOf(context);
+    _setupController(newController);
+    if (_isMounted) setState(() {});
   }
 
   void _initFocusNode() {
@@ -271,6 +175,7 @@ abstract class FormixFieldWidgetState<T> extends ConsumerState<FormixFieldWidget
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _resolveController();
   }
 
   void _setupController(FormixController? newController) {
@@ -387,7 +292,7 @@ abstract class FormixFieldWidgetState<T> extends ConsumerState<FormixFieldWidget
     }
 
     if (widget.controller != oldWidget.controller || widget.fieldId != oldWidget.fieldId) {
-      _setupControllerSubscription();
+      _resolveController();
     } else {
       // Check for configuration changes that require re-registration
       if (widget.initialValue != oldWidget.initialValue ||
@@ -403,8 +308,6 @@ abstract class FormixFieldWidgetState<T> extends ConsumerState<FormixFieldWidget
   @override
   void dispose() {
     _isMounted = false;
-    _controllerSub?.close();
-    _innerProviderSub?.close();
     _controller?.removeFieldListener(widget.fieldId, _onFieldChanged);
     _focusNode.removeListener(_onFocusChanged);
     if (_createdOwnFocusNode) {
@@ -608,37 +511,20 @@ abstract class FormixTextFormFieldWidgetState extends FormixFieldWidgetState<Str
   @override
   Widget build(BuildContext context) {
     final fieldWidget = widget as FormixTextFormFieldWidget;
+    if (!hasController) return const SizedBox.shrink();
 
-    // Use Riverpod watches for optimized rebuilds when using implicit controller
-    if (widget.controller == null) {
-      // Use Consumer to avoid nested selector issues
-      return Consumer(
-        builder: (context, ref, _) {
-          final validation = ref.watch(fieldValidationProvider(fieldWidget.fieldId));
-          final isTouched = ref.watch(fieldTouchedProvider(fieldWidget.fieldId));
-          final isDirty = ref.watch(fieldDirtyProvider(fieldWidget.fieldId));
-          final isSubmitting = ref.watch(formSubmittingProvider);
+    return SignalBuilder(
+      builder: (context) {
+        final validationResult = widget.forceErrorText != null
+            // coverage:ignore-line — legacy base widget never forwards forceErrorText via its constructor
+            ? ValidationResult(isValid: false, errorMessage: widget.forceErrorText)
+            : controller.validationSignal(fieldWidget.fieldId).value;
+        final isTouched = controller.touchedSignal(fieldWidget.fieldId).value;
+        final isDirty = controller.dirtySignal(fieldWidget.fieldId).value;
+        final isSubmitting = controller.isSubmittingSignal.value;
 
-          return _buildTextField(fieldWidget, validation, isTouched, isDirty, isSubmitting);
-        },
-      );
-    }
-
-    // Fallback for explicit controller usage
-    return AnimatedBuilder(
-      animation: Listenable.merge([
-        controller.fieldValidationNotifier(fieldWidget.fieldId),
-        controller.fieldTouchedNotifier(fieldWidget.fieldId),
-        controller.fieldDirtyNotifier(fieldWidget.fieldId),
-        controller.isSubmittingNotifier,
-      ]),
-      builder: (context, _) => _buildTextField(
-        fieldWidget,
-        validation,
-        isTouched,
-        isDirty,
-        controller.isSubmitting,
-      ),
+        return _buildTextField(fieldWidget, validationResult, isTouched, isDirty, isSubmitting);
+      },
     );
   }
 
@@ -712,37 +598,19 @@ abstract class FormixNumberFormFieldWidgetState extends FormixFieldWidgetState<i
   @override
   Widget build(BuildContext context) {
     final fieldWidget = widget as FormixNumberFormFieldWidget;
+    if (!hasController) return const SizedBox.shrink();
 
-    if (widget.controller == null) {
-      // Use Consumer to avoid nested selector issues
-      return Consumer(
-        builder: (context, ref, _) {
-          final validation = ref.watch(fieldValidationProvider(fieldWidget.fieldId));
-          final isDirty = ref.watch(fieldDirtyProvider(fieldWidget.fieldId));
-          final isTouched = ref.watch(fieldTouchedProvider(fieldWidget.fieldId));
-          final isSubmitting = ref.watch(formSubmittingProvider);
+    return SignalBuilder(
+      builder: (context) {
+        final validationResult = widget.forceErrorText != null
+            // coverage:ignore-line — legacy base widget never forwards forceErrorText via its constructor
+            ? ValidationResult(isValid: false, errorMessage: widget.forceErrorText)
+            : controller.validationSignal(fieldWidget.fieldId).value;
+        final isDirty = controller.dirtySignal(fieldWidget.fieldId).value;
+        final isTouched = controller.touchedSignal(fieldWidget.fieldId).value;
+        final isSubmitting = controller.isSubmittingSignal.value;
 
-          return _buildNumberField(fieldWidget, validation, isDirty, isTouched, isSubmitting);
-        },
-      );
-    }
-
-    // Fallback for explicit controller
-    return ValueListenableBuilder<ValidationResult>(
-      valueListenable: controller.fieldValidationNotifier(fieldWidget.fieldId),
-      builder: (context, validation, child) {
-        return ValueListenableBuilder<bool>(
-          valueListenable: controller.fieldDirtyNotifier(fieldWidget.fieldId),
-          builder: (context, isDirty, child) {
-            return _buildNumberField(
-              fieldWidget,
-              validation,
-              isDirty,
-              controller.isFieldTouched(fieldWidget.fieldId),
-              controller.isSubmitting,
-            );
-          },
-        );
+        return _buildNumberField(fieldWidget, validationResult, isDirty, isTouched, isSubmitting);
       },
     );
   }

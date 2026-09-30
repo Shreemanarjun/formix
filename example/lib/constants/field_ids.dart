@@ -1,10 +1,12 @@
 import 'package:formix/formix.dart';
 
 // Field IDs for type safety
-final nameField = FormixFieldID<String>('name');
-final emailField = FormixFieldID<String>('email');
-final ageField = FormixFieldID<int>('age');
-final newsletterField = FormixFieldID<bool>('newsletter');
-final passwordField = FormixFieldID<String>('password');
-final confirmPasswordField = FormixFieldID<String>('confirmPassword');
-final dobField = FormixFieldID<DateTime>('dob');
+const nameField = FormixFieldID<String>('name');
+const emailField = FormixFieldID<String>('email');
+const ageField = FormixFieldID<int>('age');
+const newsletterField = FormixFieldID<bool>('newsletter');
+const passwordField = FormixFieldID<String>('password');
+const confirmPasswordField = FormixFieldID<String>('confirmPassword');
+const dobField = FormixFieldID<DateTime>('dob');
+const countryField = FormixFieldID<String>('country');
+const bioField = FormixFieldID<String>('bio');

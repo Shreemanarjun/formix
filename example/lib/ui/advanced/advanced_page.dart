@@ -1,31 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:formix/formix.dart';
 import '../../constants/field_ids.dart';
+import 'advanced_fields.dart';
 
 // Advanced Example
-class AdvancedExample extends ConsumerWidget {
+class AdvancedExample extends StatelessWidget {
   const AdvancedExample({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return const AdvancedExampleContent();
   }
 }
 
-class AdvancedExampleContent extends ConsumerStatefulWidget {
+class AdvancedExampleContent extends StatefulWidget {
   const AdvancedExampleContent({super.key});
 
   @override
-  ConsumerState<AdvancedExampleContent> createState() =>
-      _AdvancedExampleContentState();
+  State<AdvancedExampleContent> createState() => _AdvancedExampleContentState();
 }
 
-class _AdvancedExampleContentState
-    extends ConsumerState<AdvancedExampleContent> {
+class _AdvancedExampleContentState extends State<AdvancedExampleContent> {
   @override
   Widget build(BuildContext context) {
     return Formix(
-      initialValue: {
+      formId: 'advanced_showcase',
+      initialValue: const {
         'name': 'John Doe',
         'email': 'john@example.com',
         'age': 25,
@@ -35,77 +35,7 @@ class _AdvancedExampleContentState
         'password': '',
         'confirmPassword': '',
       },
-      fields: [
-        FormixFieldConfig<String>(
-          id: nameField,
-          initialValue: 'John Doe',
-          validator: (value) {
-            if (value == null || value.isEmpty) return 'Name is required';
-            if (value.length < 2) return 'Name must be at least 2 characters';
-            return null;
-          },
-        ),
-        FormixFieldConfig<String>(
-          id: emailField,
-          initialValue: 'john@example.com',
-          validator: (value) {
-            if (value == null || value.isEmpty) return 'Email is required';
-            // Use static constant if available or standard pattern
-            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$').hasMatch(value)) {
-              return 'Invalid email format';
-            }
-            return null;
-          },
-        ),
-        FormixFieldConfig<num>(
-          id: ageField,
-          initialValue: 25,
-          validator: (value) {
-            if (value == null) return null;
-            if (value < 13) return 'Must be at least 13 years old';
-            if (value > 120) return 'Age must be realistic';
-            return null;
-          },
-        ),
-        FormixFieldConfig<bool>(id: newsletterField, initialValue: true),
-        FormixFieldConfig<String>(
-          id: FormixFieldID<String>('country'),
-          initialValue: 'US',
-        ),
-        FormixFieldConfig<String>(
-          id: FormixFieldID<String>('bio'),
-          initialValue: '',
-          validator: (value) {
-            if (value != null && value.length > 500) {
-              return 'Bio must be less than 500 characters';
-            }
-            return null;
-          },
-        ),
-        FormixFieldConfig<String>(
-          id: FormixFieldID<String>('password'),
-          initialValue: '',
-          validator: (value) {
-            if (value == null || value.isEmpty) return 'Password is required';
-            if (value.length < 8) {
-              return 'Password must be at least 8 characters';
-            }
-            return null;
-          },
-        ),
-        FormixFieldConfig<String>(
-          id: FormixFieldID<String>('confirmPassword'),
-          initialValue: '',
-          validator: (value) {
-            // Cross-field validation will be handled by a custom mechanism
-            // For now, just validate that it's not empty
-            if (value == null || value.isEmpty) {
-              return 'Please confirm your password';
-            }
-            return null;
-          },
-        ),
-      ],
+      fields: advancedFieldConfigs,
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -117,27 +47,30 @@ class _AdvancedExampleContentState
             ),
             const SizedBox(height: 8),
             const Text(
-              'Comprehensive example with validation, async operations, and form state management',
+              'Comprehensive example with declarative cross-field validation and automatic state management',
               style: TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 16),
 
-            // Auto-validation modes demo
-            const Text(
-              'Auto-Validation Modes',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
+            // Info notice
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.amber.shade50,
+                color: Colors.blue.shade50,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber.shade200),
+                border: Border.all(color: Colors.blue.shade200),
               ),
-              child: const Text(
-                'This form uses automatic validation on user interaction. Try typing in fields to see validation in action.',
-                style: TextStyle(fontSize: 14),
+              child: const Row(
+                children: [
+                  Icon(Icons.lightbulb_outline, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'This form uses crossFieldValidator and dependsOn. Notice how the confirm password field reacts instantly when the original password changes.',
+                      style: TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -177,7 +110,7 @@ class _AdvancedExampleContentState
             const SizedBox(height: 16),
 
             FormixDropdownFormField<String>(
-              fieldId: FormixFieldID<String>('country'),
+              fieldId: countryField,
               items: const [
                 DropdownMenuItem(value: 'US', child: Text('United States')),
                 DropdownMenuItem(value: 'CA', child: Text('Canada')),
@@ -199,14 +132,15 @@ class _AdvancedExampleContentState
             ),
             const SizedBox(height: 16),
 
-            // Password fields with confirmation
+            // Password fields
             const Text(
               'Password Management',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 8),
             FormixTextFormField(
-              fieldId: FormixFieldID<String>('password'),
+              fieldId: passwordField,
+              obscureText: true,
               decoration: const InputDecoration(
                 labelText: 'Password',
                 hintText: 'Create a password',
@@ -215,7 +149,8 @@ class _AdvancedExampleContentState
             ),
             const SizedBox(height: 16),
             FormixTextFormField(
-              fieldId: FormixFieldID<String>('confirmPassword'),
+              fieldId: confirmPasswordField,
+              obscureText: true,
               decoration: const InputDecoration(
                 labelText: 'Confirm Password',
                 hintText: 'Confirm your password',
@@ -224,9 +159,9 @@ class _AdvancedExampleContentState
             ),
             const SizedBox(height: 16),
 
-            // Bio field with length limit
+            // Bio field
             FormixTextFormField(
-              fieldId: FormixFieldID<String>('bio'),
+              fieldId: bioField,
               maxLength: 500,
               decoration: const InputDecoration(
                 labelText: 'Bio',
@@ -240,42 +175,12 @@ class _AdvancedExampleContentState
             const FormixFormStatus(),
             const SizedBox(height: 16),
 
-            Consumer(
-              builder: (context, ref, child) {
-                final controllerProvider = Formix.of(context)!;
-                final controller = ref.read(controllerProvider.notifier);
-                final formState = ref.watch(controllerProvider);
-
-                // Custom cross-field validation for password confirmation
-                final password = formState.values['password'] as String?;
-                final confirmPassword =
-                    formState.values['confirmPassword'] as String?;
-                final hasPasswordMismatch =
-                    password != null &&
-                    confirmPassword != null &&
-                    password.isNotEmpty &&
-                    confirmPassword.isNotEmpty &&
-                    password != confirmPassword;
-
-                // Update confirm password validation if there's a mismatch
-                if (hasPasswordMismatch) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    final newValidations = Map<String, ValidationResult>.from(
-                      formState.validations,
-                    );
-                    newValidations['confirmPassword'] = ValidationResult(
-                      isValid: false,
-                      errorMessage: 'Passwords do not match',
-                    );
-                    // Update the controller's state directly
-                    (controller as dynamic).state = formState.copyWith(
-                      validations: newValidations,
-                    );
-                  });
-                }
-
-                final isValid = formState.isValid && !hasPasswordMismatch;
-                final isDirty = formState.isDirty;
+            FormixBuilder(
+              select: (state) => Object.hash(state.isValid, state.isDirty),
+              builder: (context, scope) {
+                final isValid = scope.watchIsValid;
+                final isDirty = scope.watchIsFormDirty;
+                final formValues = scope.values;
 
                 return Column(
                   children: [
@@ -286,7 +191,6 @@ class _AdvancedExampleContentState
                         ElevatedButton.icon(
                           onPressed: isValid
                               ? () async {
-                                  // Simulate async submission
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text('Submitting...'),
@@ -314,7 +218,6 @@ class _AdvancedExampleContentState
                         ),
                         ElevatedButton.icon(
                           onPressed: () {
-                            final values = formState.values;
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
@@ -324,7 +227,7 @@ class _AdvancedExampleContentState
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     mainAxisSize: MainAxisSize.min,
-                                    children: values.entries.map((entry) {
+                                    children: formValues.entries.map((entry) {
                                       return Padding(
                                         padding: const EdgeInsets.symmetric(
                                           vertical: 4,
@@ -350,7 +253,7 @@ class _AdvancedExampleContentState
                           label: const Text('Show Values'),
                         ),
                         OutlinedButton.icon(
-                          onPressed: () => controller.reset(),
+                          onPressed: () => scope.controller.reset(),
                           icon: const Icon(Icons.refresh),
                           label: const Text('Reset'),
                         ),
@@ -381,7 +284,7 @@ class _AdvancedExampleContentState
                             child: Text(
                               isValid
                                   ? 'Form is valid and ready to submit'
-                                  : 'Form has validation errors',
+                                  : 'Form has validation errors: ${scope.controller.errors}',
                               style: TextStyle(
                                 color: isValid
                                     ? Colors.green.shade800

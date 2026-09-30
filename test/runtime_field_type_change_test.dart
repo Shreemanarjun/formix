@@ -14,57 +14,55 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: ProviderScope(
-              child: StatefulBuilder(
-                builder: (context, setState) {
-                  return Scaffold(
-                    body: Column(
-                      children: [
-                        Formix(
-                          key: formKey,
-                          fields: useStringField
-                              ? [
-                                  FormixFieldConfig<String>(
-                                    id: const FormixFieldID<String>('dynamicField'),
-                                    validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
-                                  ),
-                                ]
-                              : [
-                                  FormixFieldConfig<DateTime?>(
-                                    id: const FormixFieldID<DateTime?>('dynamicField'),
-                                    validator: (value) => value == null ? 'Required' : null,
-                                  ),
-                                ],
-                          child: useStringField
-                              ? const FormixTextFormField(
-                                  fieldId: FormixFieldID<String>('dynamicField'),
-                                  decoration: InputDecoration(labelText: 'String Field'),
-                                )
-                              : FormixRawFormField<DateTime?>(
-                                  fieldId: const FormixFieldID<DateTime?>('dynamicField'),
-                                  builder: (context, state) {
-                                    return Column(
-                                      children: [
-                                        Text('Date: ${state.value}'),
-                                        if (state.hasError) Text('Error: ${state.validation.errorMessage}'),
-                                      ],
-                                    );
-                                  },
+            home: StatefulBuilder(
+              builder: (context, setState) {
+                return Scaffold(
+                  body: Column(
+                    children: [
+                      Formix(
+                        key: formKey,
+                        fields: useStringField
+                            ? [
+                                FormixFieldConfig<String>(
+                                  id: const FormixFieldID<String>('dynamicField'),
+                                  validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
                                 ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              useStringField = !useStringField;
-                            });
-                          },
-                          child: const Text('Toggle Field Type'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                              ]
+                            : [
+                                FormixFieldConfig<DateTime?>(
+                                  id: const FormixFieldID<DateTime?>('dynamicField'),
+                                  validator: (value) => value == null ? 'Required' : null,
+                                ),
+                              ],
+                        child: useStringField
+                            ? const FormixTextFormField(
+                                fieldId: FormixFieldID<String>('dynamicField'),
+                                decoration: InputDecoration(labelText: 'String Field'),
+                              )
+                            : FormixRawFormField<DateTime?>(
+                                fieldId: const FormixFieldID<DateTime?>('dynamicField'),
+                                builder: (context, state) {
+                                  return Column(
+                                    children: [
+                                      Text('Date: ${state.value}'),
+                                      if (state.hasError) Text('Error: ${state.validation.errorMessage}'),
+                                    ],
+                                  );
+                                },
+                              ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            useStringField = !useStringField;
+                          });
+                        },
+                        child: const Text('Toggle Field Type'),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
         );
@@ -101,57 +99,55 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: ProviderScope(
-              child: StatefulBuilder(
-                builder: (context, setState) {
-                  return Scaffold(
-                    body: Column(
-                      children: [
-                        Formix(
-                          key: formKey,
-                          fields: useStringField
-                              ? [
-                                  FormixFieldConfig<String>(
-                                    id: const FormixFieldID<String>('stringField'),
-                                    validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
-                                  ),
-                                ]
-                              : [
-                                  FormixFieldConfig<DateTime?>(
-                                    id: const FormixFieldID<DateTime?>('dateField'),
-                                    validator: (value) => value == null ? 'Required' : null,
-                                  ),
-                                ],
-                          child: useStringField
-                              ? const FormixTextFormField(
-                                  fieldId: FormixFieldID<String>('stringField'),
-                                  decoration: InputDecoration(labelText: 'String Field'),
-                                )
-                              : FormixRawFormField<DateTime?>(
-                                  fieldId: const FormixFieldID<DateTime?>('dateField'),
-                                  builder: (context, state) {
-                                    return Column(
-                                      children: [
-                                        Text('Date: ${state.value}'),
-                                        if (state.hasError) Text('Error: ${state.validation.errorMessage}'),
-                                      ],
-                                    );
-                                  },
+            home: StatefulBuilder(
+              builder: (context, setState) {
+                return Scaffold(
+                  body: Column(
+                    children: [
+                      Formix(
+                        key: formKey,
+                        fields: useStringField
+                            ? [
+                                FormixFieldConfig<String>(
+                                  id: const FormixFieldID<String>('stringField'),
+                                  validator: (value) => value?.isEmpty ?? true ? 'Required' : null,
                                 ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              useStringField = !useStringField;
-                            });
-                          },
-                          child: const Text('Toggle Field Type'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                              ]
+                            : [
+                                FormixFieldConfig<DateTime?>(
+                                  id: const FormixFieldID<DateTime?>('dateField'),
+                                  validator: (value) => value == null ? 'Required' : null,
+                                ),
+                              ],
+                        child: useStringField
+                            ? const FormixTextFormField(
+                                fieldId: FormixFieldID<String>('stringField'),
+                                decoration: InputDecoration(labelText: 'String Field'),
+                              )
+                            : FormixRawFormField<DateTime?>(
+                                fieldId: const FormixFieldID<DateTime?>('dateField'),
+                                builder: (context, state) {
+                                  return Column(
+                                    children: [
+                                      Text('Date: ${state.value}'),
+                                      if (state.hasError) Text('Error: ${state.validation.errorMessage}'),
+                                    ],
+                                  );
+                                },
+                              ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            useStringField = !useStringField;
+                          });
+                        },
+                        child: const Text('Toggle Field Type'),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
         );

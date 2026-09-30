@@ -7,7 +7,7 @@ void main() {
     const field2 = FormixFieldID<String>('field2');
 
     test('nextStep should transition only if fields are valid', () {
-      final controller = RiverpodFormController(
+      final controller = FormixController(
         fields: [
           FormixField<String>(
             id: field1,
@@ -50,7 +50,7 @@ void main() {
     });
 
     test('previousStep and goToStep should update currentStep', () {
-      final controller = RiverpodFormController();
+      final controller = FormixController();
       expect(controller.state.currentStep, 0);
 
       controller.goToStep(10);
@@ -64,7 +64,7 @@ void main() {
     });
 
     test('validateStep is an alias for validate', () {
-      final controller = RiverpodFormController(
+      final controller = FormixController(
         fields: [
           FormixField<String>(
             id: field1,

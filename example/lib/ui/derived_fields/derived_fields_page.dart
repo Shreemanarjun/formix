@@ -2,25 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:formix/formix.dart';
 
 // Derived Fields Example
-class DerivedFieldsExample extends ConsumerWidget {
+class DerivedFieldsExample extends StatelessWidget {
   const DerivedFieldsExample({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return const DerivedFieldsExampleContent();
   }
 }
 
-class DerivedFieldsExampleContent extends ConsumerStatefulWidget {
+class DerivedFieldsExampleContent extends StatefulWidget {
   const DerivedFieldsExampleContent({super.key});
 
   @override
-  ConsumerState<DerivedFieldsExampleContent> createState() =>
+  State<DerivedFieldsExampleContent> createState() =>
       _DerivedFieldsExampleContentState();
 }
 
 class _DerivedFieldsExampleContentState
-    extends ConsumerState<DerivedFieldsExampleContent> {
+    extends State<DerivedFieldsExampleContent> {
   @override
   Widget build(BuildContext context) {
     return Formix(
@@ -143,10 +143,10 @@ class _DerivedFieldsExampleContentState
                     style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(width: 8),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final fullName = ref.watch(
-                        fieldValueProvider(FormixFieldID<String>('fullName')),
+                  FormixBuilder(
+                    builder: (context, scope) {
+                      final fullName = scope.watchValue(
+                        FormixFieldID<String>('fullName'),
                       );
                       return Text(
                         fullName?.isEmpty ?? true
@@ -193,11 +193,9 @@ class _DerivedFieldsExampleContentState
                     style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(width: 8),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final age = ref.watch(
-                        fieldValueProvider(FormixFieldID<int>('age')),
-                      );
+                  FormixBuilder(
+                    builder: (context, scope) {
+                      final age = scope.watchValue(FormixFieldID<int>('age'));
                       return Text(
                         '$age years old',
                         style: const TextStyle(fontWeight: FontWeight.bold),
@@ -257,10 +255,10 @@ class _DerivedFieldsExampleContentState
                     style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(width: 8),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final total = ref.watch(
-                        fieldValueProvider(FormixFieldID<double>('total')),
+                  FormixBuilder(
+                    builder: (context, scope) {
+                      final total = scope.watchValue(
+                        FormixFieldID<double>('total'),
                       );
                       return Text(
                         '\$${total?.toStringAsFixed(2) ?? '0.00'}',
@@ -300,10 +298,10 @@ class _DerivedFieldsExampleContentState
                     style: TextStyle(fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(width: 8),
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final finalTotal = ref.watch(
-                        fieldValueProvider(FormixFieldID<double>('finalTotal')),
+                  FormixBuilder(
+                    builder: (context, scope) {
+                      final finalTotal = scope.watchValue(
+                        FormixFieldID<double>('finalTotal'),
                       );
                       return Text(
                         '\$${finalTotal?.toStringAsFixed(2) ?? '0.00'}',
@@ -317,115 +315,76 @@ class _DerivedFieldsExampleContentState
 
             const SizedBox(height: 24),
 
-            // Custom Field Derivation Implementation
-            // This demonstrates how to implement field derivation without circular dependencies
-            Consumer(
-              builder: (context, ref, child) {
-                final firstName =
-                    ref.watch(
-                      fieldValueProvider(FormixFieldID<String>('firstName')),
-                    ) ??
+            // Field derivation, the right way: FormixFieldDerivation watches its
+            // dependencies and writes the target through a gated effect — no
+            // build-time writes, no per-frame post-frame callbacks, no loops.
+            FormixFieldDerivation(
+              dependencies: const <FormixFieldID<dynamic>>[
+                FormixFieldID<String>('firstName'),
+                FormixFieldID<String>('lastName'),
+              ],
+              targetField: const FormixFieldID<String>('fullName'),
+              derive: (values) {
+                final first =
+                    values[const FormixFieldID<String>('firstName')]
+                        as String? ??
                     '';
-                final lastName =
-                    ref.watch(
-                      fieldValueProvider(FormixFieldID<String>('lastName')),
-                    ) ??
+                final last =
+                    values[const FormixFieldID<String>('lastName')]
+                        as String? ??
                     '';
-                final fullName = '$firstName $lastName'.trim();
-
-                // Update the derived field value
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  final controller = Formix.controllerOf(context);
-                  if (controller != null) {
-                    controller.setValue(
-                      FormixFieldID<String>('fullName'),
-                      fullName,
-                    );
-                  }
-                });
-
-                return const SizedBox.shrink();
+                return '$first $last'.trim();
               },
             ),
 
-            Consumer(
-              builder: (context, ref, child) {
+            FormixFieldDerivation(
+              dependencies: const <FormixFieldID<dynamic>>[
+                FormixFieldID<int>('birthYear'),
+                FormixFieldID<int>('currentYear'),
+              ],
+              targetField: const FormixFieldID<int>('age'),
+              derive: (values) {
                 final birthYear =
-                    ref.watch(
-                      fieldValueProvider(FormixFieldID<int>('birthYear')),
-                    ) ??
+                    values[const FormixFieldID<int>('birthYear')] as int? ??
                     2000;
                 final currentYear =
-                    ref.watch(
-                      fieldValueProvider(FormixFieldID<int>('currentYear')),
-                    ) ??
+                    values[const FormixFieldID<int>('currentYear')] as int? ??
                     DateTime.now().year;
-                final age = currentYear - birthYear;
-
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  final controller = Formix.controllerOf(context);
-                  if (controller != null) {
-                    controller.setValue(FormixFieldID<int>('age'), age);
-                  }
-                });
-
-                return const SizedBox.shrink();
+                return currentYear - birthYear;
               },
             ),
 
-            Consumer(
-              builder: (context, ref, child) {
+            FormixFieldDerivation(
+              dependencies: const <FormixFieldID<dynamic>>[
+                FormixFieldID<double>('price'),
+                FormixFieldID<int>('quantity'),
+              ],
+              targetField: const FormixFieldID<double>('total'),
+              derive: (values) {
                 final price =
-                    ref.watch(
-                      fieldValueProvider(FormixFieldID<double>('price')),
-                    ) ??
+                    values[const FormixFieldID<double>('price')] as double? ??
                     0.0;
                 final quantity =
-                    ref.watch(
-                      fieldValueProvider(FormixFieldID<int>('quantity')),
-                    ) ??
-                    1;
-                final total = price * quantity;
-
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  final controller = Formix.controllerOf(context);
-                  if (controller != null) {
-                    controller.setValue(FormixFieldID<double>('total'), total);
-                  }
-                });
-
-                return const SizedBox.shrink();
+                    values[const FormixFieldID<int>('quantity')] as int? ?? 1;
+                return price * quantity;
               },
             ),
 
-            Consumer(
-              builder: (context, ref, child) {
+            FormixFieldDerivation(
+              dependencies: const <FormixFieldID<dynamic>>[
+                FormixFieldID<double>('total'),
+                FormixFieldID<double>('discountPercent'),
+              ],
+              targetField: const FormixFieldID<double>('finalTotal'),
+              derive: (values) {
                 final total =
-                    ref.watch(
-                      fieldValueProvider(FormixFieldID<double>('total')),
-                    ) ??
+                    values[const FormixFieldID<double>('total')] as double? ??
                     0.0;
                 final discountPercent =
-                    ref.watch(
-                      fieldValueProvider(
-                        FormixFieldID<double>('discountPercent'),
-                      ),
-                    ) ??
+                    values[const FormixFieldID<double>('discountPercent')]
+                        as double? ??
                     0.0;
-                final discountAmount = total * (discountPercent / 100);
-                final finalTotal = total - discountAmount;
-
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  final controller = Formix.controllerOf(context);
-                  if (controller != null) {
-                    controller.setValue(
-                      FormixFieldID<double>('finalTotal'),
-                      finalTotal,
-                    );
-                  }
-                });
-
-                return const SizedBox.shrink();
+                return total - (total * (discountPercent / 100));
               },
             ),
 

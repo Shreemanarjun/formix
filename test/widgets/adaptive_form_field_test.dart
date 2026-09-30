@@ -12,17 +12,15 @@ void main() {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(id: fieldId),
-                ],
-                child: FormixAdaptiveTextFormField(
-                  fieldId: fieldId,
-                  decoration: InputDecoration(labelText: 'Name'),
-                ),
+        const MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(id: fieldId),
+              ],
+              child: FormixAdaptiveTextFormField(
+                fieldId: fieldId,
+                decoration: InputDecoration(labelText: 'Name'),
               ),
             ),
           ),
@@ -39,17 +37,15 @@ void main() {
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(id: fieldId),
-                ],
-                child: FormixAdaptiveTextFormField(
-                  fieldId: fieldId,
-                  placeholder: 'Name',
-                ),
+        const MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(id: fieldId),
+              ],
+              child: FormixAdaptiveTextFormField(
+                fieldId: fieldId,
+                placeholder: 'Name',
               ),
             ),
           ),
@@ -67,19 +63,17 @@ void main() {
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(id: fieldId),
-                ],
-                child: FormixAdaptiveTextFormField(
-                  fieldId: fieldId,
-                  decoration: InputDecoration(
-                    labelText: 'Label',
-                    prefixIcon: Icon(Icons.person),
-                  ),
+        const MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(id: fieldId),
+              ],
+              child: FormixAdaptiveTextFormField(
+                fieldId: fieldId,
+                decoration: InputDecoration(
+                  labelText: 'Label',
+                  prefixIcon: Icon(Icons.person),
                 ),
               ),
             ),
@@ -101,15 +95,13 @@ void main() {
     testWidgets('value synchronization works on Android', (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [
-                  FormixFieldConfig(id: fieldId, initialValue: 'Initial'),
-                ],
-                child: FormixAdaptiveTextFormField(fieldId: fieldId),
-              ),
+        const MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [
+                FormixFieldConfig(id: fieldId, initialValue: 'Initial'),
+              ],
+              child: FormixAdaptiveTextFormField(fieldId: fieldId),
             ),
           ),
         ),
@@ -126,17 +118,15 @@ void main() {
     testWidgets('value synchronization works on iOS', (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
       await tester.pumpWidget(
-        const ProviderScope(
-          child: CupertinoApp(
-            home: CupertinoPageScaffold(
-              child: Padding(
-                padding: EdgeInsets.all(20),
-                child: Formix(
-                  fields: [
-                    FormixFieldConfig(id: fieldId, initialValue: 'Initial iOS'),
-                  ],
-                  child: FormixAdaptiveTextFormField(fieldId: fieldId),
-                ),
+        const CupertinoApp(
+          home: CupertinoPageScaffold(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: Formix(
+                fields: [
+                  FormixFieldConfig(id: fieldId, initialValue: 'Initial iOS'),
+                ],
+                child: FormixAdaptiveTextFormField(fieldId: fieldId),
               ),
             ),
           ),

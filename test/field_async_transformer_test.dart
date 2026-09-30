@@ -21,16 +21,14 @@ void main() {
         );
 
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Formix(
-                initialValue: const {'source': 'initial', 'target': 'target'},
-                fields: [
-                  FormixFieldConfig(id: sourceField),
-                  FormixFieldConfig(id: targetField),
-                ],
-                child: widget,
-              ),
+          MaterialApp(
+            home: Formix(
+              initialValue: const {'source': 'initial', 'target': 'target'},
+              fields: [
+                FormixFieldConfig(id: sourceField),
+                FormixFieldConfig(id: targetField),
+              ],
+              child: widget,
             ),
           ),
         );
@@ -53,31 +51,23 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              initialValue: const {'source': 'Hi', 'target': 'HI'},
-              fields: [
-                FormixFieldConfig(id: sourceField),
-                FormixFieldConfig(id: targetField),
-              ],
-              child: widget,
-            ),
+        MaterialApp(
+          home: Formix(
+            initialValue: const {'source': 'Hi', 'target': 'HI'},
+            fields: [
+              FormixFieldConfig(id: sourceField),
+              FormixFieldConfig(id: targetField),
+            ],
+            child: widget,
           ),
         ),
       );
 
-      final provider = Formix.of(
-        tester.element(
-          find.byType(FormixFieldAsyncTransformer<String, String>),
-        ),
-      )!;
-      final container = ProviderScope.containerOf(
+      final controller = Formix.of(
         tester.element(
           find.byType(FormixFieldAsyncTransformer<String, String>),
         ),
       );
-      final controller = container.read(provider.notifier);
 
       // Wait for initial transform if any (none expected if values match)
       await tester.pumpAndSettle();
@@ -109,31 +99,23 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              initialValue: const {'source': 'start', 'target': 'START'},
-              fields: [
-                FormixFieldConfig(id: sourceField),
-                FormixFieldConfig(id: targetField),
-              ],
-              child: widget,
-            ),
+        MaterialApp(
+          home: Formix(
+            initialValue: const {'source': 'start', 'target': 'START'},
+            fields: [
+              FormixFieldConfig(id: sourceField),
+              FormixFieldConfig(id: targetField),
+            ],
+            child: widget,
           ),
         ),
       );
 
-      final provider = Formix.of(
-        tester.element(
-          find.byType(FormixFieldAsyncTransformer<String, String>),
-        ),
-      )!;
-      final container = ProviderScope.containerOf(
+      final controller = Formix.of(
         tester.element(
           find.byType(FormixFieldAsyncTransformer<String, String>),
         ),
       );
-      final controller = container.read(provider.notifier);
 
       // Wait for initial value debounce to settle completely
       await tester.pump(const Duration(seconds: 1));
@@ -170,31 +152,23 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              initialValue: const {'source': 'initial', 'target': 'target'},
-              fields: [
-                FormixFieldConfig(id: sourceField),
-                FormixFieldConfig(id: targetField),
-              ],
-              child: widget,
-            ),
+        MaterialApp(
+          home: Formix(
+            initialValue: const {'source': 'initial', 'target': 'target'},
+            fields: [
+              FormixFieldConfig(id: sourceField),
+              FormixFieldConfig(id: targetField),
+            ],
+            child: widget,
           ),
         ),
       );
 
-      final provider = Formix.of(
-        tester.element(
-          find.byType(FormixFieldAsyncTransformer<String, String>),
-        ),
-      )!;
-      final container = ProviderScope.containerOf(
+      final controller = Formix.of(
         tester.element(
           find.byType(FormixFieldAsyncTransformer<String, String>),
         ),
       );
-      final controller = container.read(provider.notifier);
 
       // Trigger error
       controller.setValue(sourceField, 'new');
@@ -216,31 +190,23 @@ void main() {
         );
 
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Formix(
-                initialValue: const {'source': 'start', 'target': 'start'},
-                fields: [
-                  FormixFieldConfig(id: sourceField),
-                  FormixFieldConfig(id: targetField),
-                ],
-                child: widget,
-              ),
+          MaterialApp(
+            home: Formix(
+              initialValue: const {'source': 'start', 'target': 'start'},
+              fields: [
+                FormixFieldConfig(id: sourceField),
+                FormixFieldConfig(id: targetField),
+              ],
+              child: widget,
             ),
           ),
         );
 
-        final provider = Formix.of(
-          tester.element(
-            find.byType(FormixFieldAsyncTransformer<String, String>),
-          ),
-        )!;
-        final container = ProviderScope.containerOf(
+        final controller = Formix.of(
           tester.element(
             find.byType(FormixFieldAsyncTransformer<String, String>),
           ),
         );
-        final controller = container.read(provider.notifier);
 
         // Trigger async operation
         controller.setValue(sourceField, 'new');
@@ -268,26 +234,22 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              initialValue: const {
-                'obj_source': {'name': 'John', 'age': 25},
-                'target': 'JOHN',
-              },
-              fields: [
-                const FormixFieldConfig(id: objectSourceField),
-                FormixFieldConfig(id: targetField),
-              ],
-              child: widget,
-            ),
+        MaterialApp(
+          home: Formix(
+            initialValue: const {
+              'obj_source': {'name': 'John', 'age': 25},
+              'target': 'JOHN',
+            },
+            fields: [
+              const FormixFieldConfig(id: objectSourceField),
+              FormixFieldConfig(id: targetField),
+            ],
+            child: widget,
           ),
         ),
       );
 
-      final provider = Formix.of(tester.element(find.byType(FormixFieldAsyncTransformer<Map<String, dynamic>, String>)))!;
-      final container = ProviderScope.containerOf(tester.element(find.byType(FormixFieldAsyncTransformer<Map<String, dynamic>, String>)));
-      final controller = container.read(provider.notifier);
+      final controller = Formix.of(tester.element(find.byType(FormixFieldAsyncTransformer<Map<String, dynamic>, String>)));
 
       // Initial transform on mount
       await tester.pumpAndSettle();

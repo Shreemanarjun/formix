@@ -20,16 +20,14 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              initialValue: const {'source': 'initial', 'target': 0},
-              fields: [
-                FormixFieldConfig(id: sourceField),
-                FormixFieldConfig(id: targetField),
-              ],
-              child: widget,
-            ),
+        MaterialApp(
+          home: Formix(
+            initialValue: const {'source': 'initial', 'target': 0},
+            fields: [
+              FormixFieldConfig(id: sourceField),
+              FormixFieldConfig(id: targetField),
+            ],
+            child: widget,
           ),
         ),
       );
@@ -47,28 +45,22 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              initialValue: const {'source': 'Hi', 'target': 0},
-              fields: [
-                FormixFieldConfig(id: sourceField),
-                FormixFieldConfig(id: targetField),
-              ],
-              child: widget,
-            ),
+        MaterialApp(
+          home: Formix(
+            initialValue: const {'source': 'Hi', 'target': 0},
+            fields: [
+              FormixFieldConfig(id: sourceField),
+              FormixFieldConfig(id: targetField),
+            ],
+            child: widget,
           ),
         ),
       );
 
       // Get controller to check values
-      final provider = Formix.of(
-        tester.element(find.byType(FormixFieldTransformer<String, int>)),
-      )!;
-      final container = ProviderScope.containerOf(
+      final controller = Formix.of(
         tester.element(find.byType(FormixFieldTransformer<String, int>)),
       );
-      final controller = container.read(provider.notifier);
 
       // Initial value should be transformed
       expect(controller.getValue(targetField), 2);
@@ -88,27 +80,21 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              initialValue: const {'source': null, 'target': 0},
-              fields: [
-                FormixFieldConfig(id: sourceField),
-                FormixFieldConfig(id: targetField),
-              ],
-              child: widget,
-            ),
+        MaterialApp(
+          home: Formix(
+            initialValue: const {'source': null, 'target': 0},
+            fields: [
+              FormixFieldConfig(id: sourceField),
+              FormixFieldConfig(id: targetField),
+            ],
+            child: widget,
           ),
         ),
       );
 
-      final provider = Formix.of(
-        tester.element(find.byType(FormixFieldTransformer<String, int>)),
-      )!;
-      final container = ProviderScope.containerOf(
+      final controller = Formix.of(
         tester.element(find.byType(FormixFieldTransformer<String, int>)),
       );
-      final controller = container.read(provider.notifier);
 
       expect(controller.getValue(targetField), 0);
 
@@ -129,27 +115,21 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              initialValue: const {'source': 'initial', 'target': 100},
-              fields: [
-                FormixFieldConfig(id: sourceField),
-                FormixFieldConfig(id: targetField),
-              ],
-              child: widget,
-            ),
+        MaterialApp(
+          home: Formix(
+            initialValue: const {'source': 'initial', 'target': 100},
+            fields: [
+              FormixFieldConfig(id: sourceField),
+              FormixFieldConfig(id: targetField),
+            ],
+            child: widget,
           ),
         ),
       );
 
-      final provider = Formix.of(
-        tester.element(find.byType(FormixFieldTransformer<String, int>)),
-      )!;
-      final container = ProviderScope.containerOf(
+      final controller = Formix.of(
         tester.element(find.byType(FormixFieldTransformer<String, int>)),
       );
-      final controller = container.read(provider.notifier);
 
       // Should not crash, target field should keep its initial value
       expect(controller.getValue(targetField), 100);
@@ -159,59 +139,51 @@ void main() {
       const newSourceField = FormixFieldID<String>('newSource');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              initialValue: const {
-                'source': 'old',
-                'newSource': 'new',
-                'target': 0,
-              },
-              fields: [
-                FormixFieldConfig(id: sourceField),
-                const FormixFieldConfig(id: newSourceField),
-                FormixFieldConfig(id: targetField),
-              ],
-              child: FormixFieldTransformer<String, int>(
-                sourceField: sourceField,
-                targetField: targetField,
-                transform: (value) => value?.length ?? 0,
-              ),
+        MaterialApp(
+          home: Formix(
+            initialValue: const {
+              'source': 'old',
+              'newSource': 'new',
+              'target': 0,
+            },
+            fields: [
+              FormixFieldConfig(id: sourceField),
+              const FormixFieldConfig(id: newSourceField),
+              FormixFieldConfig(id: targetField),
+            ],
+            child: FormixFieldTransformer<String, int>(
+              sourceField: sourceField,
+              targetField: targetField,
+              transform: (value) => value?.length ?? 0,
             ),
           ),
         ),
       );
 
-      final provider = Formix.of(
-        tester.element(find.byType(FormixFieldTransformer<String, int>)),
-      )!;
-      final container = ProviderScope.containerOf(
+      final controller = Formix.of(
         tester.element(find.byType(FormixFieldTransformer<String, int>)),
       );
-      final controller = container.read(provider.notifier);
 
       expect(controller.getValue(targetField), 3); // "old".length
 
       // Update widget to listen to newSourceField
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              initialValue: const {
-                'source': 'old',
-                'newSource': 'new',
-                'target': 0,
-              },
-              fields: [
-                FormixFieldConfig(id: sourceField),
-                const FormixFieldConfig(id: newSourceField),
-                FormixFieldConfig(id: targetField),
-              ],
-              child: FormixFieldTransformer<String, int>(
-                sourceField: newSourceField,
-                targetField: targetField,
-                transform: (value) => value?.length ?? 0,
-              ),
+        MaterialApp(
+          home: Formix(
+            initialValue: const {
+              'source': 'old',
+              'newSource': 'new',
+              'target': 0,
+            },
+            fields: [
+              FormixFieldConfig(id: sourceField),
+              const FormixFieldConfig(id: newSourceField),
+              FormixFieldConfig(id: targetField),
+            ],
+            child: FormixFieldTransformer<String, int>(
+              sourceField: newSourceField,
+              targetField: targetField,
+              transform: (value) => value?.length ?? 0,
             ),
           ),
         ),
@@ -245,26 +217,22 @@ void main() {
       );
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              initialValue: const {
-                'obj_source': {'name': 'John', 'age': 25},
-                'source': 'JOHN',
-              },
-              fields: [
-                const FormixFieldConfig(id: objectSourceField),
-                FormixFieldConfig(id: sourceField),
-              ],
-              child: widget,
-            ),
+        MaterialApp(
+          home: Formix(
+            initialValue: const {
+              'obj_source': {'name': 'John', 'age': 25},
+              'source': 'JOHN',
+            },
+            fields: [
+              const FormixFieldConfig(id: objectSourceField),
+              FormixFieldConfig(id: sourceField),
+            ],
+            child: widget,
           ),
         ),
       );
 
-      final provider = Formix.of(tester.element(find.byType(FormixFieldTransformer<Map<String, dynamic>, String>)))!;
-      final container = ProviderScope.containerOf(tester.element(find.byType(FormixFieldTransformer<Map<String, dynamic>, String>)));
-      final controller = container.read(provider.notifier);
+      final controller = Formix.of(tester.element(find.byType(FormixFieldTransformer<Map<String, dynamic>, String>)));
 
       // Initial transform on mount
       expect(transformCount, 1);

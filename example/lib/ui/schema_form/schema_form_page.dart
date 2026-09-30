@@ -3,25 +3,24 @@ import 'package:formix/formix.dart';
 import '../../constants/field_ids.dart';
 
 // Schema-based Form Example
-class SchemaFormExample extends ConsumerWidget {
+class SchemaFormExample extends StatelessWidget {
   const SchemaFormExample({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return const SchemaFormExampleContent();
   }
 }
 
-class SchemaFormExampleContent extends ConsumerStatefulWidget {
+class SchemaFormExampleContent extends StatefulWidget {
   const SchemaFormExampleContent({super.key});
 
   @override
-  ConsumerState<SchemaFormExampleContent> createState() =>
+  State<SchemaFormExampleContent> createState() =>
       _SchemaFormExampleContentState();
 }
 
-class _SchemaFormExampleContentState
-    extends ConsumerState<SchemaFormExampleContent> {
+class _SchemaFormExampleContentState extends State<SchemaFormExampleContent> {
   late final FormSchema schema;
   late final SchemaBasedFormController controller;
 
@@ -212,11 +211,10 @@ class _SchemaFormExampleContentState
                 border: Border.all(color: Colors.grey.shade300),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Consumer(
-                builder: (context, ref, child) {
-                  final controllerProvider = Formix.of(context)!;
-                  final controller = ref.read(controllerProvider.notifier);
-                  final value = ref.watch(fieldValueProvider(dobField));
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  final controller = scope.controller;
+                  final value = scope.watchValue(dobField);
                   return ListTile(
                     title: Text(
                       value?.toString().split(' ')[0] ?? 'Select date',
@@ -262,11 +260,10 @@ class _SchemaFormExampleContentState
             const FormixFormStatus(),
             const SizedBox(height: 16),
 
-            Consumer(
-              builder: (context, ref, child) {
-                final controllerProvider = Formix.of(context)!;
-                final controller = ref.read(controllerProvider.notifier);
-                final formState = ref.watch(controllerProvider);
+            FormixBuilder(
+              builder: (context, scope) {
+                final controller = scope.controller;
+                final formState = scope.watchState;
 
                 return Row(
                   children: [

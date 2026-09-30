@@ -30,10 +30,10 @@ void main() {
         ),
       ];
 
-      final container = ProviderContainer();
-      final controller = container.read(
-        formControllerProvider(FormixParameter(fields: fields)).notifier,
+      final controller = FormixController.fromParameter(
+        FormixParameter(fields: fields),
       );
+      addTearDown(controller.dispose);
 
       // 1. Initial State
       expect(controller.currentState.isValid, isTrue);
@@ -93,10 +93,10 @@ void main() {
         ),
       ];
 
-      final container = ProviderContainer();
-      final controller = container.read(
-        formControllerProvider(FormixParameter(fields: fields)).notifier,
+      final controller = FormixController.fromParameter(
+        FormixParameter(fields: fields),
       );
+      addTearDown(controller.dispose);
 
       // Update A.
       // BFS should queue B and C.
@@ -121,10 +121,10 @@ void main() {
         const FormixFieldConfig<String>(id: b, initialValue: 'b', dependsOn: [a]),
       ];
 
-      final container = ProviderContainer();
-      final controller = container.read(
-        formControllerProvider(FormixParameter(fields: fields)).notifier,
+      final controller = FormixController.fromParameter(
+        FormixParameter(fields: fields),
       );
+      addTearDown(controller.dispose);
 
       // Should complete without stack overflow
       controller.setValue(a, 'newA');
@@ -138,10 +138,10 @@ void main() {
         const FormixFieldConfig<String>(id: a, initialValue: 'a', dependsOn: [a]),
       ];
 
-      final container = ProviderContainer();
-      final controller = container.read(
-        formControllerProvider(FormixParameter(fields: fields)).notifier,
+      final controller = FormixController.fromParameter(
+        FormixParameter(fields: fields),
       );
+      addTearDown(controller.dispose);
 
       controller.setValue(a, 'new');
       expect(controller.currentState.isValid, isTrue);
@@ -167,10 +167,10 @@ void main() {
         ),
       ];
 
-      final container = ProviderContainer();
-      final controller = container.read(
-        formControllerProvider(FormixParameter(fields: fields)).notifier,
+      final controller = FormixController.fromParameter(
+        FormixParameter(fields: fields),
       );
+      addTearDown(controller.dispose);
 
       // 1. Add items using array manipulation
       controller.addArrayItem(itemsArray, 50);

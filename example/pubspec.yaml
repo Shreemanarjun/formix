@@ -11,7 +11,6 @@ dependencies:
     sdk: flutter
   formix:
     path: ../
-  flutter_riverpod: ^2.5.1
 
 dev_dependencies:
   flutter_test:
@@ -20,7 +19,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-
-dependency_overrides:
-  dwds: ^26.2.3

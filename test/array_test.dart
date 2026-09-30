@@ -55,30 +55,28 @@ void main() {
       const arrayId = FormixArrayID<String>('hobbies');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              initialValue: const {
-                'hobbies': ['A', 'B'],
-              },
-              child: Scaffold(
-                body: FormixArray<String>(
-                  id: arrayId,
-                  itemBuilder: (context, index, itemId, scope) {
-                    return ListTile(
-                      title: Text('Item $index'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => scope.removeArrayItemAt(arrayId, index),
-                      ),
-                    );
-                  },
-                ),
-                floatingActionButton: FormixBuilder(
-                  builder: (context, scope) => FloatingActionButton(
-                    onPressed: () => scope.addArrayItem(arrayId, 'C'),
-                    child: const Icon(Icons.add),
-                  ),
+        MaterialApp(
+          home: Formix(
+            initialValue: const {
+              'hobbies': ['A', 'B'],
+            },
+            child: Scaffold(
+              body: FormixArray<String>(
+                id: arrayId,
+                itemBuilder: (context, index, itemId, scope) {
+                  return ListTile(
+                    title: Text('Item $index'),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.delete),
+                      onPressed: () => scope.removeArrayItemAt(arrayId, index),
+                    ),
+                  );
+                },
+              ),
+              floatingActionButton: FormixBuilder(
+                builder: (context, scope) => FloatingActionButton(
+                  onPressed: () => scope.addArrayItem(arrayId, 'C'),
+                  child: const Icon(Icons.add),
                 ),
               ),
             ),

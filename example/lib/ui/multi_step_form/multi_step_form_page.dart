@@ -226,125 +226,124 @@ class _MultiStepFormPageState extends State<MultiStepFormPage> {
         title: const Text('Multi-Step Registration'),
         elevation: 2,
       ),
-      body: ProviderScope(
-        child: Formix(
-          formId: 'multi_step_wizard', // ID required for analytics tracking
-          analytics: const LoggingFormixAnalytics(),
-          initialValue: const {'newsletter': false, 'notifications': true},
-          child: FormixBuilder(
-            builder: (context, scope) {
-              final currentStep = scope.watchCurrentStep;
+      body: Formix(
+        formId: 'multi_step_wizard', // ID required for analytics tracking
+        analytics: const LoggingFormixAnalytics(),
+        initialValue: const {'newsletter': false, 'notifications': true},
+        child: FormixBuilder(
+          select: (state) => Object.hash(state.currentStep, state.isValid),
+          builder: (context, scope) {
+            final currentStep = scope.watchCurrentStep;
 
-              return Column(
-                children: [
-                  // Step indicator
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    color: Colors.blue.shade50,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(4, (index) {
-                        return Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 16,
-                              backgroundColor: currentStep >= index
-                                  ? Colors.blue
-                                  : Colors.grey.shade300,
-                              child: Text(
-                                '${index + 1}',
-                                style: TextStyle(
-                                  color: currentStep >= index
-                                      ? Colors.white
-                                      : Colors.grey.shade600,
-                                  fontWeight: FontWeight.bold,
-                                ),
+            return Column(
+              children: [
+                // Step indicator
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  color: Colors.blue.shade50,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(4, (index) {
+                      return Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: currentStep >= index
+                                ? Colors.blue
+                                : Colors.grey.shade300,
+                            child: Text(
+                              '${index + 1}',
+                              style: TextStyle(
+                                color: currentStep >= index
+                                    ? Colors.white
+                                    : Colors.grey.shade600,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            if (index < 3)
-                              Container(
-                                width: 40,
-                                height: 2,
-                                color: currentStep > index
-                                    ? Colors.blue
-                                    : Colors.grey.shade300,
-                              ),
-                          ],
-                        );
-                      }),
-                    ),
+                          ),
+                          if (index < 3)
+                            Container(
+                              width: 40,
+                              height: 2,
+                              color: currentStep > index
+                                  ? Colors.blue
+                                  : Colors.grey.shade300,
+                            ),
+                        ],
+                      );
+                    }),
                   ),
-                  // Step titles
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      [
-                        'Personal Information',
-                        'Address',
-                        'Employment',
-                        'Preferences',
-                      ][currentStep],
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
+                ),
+                // Step titles
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    [
+                      'Personal Information',
+                      'Address',
+                      'Employment',
+                      'Preferences',
+                    ][currentStep],
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  // Active Step (Lazy Loaded)
-                  Expanded(
-                    child: Builder(
-                      builder: (context) {
-                        switch (currentStep) {
-                          case 0:
-                            return SingleChildScrollView(
-                              key: const ValueKey(0),
-                              child: _buildStep1(),
-                            );
-                          case 1:
-                            return SingleChildScrollView(
-                              key: const ValueKey(1),
-                              child: _buildStep2(),
-                            );
-                          case 2:
-                            return SingleChildScrollView(
-                              key: const ValueKey(2),
-                              child: _buildStep3(),
-                            );
-                          case 3:
-                            return SingleChildScrollView(
-                              key: const ValueKey(3),
-                              child: _buildStep4(),
-                            );
-                          default:
-                            return const SizedBox();
-                        }
-                      },
-                    ),
+                ),
+                // Active Step (Lazy Loaded)
+                Expanded(
+                  child: Builder(
+                    builder: (context) {
+                      switch (currentStep) {
+                        case 0:
+                          return SingleChildScrollView(
+                            key: const ValueKey(0),
+                            child: _buildStep1(),
+                          );
+                        case 1:
+                          return SingleChildScrollView(
+                            key: const ValueKey(1),
+                            child: _buildStep2(),
+                          );
+                        case 2:
+                          return SingleChildScrollView(
+                            key: const ValueKey(2),
+                            child: _buildStep3(),
+                          );
+                        case 3:
+                          return SingleChildScrollView(
+                            key: const ValueKey(3),
+                            child: _buildStep4(),
+                          );
+                        default:
+                          return const SizedBox();
+                      }
+                    },
                   ),
-                  // Navigation buttons
-                  Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        if (currentStep > 0)
-                          TextButton(
-                            key: const Key('back_button'),
-                            onPressed: () => _onStepCancel(scope),
-                            child: const Text('Back'),
-                          )
-                        else
-                          const SizedBox.shrink(),
+                ),
+                // Navigation buttons
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (currentStep > 0)
+                        TextButton(
+                          key: const Key('back_button'),
+                          onPressed: () => _onStepCancel(scope),
+                          child: const Text('Back'),
+                        )
+                      else
+                        const SizedBox.shrink(),
 
-                        ElevatedButton(
-                          key: const Key('continue_button'),
-                          onPressed: () => _onStepContinue(scope),
-                          child: Text(currentStep == 3 ? 'Submit' : 'Continue'),
-                        ),
-                      ],
-                    ),
+                      ElevatedButton(
+                        key: const Key('continue_button'),
+                        onPressed: () => _onStepContinue(scope),
+                        child: Text(currentStep == 3 ? 'Submit' : 'Continue'),
+                      ),
+                    ],
                   ),
-                ],
-              );
-            },
-          ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

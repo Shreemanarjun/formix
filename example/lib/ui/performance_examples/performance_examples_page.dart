@@ -2,25 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:formix/formix.dart';
 
 // Performance Examples
-class PerformanceExamples extends ConsumerWidget {
+class PerformanceExamples extends StatelessWidget {
   const PerformanceExamples({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return const PerformanceExamplesContent();
   }
 }
 
-class PerformanceExamplesContent extends ConsumerStatefulWidget {
+class PerformanceExamplesContent extends StatefulWidget {
   const PerformanceExamplesContent({super.key});
 
   @override
-  ConsumerState<PerformanceExamplesContent> createState() =>
+  State<PerformanceExamplesContent> createState() =>
       _PerformanceExamplesContentState();
 }
 
 class _PerformanceExamplesContentState
-    extends ConsumerState<PerformanceExamplesContent> {
+    extends State<PerformanceExamplesContent> {
   @override
   Widget build(BuildContext context) {
     return Formix(
@@ -241,11 +241,9 @@ class _PerformanceExamplesContentState
             const FormixFormStatus(),
             const SizedBox(height: 16),
 
-            Consumer(
-              builder: (context, ref, child) {
-                final controllerProvider = Formix.of(context)!;
-                ref.read(controllerProvider.notifier);
-                final formState = ref.watch(controllerProvider);
+            FormixBuilder(
+              builder: (context, scope) {
+                final formState = scope.watchState;
 
                 return Column(
                   children: [

@@ -17,20 +17,18 @@ void main() {
     );
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              fields: const [field1], // Only field1 is registered initially
-              child: Column(
-                children: [
-                  FormixTextFormField(
-                    fieldId: field1.id,
-                    decoration: const InputDecoration(labelText: 'Field 1'),
-                  ),
-                  // Field 2 is not in the tree yet
-                ],
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            fields: const [field1], // Only field1 is registered initially
+            child: Column(
+              children: [
+                FormixTextFormField(
+                  fieldId: field1.id,
+                  decoration: const InputDecoration(labelText: 'Field 1'),
+                ),
+                // Field 2 is not in the tree yet
+              ],
             ),
           ),
         ),
@@ -42,26 +40,24 @@ void main() {
 
     // Now add Section 2
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              fields: const [field1],
-              child: Column(
-                children: [
-                  FormixTextFormField(
-                    fieldId: field1.id,
-                    decoration: const InputDecoration(labelText: 'Field 1'),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            fields: const [field1],
+            child: Column(
+              children: [
+                FormixTextFormField(
+                  fieldId: field1.id,
+                  decoration: const InputDecoration(labelText: 'Field 1'),
+                ),
+                FormixSection(
+                  fields: const [field2],
+                  child: FormixTextFormField(
+                    fieldId: field2.id,
+                    decoration: const InputDecoration(labelText: 'Field 2'),
                   ),
-                  FormixSection(
-                    fields: const [field2],
-                    child: FormixTextFormField(
-                      fieldId: field2.id,
-                      decoration: const InputDecoration(labelText: 'Field 2'),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -83,15 +79,13 @@ void main() {
     );
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              child: FormixSection(
-                keepAlive: false,
-                fields: const [field1],
-                child: FormixTextFormField(fieldId: field1.id),
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            child: FormixSection(
+              keepAlive: false,
+              fields: const [field1],
+              child: FormixTextFormField(fieldId: field1.id),
             ),
           ),
         ),
@@ -103,12 +97,10 @@ void main() {
 
     // Remove the section
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              child: Container(), // Empty
-            ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            child: Container(), // Empty
           ),
         ),
       ),
@@ -119,15 +111,13 @@ void main() {
 
     // If we add it back, it should re-register with initial value
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              child: FormixSection(
-                keepAlive: false,
-                fields: const [field1],
-                child: FormixTextFormField(fieldId: field1.id),
-              ),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            child: FormixSection(
+              keepAlive: false,
+              fields: const [field1],
+              child: FormixTextFormField(fieldId: field1.id),
             ),
           ),
         ),

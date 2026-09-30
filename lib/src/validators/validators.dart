@@ -11,6 +11,9 @@ class FormixValidators {
   /// Start a validator chain for a Numeric field.
   static NumberValidator<T> number<T extends num>() => NumberValidator<T>([]);
 
+  /// Start a validator chain for a [DateTime] field.
+  static DateTimeValidator date() => DateTimeValidator([]);
+
   /// Start a validator chain for any type.
   static GenericValidator<T> any<T>() => GenericValidator<T>([]);
 }
@@ -180,10 +183,66 @@ class NumberValidator<T extends num> extends ValidatorChain<T, NumberValidator<T
     0 as T,
     message ?? FormixValidationKeys.withParam(FormixValidationKeys.min, 0),
   );
+
+  /// Validates that the numeric value is within `[min, max]` (inclusive).
+  NumberValidator<T> between(T min, T max, [String? message]) {
+    return _add((val) {
+      if (val == null) return null;
+      if (val < min) {
+        return message ?? FormixValidationKeys.withParam(FormixValidationKeys.min, min);
+      }
+      if (val > max) {
+        return message ?? FormixValidationKeys.withParam(FormixValidationKeys.max, max);
+      }
+      return null;
+    });
+  }
+}
+
+/// Validator chain specifically for [DateTime] types.
+class DateTimeValidator extends ValidatorChain<DateTime, DateTimeValidator> {
+  /// Creates a [DateTimeValidator].
+  DateTimeValidator(super.syncValidators);
+
+  /// Validates that the date is on or after [min].
+  DateTimeValidator after(DateTime min, [String? message]) {
+    return _add((val) {
+      if (val == null) return null;
+      if (val.isBefore(min)) {
+        return message ?? FormixValidationKeys.withParam(FormixValidationKeys.minDate, min.millisecondsSinceEpoch);
+      }
+      return null;
+    });
+  }
+
+  /// Validates that the date is on or before [max].
+  DateTimeValidator before(DateTime max, [String? message]) {
+    return _add((val) {
+      if (val == null) return null;
+      if (val.isAfter(max)) {
+        return message ?? FormixValidationKeys.withParam(FormixValidationKeys.maxDate, max.millisecondsSinceEpoch);
+      }
+      return null;
+    });
+  }
+
+  /// Validates that the date is within `[min, max]` (inclusive).
+  DateTimeValidator between(DateTime min, DateTime max, [String? message]) => after(min, message).before(max, message);
 }
 
 /// Validator chain for any generic type.
 class GenericValidator<T> extends ValidatorChain<T, GenericValidator<T>> {
   /// Creates a [GenericValidator].
   GenericValidator(super.syncValidators);
+
+  /// Validates that the value is one of [options].
+  GenericValidator<T> oneOf(List<T> options, [String? message]) {
+    return _add((val) {
+      if (val == null) return null;
+      if (!options.contains(val)) {
+        return message ?? FormixValidationKeys.invalidSelection;
+      }
+      return null;
+    });
+  }
 }

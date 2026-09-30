@@ -10,33 +10,31 @@ void main() {
       const nameField = FormixFieldID<String>('name');
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Column(
-                children: [
-                  Formix(
-                    key: Key('form_1'),
-                    initialValue: {'name': 'Form 1'},
-                    child: Column(
-                      children: [
-                        Text('Form One'),
-                        FormixTextFormField(fieldId: nameField),
-                      ],
-                    ),
+        const MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                Formix(
+                  key: Key('form_1'),
+                  initialValue: {'name': 'Form 1'},
+                  child: Column(
+                    children: [
+                      Text('Form One'),
+                      FormixTextFormField(fieldId: nameField),
+                    ],
                   ),
-                  Formix(
-                    key: Key('form_2'),
-                    initialValue: {'name': 'Form 2'},
-                    child: Column(
-                      children: [
-                        Text('Form Two'),
-                        FormixTextFormField(fieldId: nameField),
-                      ],
-                    ),
+                ),
+                Formix(
+                  key: Key('form_2'),
+                  initialValue: {'name': 'Form 2'},
+                  child: Column(
+                    children: [
+                      Text('Form Two'),
+                      FormixTextFormField(fieldId: nameField),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -84,34 +82,32 @@ void main() {
       FormixController? innerController;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                key: const Key('outer_form'),
-                initialValue: const {'outer': 'O', 'shared': 'Outer Shared'},
-                child: Column(
-                  children: [
-                    const FormixTextFormField(fieldId: outerField),
-                    const FormixTextFormField(fieldId: sharedField),
-                    const Divider(),
-                    Formix(
-                      key: const Key('inner_form'),
-                      initialValue: const {'inner': 'I', 'shared': 'Inner Shared'},
-                      child: FormixBuilder(
-                        builder: (context, scope) {
-                          innerController = scope.controller;
-                          return const Column(
-                            children: [
-                              FormixTextFormField(fieldId: innerField),
-                              FormixTextFormField(fieldId: sharedField),
-                            ],
-                          );
-                        },
-                      ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              key: const Key('outer_form'),
+              initialValue: const {'outer': 'O', 'shared': 'Outer Shared'},
+              child: Column(
+                children: [
+                  const FormixTextFormField(fieldId: outerField),
+                  const FormixTextFormField(fieldId: sharedField),
+                  const Divider(),
+                  Formix(
+                    key: const Key('inner_form'),
+                    initialValue: const {'inner': 'I', 'shared': 'Inner Shared'},
+                    child: FormixBuilder(
+                      builder: (context, scope) {
+                        innerController = scope.controller;
+                        return const Column(
+                          children: [
+                            FormixTextFormField(fieldId: innerField),
+                            FormixTextFormField(fieldId: sharedField),
+                          ],
+                        );
+                      },
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -149,47 +145,45 @@ void main() {
       const fieldId = FormixFieldID<String>('field');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Column(
-                children: [
-                  Formix(
-                    key: const Key('form_valid'),
-                    fields: [
-                      FormixFieldConfig<String>(
-                        id: fieldId,
-                        validator: (v) => null, // Always valid
-                      ),
-                    ],
-                    child: FormixBuilder(
-                      builder: (context, scope) {
-                        return Text('Form 1 Valid: ${scope.watchIsValid}');
-                      },
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                Formix(
+                  key: const Key('form_valid'),
+                  fields: [
+                    FormixFieldConfig<String>(
+                      id: fieldId,
+                      validator: (v) => null, // Always valid
                     ),
+                  ],
+                  child: FormixBuilder(
+                    builder: (context, scope) {
+                      return Text('Form 1 Valid: ${scope.watchIsValid}');
+                    },
                   ),
-                  Formix(
-                    key: const Key('form_invalid'),
-                    fields: [
-                      FormixFieldConfig<String>(
-                        id: fieldId,
-                        initialValue: '',
-                        validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
-                      ),
-                    ],
-                    child: FormixBuilder(
-                      builder: (context, scope) {
-                        return Column(
-                          children: [
-                            Text('Form 2 Valid: ${scope.watchIsValid}'),
-                            const FormixTextFormField(fieldId: fieldId),
-                          ],
-                        );
-                      },
+                ),
+                Formix(
+                  key: const Key('form_invalid'),
+                  fields: [
+                    FormixFieldConfig<String>(
+                      id: fieldId,
+                      initialValue: '',
+                      validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
                     ),
+                  ],
+                  child: FormixBuilder(
+                    builder: (context, scope) {
+                      return Column(
+                        children: [
+                          Text('Form 2 Valid: ${scope.watchIsValid}'),
+                          const FormixTextFormField(fieldId: fieldId),
+                        ],
+                      );
+                    },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -209,15 +203,21 @@ void main() {
       expect(find.text('Form 2 Valid: true'), findsOneWidget);
     });
 
-    testWidgets('Formix.of returns null when no form is present', (
+    testWidgets('Formix.maybeOf returns null; Formix.of throws when absent', (
       tester,
     ) async {
+      Object? thrown;
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: Builder(
               builder: (context) {
-                final provider = Formix.of(context);
+                final provider = Formix.maybeOf(context);
+                try {
+                  Formix.of(context);
+                } catch (e) {
+                  thrown = e;
+                }
                 return Text('No Form: ${provider == null}');
               },
             ),
@@ -226,13 +226,12 @@ void main() {
       );
 
       expect(find.text('No Form: true'), findsOneWidget);
+      expect(thrown, isA<FlutterError>());
     });
 
     testWidgets('Dynamic form replacement works seamlessly', (tester) async {
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(home: Scaffold(body: _DynamicFormSwitcher())),
-        ),
+        const MaterialApp(home: Scaffold(body: _DynamicFormSwitcher())),
       );
 
       expect(find.text('A'), findsOneWidget);
@@ -250,31 +249,29 @@ void main() {
       bool savePressed = false;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              appBar: AppBar(
-                actions: [
-                  Builder(
-                    builder: (context) => IconButton(
-                      icon: const Icon(Icons.save),
-                      onPressed: () {
-                        // Access form from outside its tree
-                        final controller = formKey.currentState?.controller;
-                        final data = formKey.currentState?.data;
-                        expect(controller, isNotNull);
-                        expect(data?.values['name'], 'John');
-                        savePressed = true;
-                      },
-                    ),
+        MaterialApp(
+          home: Scaffold(
+            appBar: AppBar(
+              actions: [
+                Builder(
+                  builder: (context) => IconButton(
+                    icon: const Icon(Icons.save),
+                    onPressed: () {
+                      // Access form from outside its tree
+                      final controller = formKey.currentState?.controller;
+                      final data = formKey.currentState?.data;
+                      expect(controller, isNotNull);
+                      expect(data?.values['name'], 'John');
+                      savePressed = true;
+                    },
                   ),
-                ],
-              ),
-              body: Formix(
-                key: formKey,
-                initialValue: const {'name': 'John'},
-                child: const FormixTextFormField(fieldId: nameField),
-              ),
+                ),
+              ],
+            ),
+            body: Formix(
+              key: formKey,
+              initialValue: const {'name': 'John'},
+              child: const FormixTextFormField(fieldId: nameField),
             ),
           ),
         ),
@@ -298,18 +295,16 @@ void main() {
       final changedValues = <Map<String, dynamic>>[];
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'name': 'Alice', 'email': 'alice@example.com'},
-                onChanged: (values) => changedValues.add(Map.from(values)),
-                child: const Column(
-                  children: [
-                    FormixTextFormField(fieldId: nameField),
-                    FormixTextFormField(fieldId: emailField),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'name': 'Alice', 'email': 'alice@example.com'},
+              onChanged: (values) => changedValues.add(Map.from(values)),
+              child: const Column(
+                children: [
+                  FormixTextFormField(fieldId: nameField),
+                  FormixTextFormField(fieldId: emailField),
+                ],
               ),
             ),
           ),
@@ -342,45 +337,43 @@ void main() {
       FormixController? level3Controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'value': 'L1'},
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    level1Controller = scope.controller;
-                    return Column(
-                      children: [
-                        Text('Level 1: ${scope.watchValue(field)}'),
-                        Formix(
-                          initialValue: const {'value': 'L2'},
-                          child: FormixBuilder(
-                            builder: (context, scope) {
-                              level2Controller = scope.controller;
-                              return Column(
-                                children: [
-                                  Text('Level 2: ${scope.watchValue(field)}'),
-                                  Formix(
-                                    initialValue: const {'value': 'L3'},
-                                    child: FormixBuilder(
-                                      builder: (context, scope) {
-                                        level3Controller = scope.controller;
-                                        return Text(
-                                          'Level 3: ${scope.watchValue(field)}',
-                                        );
-                                      },
-                                    ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'value': 'L1'},
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  level1Controller = scope.controller;
+                  return Column(
+                    children: [
+                      Text('Level 1: ${scope.watchValue(field)}'),
+                      Formix(
+                        initialValue: const {'value': 'L2'},
+                        child: FormixBuilder(
+                          builder: (context, scope) {
+                            level2Controller = scope.controller;
+                            return Column(
+                              children: [
+                                Text('Level 2: ${scope.watchValue(field)}'),
+                                Formix(
+                                  initialValue: const {'value': 'L3'},
+                                  child: FormixBuilder(
+                                    builder: (context, scope) {
+                                      level3Controller = scope.controller;
+                                      return Text(
+                                        'Level 3: ${scope.watchValue(field)}',
+                                      );
+                                    },
                                   ),
-                                ],
-                              );
-                            },
-                          ),
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                      ],
-                    );
-                  },
-                ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -406,23 +399,21 @@ void main() {
       const field = FormixFieldID<String>('value');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Column(
-                children: [
-                  Formix(
-                    key: formKey1,
-                    initialValue: const {'value': 'Initial 1'},
-                    child: const FormixTextFormField(fieldId: field),
-                  ),
-                  Formix(
-                    key: formKey2,
-                    initialValue: const {'value': 'Initial 2'},
-                    child: const FormixTextFormField(fieldId: field),
-                  ),
-                ],
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                Formix(
+                  key: formKey1,
+                  initialValue: const {'value': 'Initial 1'},
+                  child: const FormixTextFormField(fieldId: field),
+                ),
+                Formix(
+                  key: formKey2,
+                  initialValue: const {'value': 'Initial 2'},
+                  child: const FormixTextFormField(fieldId: field),
+                ),
+              ],
             ),
           ),
         ),
@@ -447,48 +438,46 @@ void main() {
       const field = FormixFieldID<String>('email');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Column(
-                children: [
-                  Formix(
-                    key: const Key('form1'),
-                    fields: [
-                      FormixFieldConfig<String>(
-                        id: field,
-                        initialValue: 'invalid',
-                        validator: (v) => (v?.contains('@') ?? false) ? null : 'Invalid email',
-                      ),
-                    ],
-                    child: FormixBuilder(
-                      builder: (context, scope) {
-                        return Column(
-                          children: [
-                            const FormixTextFormField(fieldId: field),
-                            Text('Form 1 Valid: ${scope.watchIsValid}'),
-                          ],
-                        );
-                      },
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                Formix(
+                  key: const Key('form1'),
+                  fields: [
+                    FormixFieldConfig<String>(
+                      id: field,
+                      initialValue: 'invalid',
+                      validator: (v) => (v?.contains('@') ?? false) ? null : 'Invalid email',
                     ),
+                  ],
+                  child: FormixBuilder(
+                    builder: (context, scope) {
+                      return Column(
+                        children: [
+                          const FormixTextFormField(fieldId: field),
+                          Text('Form 1 Valid: ${scope.watchIsValid}'),
+                        ],
+                      );
+                    },
                   ),
-                  Formix(
-                    key: const Key('form2'),
-                    fields: [
-                      FormixFieldConfig<String>(
-                        id: field,
-                        initialValue: 'valid@example.com',
-                        validator: (v) => (v?.contains('@') ?? false) ? null : 'Invalid email',
-                      ),
-                    ],
-                    child: FormixBuilder(
-                      builder: (context, scope) {
-                        return Text('Form 2 Valid: ${scope.watchIsValid}');
-                      },
+                ),
+                Formix(
+                  key: const Key('form2'),
+                  fields: [
+                    FormixFieldConfig<String>(
+                      id: field,
+                      initialValue: 'valid@example.com',
+                      validator: (v) => (v?.contains('@') ?? false) ? null : 'Invalid email',
                     ),
+                  ],
+                  child: FormixBuilder(
+                    builder: (context, scope) {
+                      return Text('Form 2 Valid: ${scope.watchIsValid}');
+                    },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
@@ -506,23 +495,21 @@ void main() {
       const field = FormixFieldID<String>('value');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Column(
-                children: [
-                  Formix(
-                    key: formKey1,
-                    initialValue: const {'value': 'A'},
-                    child: const FormixTextFormField(fieldId: field),
-                  ),
-                  Formix(
-                    key: formKey2,
-                    initialValue: const {'value': 'B'},
-                    child: const FormixTextFormField(fieldId: field),
-                  ),
-                ],
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Column(
+              children: [
+                Formix(
+                  key: formKey1,
+                  initialValue: const {'value': 'A'},
+                  child: const FormixTextFormField(fieldId: field),
+                ),
+                Formix(
+                  key: formKey2,
+                  initialValue: const {'value': 'B'},
+                  child: const FormixTextFormField(fieldId: field),
+                ),
+              ],
             ),
           ),
         ),
@@ -547,27 +534,25 @@ void main() {
       bool showForm = true;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: StatefulBuilder(
-                builder: (context, setState) {
-                  return Column(
-                    children: [
-                      if (showForm)
-                        const Formix(
-                          key: Key('disposable_form'),
-                          initialValue: {'value': 'Test'},
-                          child: FormixTextFormField(fieldId: field),
-                        ),
-                      ElevatedButton(
-                        onPressed: () => setState(() => showForm = !showForm),
-                        child: const Text('Toggle'),
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) {
+                return Column(
+                  children: [
+                    if (showForm)
+                      const Formix(
+                        key: Key('disposable_form'),
+                        initialValue: {'value': 'Test'},
+                        child: FormixTextFormField(fieldId: field),
                       ),
-                    ],
-                  );
-                },
-              ),
+                    ElevatedButton(
+                      onPressed: () => setState(() => showForm = !showForm),
+                      child: const Text('Toggle'),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),

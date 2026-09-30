@@ -8,14 +8,12 @@ void main() {
       const fieldId = FormixFieldID<String>('test_field');
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixTextFormField(
-                  fieldId: fieldId,
-                  initialValue: 'Implicit',
-                ),
+        const MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixTextFormField(
+                fieldId: fieldId,
+                initialValue: 'Implicit',
               ),
             ),
           ),
@@ -31,28 +29,26 @@ void main() {
       const targetId = FormixFieldID<String>('target');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: Column(
-                  children: [
-                    const FormixCheckboxFormField(
-                      fieldId: sourceId,
-                      initialValue: false,
-                      title: Text('Show Field'),
-                    ),
-                    FormixDependentField<bool>(
-                      fieldId: sourceId,
-                      builder: (context, value) {
-                        if (value == true) {
-                          return const FormixTextFormField(fieldId: targetId, initialValue: 'Target');
-                        }
-                        return const SizedBox();
-                      },
-                    ),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: Column(
+                children: [
+                  const FormixCheckboxFormField(
+                    fieldId: sourceId,
+                    initialValue: false,
+                    title: Text('Show Field'),
+                  ),
+                  FormixDependentField<bool>(
+                    fieldId: sourceId,
+                    builder: (context, value) {
+                      if (value == true) {
+                        return const FormixTextFormField(fieldId: targetId, initialValue: 'Target');
+                      }
+                      return const SizedBox();
+                    },
+                  ),
+                ],
               ),
             ),
           ),
@@ -73,24 +69,22 @@ void main() {
       const targetId = FormixFieldID<int>('target');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: Column(
-                  children: [
-                    const FormixTextFormField(fieldId: sourceId, initialValue: 'abc'),
-                    FormixFieldTransformer<String, int>(
-                      sourceField: sourceId,
-                      targetField: targetId,
-                      transform: (val) => val?.length ?? 0,
-                    ),
-                    FormixDependentField<int>(
-                      fieldId: targetId,
-                      builder: (context, val) => Text('Length: $val'),
-                    ),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: Column(
+                children: [
+                  const FormixTextFormField(fieldId: sourceId, initialValue: 'abc'),
+                  FormixFieldTransformer<String, int>(
+                    sourceField: sourceId,
+                    targetField: targetId,
+                    transform: (val) => val?.length ?? 0,
+                  ),
+                  FormixDependentField<int>(
+                    fieldId: targetId,
+                    builder: (context, val) => Text('Length: $val'),
+                  ),
+                ],
               ),
             ),
           ),
@@ -112,27 +106,25 @@ void main() {
       const targetId = FormixFieldID<String>('target');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: Column(
-                  children: [
-                    const FormixTextFormField(fieldId: sourceId, initialValue: 'a'),
-                    FormixFieldAsyncTransformer<String, String>(
-                      sourceField: sourceId,
-                      targetField: targetId,
-                      transform: (val) async {
-                        await Future.delayed(const Duration(milliseconds: 10));
-                        return 'Async: $val';
-                      },
-                    ),
-                    FormixDependentField<String>(
-                      fieldId: targetId,
-                      builder: (context, val) => Text('Result: $val'),
-                    ),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: Column(
+                children: [
+                  const FormixTextFormField(fieldId: sourceId, initialValue: 'a'),
+                  FormixFieldAsyncTransformer<String, String>(
+                    sourceField: sourceId,
+                    targetField: targetId,
+                    transform: (val) async {
+                      await Future.delayed(const Duration(milliseconds: 10));
+                      return 'Async: $val';
+                    },
+                  ),
+                  FormixDependentField<String>(
+                    fieldId: targetId,
+                    builder: (context, val) => Text('Result: $val'),
+                  ),
+                ],
               ),
             ),
           ),
@@ -149,46 +141,44 @@ void main() {
       const resultField = FormixFieldID<int>('result');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const FormixTextFormField(fieldId: FormixFieldID<String>('a_str'), initialValue: '10'),
-                      const FormixTextFormField(fieldId: FormixFieldID<String>('b_str'), initialValue: '20'),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    const FormixTextFormField(fieldId: FormixFieldID<String>('a_str'), initialValue: '10'),
+                    const FormixTextFormField(fieldId: FormixFieldID<String>('b_str'), initialValue: '20'),
 
-                      FormixFieldTransformer<String, int>(
-                        sourceField: const FormixFieldID<String>('a_str'),
-                        targetField: fieldA,
-                        transform: (val) => int.tryParse(val ?? '') ?? 0,
-                      ),
-                      FormixFieldTransformer<String, int>(
-                        sourceField: const FormixFieldID<String>('b_str'),
-                        targetField: fieldB,
-                        transform: (val) => int.tryParse(val ?? '') ?? 0,
-                      ),
+                    FormixFieldTransformer<String, int>(
+                      sourceField: const FormixFieldID<String>('a_str'),
+                      targetField: fieldA,
+                      transform: (val) => int.tryParse(val ?? '') ?? 0,
+                    ),
+                    FormixFieldTransformer<String, int>(
+                      sourceField: const FormixFieldID<String>('b_str'),
+                      targetField: fieldB,
+                      transform: (val) => int.tryParse(val ?? '') ?? 0,
+                    ),
 
-                      FormixFieldDerivation(
-                        dependencies: const [fieldA, fieldB],
-                        targetField: resultField,
-                        derive: (values) {
-                          final a = values[fieldA] as int? ?? 0;
-                          final b = values[fieldB] as int? ?? 0;
-                          return a + b;
-                        },
-                      ),
+                    FormixFieldDerivation(
+                      dependencies: const [fieldA, fieldB],
+                      targetField: resultField,
+                      derive: (values) {
+                        final a = values[fieldA] as int? ?? 0;
+                        final b = values[fieldB] as int? ?? 0;
+                        return a + b;
+                      },
+                    ),
 
-                      FormixDependentField<int>(
-                        fieldId: resultField,
-                        builder: (context, val) => Text('Sum: $val'),
-                      ),
-                    ],
-                  ), // Column
-                ), // SingleChildScrollView
-              ), // Formix
-            ),
+                    FormixDependentField<int>(
+                      fieldId: resultField,
+                      builder: (context, val) => Text('Sum: $val'),
+                    ),
+                  ],
+                ), // Column
+              ), // SingleChildScrollView
+            ), // Formix
           ),
         ),
       );
@@ -201,16 +191,14 @@ void main() {
       const fieldId = FormixFieldID<String>('section_field');
 
       await tester.pumpWidget(
-        const ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixSection(
-                  fields: [],
-                  child: FormixTextFormField(
-                    fieldId: fieldId,
-                    initialValue: 'Section Value',
-                  ),
+        const MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixSection(
+                fields: [],
+                child: FormixTextFormField(
+                  fieldId: fieldId,
+                  initialValue: 'Section Value',
                 ),
               ),
             ),
@@ -226,32 +214,29 @@ void main() {
       const arrayId = FormixArrayID<String>('test_array');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Formix(
-              child: Scaffold(
-                body: CustomScrollView(
-                  slivers: [
-                    SliverFormixArray<String>(
-                      id: arrayId,
-                      itemBuilder: (context, index, id, scope) {
-                        return Text('Item $index');
-                      },
-                      emptyBuilder: (context, scope) => const Text('Empty Array'),
-                    ),
-                  ],
-                ),
-                floatingActionButton: Consumer(
-                  builder: (context, ref, _) {
-                    return FloatingActionButton(
-                      onPressed: () {
-                        // This will now find the controller from the Formix above
-                        final provider = ref.read(currentControllerProvider);
-                        ref.read(provider.notifier).addArrayItem(arrayId, 'Item');
-                      },
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Formix(
+            child: Scaffold(
+              body: CustomScrollView(
+                slivers: [
+                  SliverFormixArray<String>(
+                    id: arrayId,
+                    itemBuilder: (context, index, id, scope) {
+                      return Text('Item $index');
+                    },
+                    emptyBuilder: (context, scope) => const Text('Empty Array'),
+                  ),
+                ],
+              ),
+              floatingActionButton: Builder(
+                builder: (context) {
+                  return FloatingActionButton(
+                    onPressed: () {
+                      // This will now find the controller from the Formix above
+                      Formix.controllerOf(context)!.addArrayItem(arrayId, 'Item');
+                    },
+                  );
+                },
               ),
             ),
           ),
@@ -272,27 +257,25 @@ void main() {
       const asyncId = FormixFieldID<String>('async_result');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: Column(
-                  children: [
-                    const FormixTextFormField(fieldId: depId, initialValue: 'trigger'),
-                    FormixDependentAsyncField<String, String>(
-                      fieldId: asyncId,
-                      dependency: depId,
-                      future: (val) async {
-                        await Future.delayed(const Duration(milliseconds: 10));
-                        return 'Fetched: $val';
-                      },
-                      builder: (context, state) {
-                        if (state.asyncState.isLoading) return const Text('Loading...');
-                        return Text(state.asyncState.value ?? 'No Data');
-                      },
-                    ),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: Column(
+                children: [
+                  const FormixTextFormField(fieldId: depId, initialValue: 'trigger'),
+                  FormixDependentAsyncField<String, String>(
+                    fieldId: asyncId,
+                    dependency: depId,
+                    future: (val) async {
+                      await Future.delayed(const Duration(milliseconds: 10));
+                      return 'Fetched: $val';
+                    },
+                    builder: (context, state) {
+                      if (state.asyncState.isLoading) return const Text('Loading...');
+                      return Text(state.asyncState.value ?? 'No Data');
+                    },
+                  ),
+                ],
               ),
             ),
           ),
@@ -309,17 +292,15 @@ void main() {
       const fieldId = FormixFieldID<String>('guard_field');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixNavigationGuard(
-                  enabled: true,
-                  showDirtyDialog: (context) async => false, // Always prevent pop
-                  child: const FormixTextFormField(
-                    fieldId: fieldId,
-                    initialValue: 'init',
-                  ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixNavigationGuard(
+                enabled: true,
+                showDirtyDialog: (context) async => false, // Always prevent pop
+                child: const FormixTextFormField(
+                  fieldId: fieldId,
+                  initialValue: 'init',
                 ),
               ),
             ),
@@ -335,24 +316,22 @@ void main() {
       const fieldId = FormixFieldID<String>('selector_field');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: Column(
-                  children: [
-                    const FormixTextFormField(
-                      fieldId: fieldId,
-                      initialValue: 'SelectMe',
-                    ),
-                    FormixFieldSelector<String>(
-                      fieldId: fieldId,
-                      builder: (context, info, child) {
-                        return Text('Selector: ${info.value}');
-                      },
-                    ),
-                  ],
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: Column(
+                children: [
+                  const FormixTextFormField(
+                    fieldId: fieldId,
+                    initialValue: 'SelectMe',
+                  ),
+                  FormixFieldSelector<String>(
+                    fieldId: fieldId,
+                    builder: (context, info, child) {
+                      return Text('Selector: ${info.value}');
+                    },
+                  ),
+                ],
               ),
             ),
           ),

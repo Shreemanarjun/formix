@@ -13,35 +13,33 @@ void main() {
         late FormixController controller;
 
         await tester.pumpWidget(
-          ProviderScope(
-            child: MaterialApp(
-              home: Scaffold(
-                body: Formix(
-                  // Root validation mode disabled to allow manual checks
-                  child: FormixBuilder(
-                    builder: (context, scope) {
-                      controller = Formix.controllerOf(context)!;
-                      return ValueListenableBuilder<bool>(
-                        valueListenable: showStep,
-                        builder: (context, show, _) {
-                          return Column(
-                            children: [
-                              if (show)
-                                const FormixFieldRegistry(
-                                  fields: [
-                                    FormixFieldConfig<String>(
-                                      id: fieldA,
-                                      initialValue: 'A',
-                                    ),
-                                  ],
-                                  child: FormixTextFormField(fieldId: fieldA),
-                                ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
+          MaterialApp(
+            home: Scaffold(
+              body: Formix(
+                // Root validation mode disabled to allow manual checks
+                child: FormixBuilder(
+                  builder: (context, scope) {
+                    controller = Formix.controllerOf(context)!;
+                    return ValueListenableBuilder<bool>(
+                      valueListenable: showStep,
+                      builder: (context, show, _) {
+                        return Column(
+                          children: [
+                            if (show)
+                              const FormixFieldRegistry(
+                                fields: [
+                                  FormixFieldConfig<String>(
+                                    id: fieldA,
+                                    initialValue: 'A',
+                                  ),
+                                ],
+                                child: FormixTextFormField(fieldId: fieldA),
+                              ),
+                          ],
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
             ),

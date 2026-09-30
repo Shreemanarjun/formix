@@ -6,7 +6,7 @@ import 'ancestor_validator.dart';
 ///
 /// Use [SliverFormixArray] when you need to render a list of fields inside
 /// a [CustomScrollView].
-class SliverFormixArray<T> extends ConsumerStatefulWidget {
+class SliverFormixArray<T> extends StatefulWidget {
   /// Creates a sliver form array widget.
   const SliverFormixArray({
     super.key,
@@ -37,10 +37,38 @@ class SliverFormixArray<T> extends ConsumerStatefulWidget {
   final Widget Function(BuildContext context, FormixScope scope)? emptyBuilder;
 
   @override
-  ConsumerState<SliverFormixArray<T>> createState() => _SliverFormixArrayState<T>();
+  State<SliverFormixArray<T>> createState() => _SliverFormixArrayState<T>();
 }
 
-class _SliverFormixArrayState<T> extends ConsumerState<SliverFormixArray<T>> {
+class _SliverFormixArrayState<T> extends State<SliverFormixArray<T>> {
+  FormixController? _controller;
+  FormixArrayID<T>? _resolvedId;
+
+  void _onArrayChanged() {
+    if (mounted) setState(() {});
+  }
+
+  void _bind(FormixController controller, FormixArrayID<T> resolvedId) {
+    // A sliver can't be wrapped in a (box-producing) SignalBuilder, so we
+    // subscribe to the array field via the controller's field listener and
+    // rebuild this element when it changes.
+    if (_controller == controller && _resolvedId == resolvedId) return;
+    if (_controller != null && _resolvedId != null) {
+      _controller!.removeFieldListener(_resolvedId!, _onArrayChanged);
+    }
+    _controller = controller;
+    _resolvedId = resolvedId;
+    controller.addFieldListener(resolvedId, _onArrayChanged);
+  }
+
+  @override
+  void dispose() {
+    if (_controller != null && _resolvedId != null) {
+      _controller!.removeFieldListener(_resolvedId!, _onArrayChanged);
+    }
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final errorWidget = FormixAncestorValidator.validate(
@@ -53,52 +81,45 @@ class _SliverFormixArrayState<T> extends ConsumerState<SliverFormixArray<T>> {
       return SliverToBoxAdapter(child: errorWidget);
     }
 
-    final provider = (Formix.of(context) ?? ref.watch(currentControllerProvider))!;
-
-    // Keep provider alive efficiently without watching state changes.
-    // This only triggers a rebuild if the controller instance itself changes.
-    ref.watch(provider.notifier);
-
-    try {
-      final controller = ref.read(provider.notifier);
-      final scope = FormixScope(
-        context: context,
-        ref: ref,
-        controller: controller,
-      );
-
-      // Resolve the array ID based on surrounding form groups
-      final resolvedId = FormixGroup.resolve(context, widget.id) as FormixArrayID<T>;
-
-      // Watch the array value reactively
-      final items = scope.watchArray(resolvedId);
-
-      if (items.isEmpty && widget.emptyBuilder != null) {
-        final child = widget.emptyBuilder!(context, scope);
-        return SliverToBoxAdapter(child: child);
-      }
-
-      return SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) {
-            final itemId = resolvedId.item(index);
-            return FormixGroup(
-              prefix: '${widget.id.key}[$index]',
-              child: widget.itemBuilder(context, index, itemId, scope),
-            );
-          },
-          childCount: items.length,
-        ),
-      );
-    } catch (e) {
-      return SliverToBoxAdapter(
+    final controller = Formix.controllerOf(context);
+    if (controller == null) {
+      return const SliverToBoxAdapter(
         child: FormixConfigurationErrorWidget(
           message: 'Failed to initialize SliverFormixArray',
-          details: e.toString().contains('No ProviderScope found')
-              ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.\n\nExample:\nvoid main() {\n  runApp(ProviderScope(child: MyApp()));\n}'
-              : 'Error: $e',
+          details: 'SliverFormixArray must be used inside a Formix widget.',
         ),
       );
     }
+
+    final scope = FormixScope(
+      context: context,
+      controller: controller,
+    );
+
+    // Resolve the array ID based on surrounding form groups
+    final resolvedId = FormixGroup.resolve(context, widget.id) as FormixArrayID<T>;
+
+    // Subscribe to changes so the sliver rebuilds when the array updates.
+    _bind(controller, resolvedId);
+
+    final items = controller.getValue(resolvedId) ?? <T>[];
+
+    if (items.isEmpty && widget.emptyBuilder != null) {
+      final child = widget.emptyBuilder!(context, scope);
+      return SliverToBoxAdapter(child: child);
+    }
+
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final itemId = resolvedId.item(index);
+          return FormixGroup(
+            prefix: '${widget.id.key}[$index]',
+            child: widget.itemBuilder(context, index, itemId, scope),
+          );
+        },
+        childCount: items.length,
+      ),
+    );
   }
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:formix/formix.dart';
+
 // verify path
 
 void main() {
@@ -12,25 +13,23 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'field': 'initial'},
-                fields: const [
-                  FormixFieldConfig<String>(
-                    id: fieldId,
-                    initialValue: 'initial',
-                  ),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = Formix.controllerOf(context)!;
-                    return const Column(
-                      children: [FormixTextFormField(fieldId: fieldId)],
-                    );
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'field': 'initial'},
+              fields: const [
+                FormixFieldConfig<String>(
+                  id: fieldId,
+                  initialValue: 'initial',
                 ),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = Formix.controllerOf(context)!;
+                  return const Column(
+                    children: [FormixTextFormField(fieldId: fieldId)],
+                  );
+                },
               ),
             ),
           ),
@@ -73,25 +72,23 @@ void main() {
       late FormixController controller;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                initialValue: const {'field': 'initial'},
-                fields: const [
-                  FormixFieldConfig<String>(
-                    id: fieldId,
-                    initialValue: 'initial',
-                  ),
-                ],
-                child: FormixBuilder(
-                  builder: (context, scope) {
-                    controller = Formix.controllerOf(context)!;
-                    return const Column(
-                      children: [FormixTextFormField(fieldId: fieldId)],
-                    );
-                  },
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              initialValue: const {'field': 'initial'},
+              fields: const [
+                FormixFieldConfig<String>(
+                  id: fieldId,
+                  initialValue: 'initial',
                 ),
+              ],
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  controller = Formix.controllerOf(context)!;
+                  return const Column(
+                    children: [FormixTextFormField(fieldId: fieldId)],
+                  );
+                },
               ),
             ),
           ),

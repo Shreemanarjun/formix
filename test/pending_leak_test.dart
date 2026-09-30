@@ -6,7 +6,7 @@ void main() {
     const field1 = FormixFieldID<String>('field1');
 
     test('validate() should not leak pendingCount when transitioning from validating to valid', () async {
-      final controller = RiverpodFormController(
+      final controller = FormixController(
         fields: [
           FormixField<String>(
             id: field1,
@@ -36,7 +36,7 @@ void main() {
       // Now imagine we remove the async validator or call validate in a way that it becomes valid
       // For this test, let's just use a field WITHOUT async validator and see if it clears.
 
-      final controller2 = RiverpodFormController(
+      final controller2 = FormixController(
         fields: [
           const FormixField<String>(
             id: field1,
@@ -56,7 +56,7 @@ void main() {
     });
 
     test('setValue() should not leak pendingCount when field becomes invalid while validating', () async {
-      final controller = RiverpodFormController(
+      final controller = FormixController(
         fields: [
           FormixField<String>(
             id: field1,

@@ -16,13 +16,11 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: textField)],
-                child: FormixTextFormField(fieldId: textField, enabled: false),
-              ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: textField)],
+              child: FormixTextFormField(fieldId: textField, enabled: false),
             ),
           ),
         ),
@@ -36,15 +34,13 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: boolField)],
-                child: FormixCheckboxFormField(
-                  fieldId: boolField,
-                  enabled: false,
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: boolField)],
+              child: FormixCheckboxFormField(
+                fieldId: boolField,
+                enabled: false,
               ),
             ),
           ),
@@ -61,15 +57,13 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: textField)],
-                child: FormixTextFormField(
-                  fieldId: textField,
-                  restorationId: 'restore_me',
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: textField)],
+              child: FormixTextFormField(
+                fieldId: textField,
+                restorationId: 'restore_me',
               ),
             ),
           ),
@@ -85,15 +79,13 @@ void main() {
     testWidgets('onChanged is called for FormixTextFormField', (tester) async {
       String? changedValue;
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                fields: [FormixFieldConfig(id: textField)],
-                child: FormixTextFormField(
-                  fieldId: textField,
-                  onChanged: (val) => changedValue = val,
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              fields: [FormixFieldConfig(id: textField)],
+              child: FormixTextFormField(
+                fieldId: textField,
+                onChanged: (val) => changedValue = val,
               ),
             ),
           ),
@@ -111,18 +103,16 @@ void main() {
       final controller = FormixController();
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                controller: controller,
-                fields: [
-                  FormixFieldConfig(id: textField, initialValue: 'initial'),
-                ],
-                child: FormixTextFormField(
-                  fieldId: textField,
-                  onSaved: (val) => savedValue = val,
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              controller: controller,
+              fields: [
+                FormixFieldConfig(id: textField, initialValue: 'initial'),
+              ],
+              child: FormixTextFormField(
+                fieldId: textField,
+                onSaved: (val) => savedValue = val,
               ),
             ),
           ),

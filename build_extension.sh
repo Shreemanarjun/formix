@@ -41,7 +41,7 @@ else
     echo "Creating default config.yaml..."
     cat > "$DEST_DIR/config.yaml" <<EOF
 name: formix
-version: 0.1.2
+version: 0.2.0
 issueTracker: https://github.com/Shreemanarjun/formix/issues
 materialIconCodePoint: "0xf0c5"
 requiresConnection: true

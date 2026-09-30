@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:formix/formix.dart';
 
-class AsyncFieldSubmissionPage extends ConsumerWidget {
+class AsyncFieldSubmissionPage extends StatelessWidget {
   const AsyncFieldSubmissionPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Async Field & Submission')),
       body: const AsyncFieldSubmissionContent(),
@@ -13,16 +13,16 @@ class AsyncFieldSubmissionPage extends ConsumerWidget {
   }
 }
 
-class AsyncFieldSubmissionContent extends ConsumerStatefulWidget {
+class AsyncFieldSubmissionContent extends StatefulWidget {
   const AsyncFieldSubmissionContent({super.key});
 
   @override
-  ConsumerState<AsyncFieldSubmissionContent> createState() =>
+  State<AsyncFieldSubmissionContent> createState() =>
       _AsyncFieldSubmissionContentState();
 }
 
 class _AsyncFieldSubmissionContentState
-    extends ConsumerState<AsyncFieldSubmissionContent> {
+    extends State<AsyncFieldSubmissionContent> {
   final countryField = const FormixFieldID<String>('country');
   final cityField = const FormixFieldID<String>('city');
   final cityOptionsField = const FormixFieldID<List<String>>('cityOptions');
@@ -104,16 +104,9 @@ class _AsyncFieldSubmissionContentState
                 prefixIcon: const Icon(Icons.alternate_email),
                 helperText:
                     'Try "admin" or "root" to see async validation error',
-                suffix: Consumer(
-                  builder: (context, ref, _) {
-                    final form = Formix.of(context)!;
-                    final isValidating = ref.watch(
-                      form.select(
-                        (s) =>
-                            s.validations[usernameField.key]?.isValidating ??
-                            false,
-                      ),
-                    );
+                suffix: FormixBuilder(
+                  builder: (context, scope) {
+                    final isValidating = scope.watchIsValidating(usernameField);
                     if (isValidating) {
                       return const SizedBox(
                         width: 16,
@@ -187,11 +180,10 @@ class _AsyncFieldSubmissionContentState
             const FormixFormStatus(),
             const SizedBox(height: 24),
 
-            Consumer(
-              builder: (context, ref, child) {
-                final form = Formix.of(context)!;
-                final controller = ref.read(form.notifier);
-                final formState = ref.watch(form);
+            FormixBuilder(
+              builder: (context, scope) {
+                final controller = scope.controller;
+                final formState = scope.watchState;
 
                 return Column(
                   children: [

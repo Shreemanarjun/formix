@@ -12,16 +12,14 @@ void main() {
       const fieldId = FormixFieldID<String>('async_field');
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixAsyncField<String>(
-                  fieldId: fieldId,
-                  future: completer.future,
-                  builder: (context, state) => Text('Resolved: ${state.asyncState.value}'),
-                  loadingBuilder: (context) => const Text('Loading...'),
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixAsyncField<String>(
+                fieldId: fieldId,
+                future: completer.future,
+                builder: (context, state) => Text('Resolved: ${state.asyncState.value}'),
+                loadingBuilder: (context) => const Text('Loading...'),
               ),
             ),
           ),
@@ -52,33 +50,31 @@ void main() {
       Map<String, dynamic>? submittedValues;
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: Builder(
-                  builder: (context) {
-                    return Column(
-                      children: [
-                        FormixAsyncField<String>(
-                          fieldId: fieldId,
-                          future: completer.future,
-                          builder: (context, state) => Text('Value: ${state.asyncState.value}'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            Formix.controllerOf(context)!.submit(
-                              onValid: (values) async {
-                                submittedValues = values;
-                              },
-                            );
-                          },
-                          child: const Text('Submit'),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: Builder(
+                builder: (context) {
+                  return Column(
+                    children: [
+                      FormixAsyncField<String>(
+                        fieldId: fieldId,
+                        future: completer.future,
+                        builder: (context, state) => Text('Value: ${state.asyncState.value}'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Formix.controllerOf(context)!.submit(
+                            onValid: (values) async {
+                              submittedValues = values;
+                            },
+                          );
+                        },
+                        child: const Text('Submit'),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ),
@@ -125,16 +121,14 @@ void main() {
       }
 
       await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: Formix(
-                child: FormixAsyncField<String>(
-                  fieldId: fieldId,
-                  future: fetchData(),
-                  onRetry: fetchData, // Needed for re-triggering on reset
-                  builder: (context, state) => Text('Value: ${state.asyncState.value}'),
-                ),
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              child: FormixAsyncField<String>(
+                fieldId: fieldId,
+                future: fetchData(),
+                onRetry: fetchData, // Needed for re-triggering on reset
+                builder: (context, state) => Text('Value: ${state.asyncState.value}'),
               ),
             ),
           ),

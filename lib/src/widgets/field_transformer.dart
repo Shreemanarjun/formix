@@ -17,7 +17,7 @@ import '../../formix.dart';
 ///   transform: (text) => text?.length ?? 0,
 /// )
 /// ```
-class FormixFieldTransformer<T, S> extends ConsumerStatefulWidget {
+class FormixFieldTransformer<T, S> extends StatefulWidget {
   /// Creates a [FormixFieldTransformer].
   const FormixFieldTransformer({
     super.key,
@@ -42,27 +42,22 @@ class FormixFieldTransformer<T, S> extends ConsumerStatefulWidget {
   final Object? Function(T? value)? select;
 
   @override
-  ConsumerState<FormixFieldTransformer<T, S>> createState() => _FormixFieldTransformerState<T, S>();
+  State<FormixFieldTransformer<T, S>> createState() => _FormixFieldTransformerState<T, S>();
 }
 
-class _FormixFieldTransformerState<T, S> extends ConsumerState<FormixFieldTransformer<T, S>> {
+class _FormixFieldTransformerState<T, S> extends State<FormixFieldTransformer<T, S>> {
   FormixController? _controller;
   Object? _initializationError;
+  VoidCallback? _disposeEffect;
+  bool _primed = false;
+  Object? _lastDep;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    var provider = Formix.of(context);
-    if (provider == null) {
-      try {
-        provider = ref.watch(currentControllerProvider);
-      } catch (_) {
-        // ProviderScope missing
-      }
-    }
-
-    if (provider == null) {
+    final newController = Formix.controllerOf(context);
+    if (newController == null) {
       if (mounted) {
         setState(() {
           _initializationError = 'FormixFieldTransformer used outside of Formix';
@@ -71,39 +66,42 @@ class _FormixFieldTransformerState<T, S> extends ConsumerState<FormixFieldTransf
       return;
     }
 
-    // We don't watch the provider here to avoid unnecessary rebuilds
-    // The ref.listen in build() handles granular updates
-    try {
-      final newController = ref.read(provider.notifier);
-      if (newController != _controller) {
-        _controller = newController;
-        // Initial transform
-        scheduleMicrotask(_transformValue);
-      }
-      _initializationError = null;
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _initializationError = e;
-        });
-      }
+    if (newController != _controller) {
+      _controller = newController;
+      _wireEffect();
     }
+    _initializationError = null;
   }
 
-  void _transformValue() {
+  /// Subscribes to the source field and re-transforms whenever the source value
+  /// (or its selected part) actually changes.
+  ///
+  /// The effect tracks ONLY the source value; the transform runs [untracked] so
+  /// writing the target never re-triggers this effect. It transforms on the
+  /// first run (mount) and thereafter only when the selected part changes.
+  void _wireEffect() {
+    _disposeEffect?.call();
+    _primed = false;
+    final controller = _controller;
+    if (controller == null) return;
+    _disposeEffect = effect(() {
+      final value = controller.valueSignal(widget.sourceField).value;
+      final dep = widget.select != null ? widget.select!(value) : value;
+      final shouldTransform = !_primed || dep != _lastDep;
+      _primed = true;
+      _lastDep = dep;
+      if (shouldTransform) {
+        untracked(() => _transformValue(value));
+      }
+    });
+  }
+
+  void _transformValue(T? sourceValue) {
     if (!mounted || _controller == null) return;
 
     try {
-      // Get source value
-      final dynamic rawValue = _controller!.getValue(widget.sourceField);
-      final T? sourceValue = rawValue as T?;
-
-      // Transform
       final S newValue = widget.transform(sourceValue);
-
-      // Get current target value to avoid infinite loops
-      final dynamic rawTarget = _controller!.getValue(widget.targetField);
-      final S? currentTarget = rawTarget as S?;
+      final S? currentTarget = _controller!.getValue(widget.targetField);
 
       if (currentTarget != newValue) {
         scheduleMicrotask(() {
@@ -127,9 +125,15 @@ class _FormixFieldTransformerState<T, S> extends ConsumerState<FormixFieldTransf
 
     // Check if source or target field changed
     if (oldWidget.sourceField != widget.sourceField || oldWidget.targetField != widget.targetField) {
-      // Re-transform with new fields
-      scheduleMicrotask(_transformValue);
+      // Rewire the effect (and re-transform) with the new fields.
+      _wireEffect();
     }
+  }
+
+  @override
+  void dispose() {
+    _disposeEffect?.call();
+    super.dispose();
   }
 
   @override
@@ -137,23 +141,9 @@ class _FormixFieldTransformerState<T, S> extends ConsumerState<FormixFieldTransf
     if (_initializationError != null) {
       return FormixConfigurationErrorWidget(
         message: _initializationError is String ? _initializationError as String : 'Failed to initialize FormixFieldTransformer',
-        details: _initializationError.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.'
-            : 'Error: $_initializationError',
+        details: 'Error: $_initializationError',
       );
     }
-
-    // Listen to source field reactively using granular selector
-    final provider = fieldValueProvider(widget.sourceField);
-    if (widget.select != null) {
-      ref.listen(
-        provider.select((value) => widget.select!(value as T?)),
-        (_, __) => _transformValue(),
-      );
-    } else {
-      ref.listen(provider, (_, __) => _transformValue());
-    }
-
     return const SizedBox.shrink();
   }
 }

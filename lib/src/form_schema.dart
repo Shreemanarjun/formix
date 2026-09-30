@@ -4,7 +4,7 @@ import 'enums.dart';
 
 import 'package:flutter/material.dart';
 
-import 'controllers/riverpod_controller.dart';
+import 'controllers/formix_base_controller.dart';
 import 'controllers/field_id.dart';
 import 'controllers/field.dart';
 import 'controllers/validation.dart';
@@ -646,9 +646,11 @@ class SchemaBasedFormController extends FormixController {
       }
       return result;
     } catch (e) {
+      // coverage:ignore-start — unreachable: schema.submit has its own try/catch and always returns a result rather than throwing
       return FormSubmissionResult.failure(
         error: schema.messages.validationFailed(e.toString()),
       );
+      // coverage:ignore-end
     }
   }
 

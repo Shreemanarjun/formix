@@ -13,10 +13,10 @@ void main() {
         ),
       );
 
-      final container = ProviderContainer();
-      final controller = container.read(
-        formControllerProvider(FormixParameter(fields: fields)).notifier,
+      final controller = FormixController.fromParameter(
+        FormixParameter(fields: fields),
       );
+      addTearDown(controller.dispose);
 
       final stopwatch = Stopwatch()..start();
 
@@ -69,10 +69,10 @@ void main() {
         );
       }
 
-      final container = ProviderContainer();
-      final controller = container.read(
-        formControllerProvider(FormixParameter(fields: fields)).notifier,
+      final controller = FormixController.fromParameter(
+        FormixParameter(fields: fields),
       );
+      addTearDown(controller.dispose);
 
       // Reset count after initial validation triggers
       validationCount = 0;

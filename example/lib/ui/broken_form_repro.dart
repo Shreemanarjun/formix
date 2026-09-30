@@ -14,7 +14,7 @@ class BrokenFormPage extends StatelessWidget {
       appBar: AppBar(title: const Text('Broken Form')),
       body: Column(
         children: [
-          // This will fail because no ProviderScope and no Formix
+          // This will fail because there is no Formix ancestor
           FormixTextFormField(
             fieldId: FormixFieldID('name'),
             decoration: const InputDecoration(labelText: 'Name'),

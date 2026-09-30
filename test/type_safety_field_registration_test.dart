@@ -12,30 +12,28 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: ProviderScope(
-              child: Scaffold(
-                body: Formix(
-                  key: formKey,
-                  fields: [
-                    FormixFieldConfig<DateTime?>(
-                      id: dateField,
-                      initialValue: DateTime(2026, 2, 8),
-                      validator: (value) {
-                        return value == null ? 'Please select a date' : null;
-                      },
-                    ),
-                  ],
-                  child: FormixRawFormField<DateTime?>(
-                    fieldId: dateField,
-                    builder: (context, state) {
-                      return Column(
-                        children: [
-                          Text('Date: ${state.value}'),
-                          if (state.hasError) Text('Error: ${state.validation.errorMessage}'),
-                        ],
-                      );
+            home: Scaffold(
+              body: Formix(
+                key: formKey,
+                fields: [
+                  FormixFieldConfig<DateTime?>(
+                    id: dateField,
+                    initialValue: DateTime(2026, 2, 8),
+                    validator: (value) {
+                      return value == null ? 'Please select a date' : null;
                     },
                   ),
+                ],
+                child: FormixRawFormField<DateTime?>(
+                  fieldId: dateField,
+                  builder: (context, state) {
+                    return Column(
+                      children: [
+                        Text('Date: ${state.value}'),
+                        if (state.hasError) Text('Error: ${state.validation.errorMessage}'),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -68,40 +66,38 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: ProviderScope(
-              child: Scaffold(
-                body: Formix(
-                  key: formKey,
-                  fields: [
-                    FormixFieldConfig<DateTime?>(
-                      id: dateField,
-                      validator: (value) => value == null ? 'Date required' : null,
+            home: Scaffold(
+              body: Formix(
+                key: formKey,
+                fields: [
+                  FormixFieldConfig<DateTime?>(
+                    id: dateField,
+                    validator: (value) => value == null ? 'Date required' : null,
+                  ),
+                  FormixFieldConfig<TimeOfDay?>(
+                    id: timeField,
+                    validator: (value) => value == null ? 'Time required' : null,
+                  ),
+                  FormixFieldConfig<String>(
+                    id: stringField,
+                    validator: (value) => value?.isEmpty ?? true ? 'Remark required' : null,
+                  ),
+                ],
+                child: Column(
+                  children: [
+                    FormixRawFormField<DateTime?>(
+                      fieldId: dateField,
+                      builder: (context, state) => Text('Date: ${state.value}'),
                     ),
-                    FormixFieldConfig<TimeOfDay?>(
-                      id: timeField,
-                      validator: (value) => value == null ? 'Time required' : null,
+                    FormixRawFormField<TimeOfDay?>(
+                      fieldId: timeField,
+                      builder: (context, state) => Text('Time: ${state.value}'),
                     ),
-                    FormixFieldConfig<String>(
-                      id: stringField,
-                      validator: (value) => value?.isEmpty ?? true ? 'Remark required' : null,
+                    const FormixTextFormField(
+                      fieldId: stringField,
+                      decoration: InputDecoration(labelText: 'Remark'),
                     ),
                   ],
-                  child: Column(
-                    children: [
-                      FormixRawFormField<DateTime?>(
-                        fieldId: dateField,
-                        builder: (context, state) => Text('Date: ${state.value}'),
-                      ),
-                      FormixRawFormField<TimeOfDay?>(
-                        fieldId: timeField,
-                        builder: (context, state) => Text('Time: ${state.value}'),
-                      ),
-                      const FormixTextFormField(
-                        fieldId: stringField,
-                        decoration: InputDecoration(labelText: 'Remark'),
-                      ),
-                    ],
-                  ),
                 ),
               ),
             ),
@@ -146,28 +142,26 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: ProviderScope(
-              child: Scaffold(
-                body: Formix(
-                  key: formKey,
-                  fields: [
-                    FormixFieldConfig<DateTime?>(
-                      id: dateField,
-                      validator: validator1,
-                    ),
-                  ],
-                  child: FormixRawFormField<DateTime?>(
-                    fieldId: dateField,
-                    validator: validator2, // Override with widget validator
-                    builder: (context, state) {
-                      return Column(
-                        children: [
-                          Text('Date: ${state.value}'),
-                          if (state.hasError) Text('Error: ${state.validation.errorMessage}'),
-                        ],
-                      );
-                    },
+            home: Scaffold(
+              body: Formix(
+                key: formKey,
+                fields: [
+                  FormixFieldConfig<DateTime?>(
+                    id: dateField,
+                    validator: validator1,
                   ),
+                ],
+                child: FormixRawFormField<DateTime?>(
+                  fieldId: dateField,
+                  validator: validator2, // Override with widget validator
+                  builder: (context, state) {
+                    return Column(
+                      children: [
+                        Text('Date: ${state.value}'),
+                        if (state.hasError) Text('Error: ${state.validation.errorMessage}'),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -207,29 +201,27 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: ProviderScope(
-              child: Scaffold(
-                body: Formix(
-                  key: formKey,
-                  autovalidateMode: FormixAutovalidateMode.always,
-                  fields: [
-                    FormixFieldConfig<DateTime?>(
-                      id: dateField,
-                      asyncValidator: asyncValidator,
-                      debounceDuration: Duration.zero, // No debounce for testing
-                    ),
-                  ],
-                  child: FormixRawFormField<DateTime?>(
-                    fieldId: dateField,
-                    builder: (context, state) {
-                      return Column(
-                        children: [
-                          Text('Date: ${state.value}'),
-                          if (state.validation.isValidating) const Text('Validating...') else if (state.hasError) Text('Error: ${state.validation.errorMessage}'),
-                        ],
-                      );
-                    },
+            home: Scaffold(
+              body: Formix(
+                key: formKey,
+                autovalidateMode: FormixAutovalidateMode.always,
+                fields: [
+                  FormixFieldConfig<DateTime?>(
+                    id: dateField,
+                    asyncValidator: asyncValidator,
+                    debounceDuration: Duration.zero, // No debounce for testing
                   ),
+                ],
+                child: FormixRawFormField<DateTime?>(
+                  fieldId: dateField,
+                  builder: (context, state) {
+                    return Column(
+                      children: [
+                        Text('Date: ${state.value}'),
+                        if (state.validation.isValidating) const Text('Validating...') else if (state.hasError) Text('Error: ${state.validation.errorMessage}'),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -261,29 +253,27 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: ProviderScope(
-              child: Scaffold(
-                body: Formix(
-                  key: formKey,
-                  fields: [
-                    FormixFieldConfig<ScheduleLocation?>(
-                      id: locationField,
-                      validator: (value) {
-                        return value == null ? 'Please select a location' : null;
-                      },
-                    ),
-                  ],
-                  child: FormixRawFormField<ScheduleLocation?>(
-                    fieldId: locationField,
-                    builder: (context, state) {
-                      return Column(
-                        children: [
-                          Text('Location: ${state.value?.name ?? "None"}'),
-                          if (state.hasError) Text('Error: ${state.validation.errorMessage}'),
-                        ],
-                      );
+            home: Scaffold(
+              body: Formix(
+                key: formKey,
+                fields: [
+                  FormixFieldConfig<ScheduleLocation?>(
+                    id: locationField,
+                    validator: (value) {
+                      return value == null ? 'Please select a location' : null;
                     },
                   ),
+                ],
+                child: FormixRawFormField<ScheduleLocation?>(
+                  fieldId: locationField,
+                  builder: (context, state) {
+                    return Column(
+                      children: [
+                        Text('Location: ${state.value?.name ?? "None"}'),
+                        if (state.hasError) Text('Error: ${state.validation.errorMessage}'),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -332,28 +322,26 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
-            home: ProviderScope(
-              child: Scaffold(
-                body: Formix(
-                  key: formKey,
-                  fields: [
-                    FormixFieldConfig<ScheduleLocation?>(
-                      id: locationField,
-                      validator: configValidator,
-                    ),
-                  ],
-                  child: FormixRawFormField<ScheduleLocation?>(
-                    fieldId: locationField,
-                    validator: widgetValidator, // Override
-                    builder: (context, state) {
-                      return Column(
-                        children: [
-                          Text('Location: ${state.value?.name ?? "None"}'),
-                          if (state.hasError) Text('Error: ${state.validation.errorMessage}'),
-                        ],
-                      );
-                    },
+            home: Scaffold(
+              body: Formix(
+                key: formKey,
+                fields: [
+                  FormixFieldConfig<ScheduleLocation?>(
+                    id: locationField,
+                    validator: configValidator,
                   ),
+                ],
+                child: FormixRawFormField<ScheduleLocation?>(
+                  fieldId: locationField,
+                  validator: widgetValidator, // Override
+                  builder: (context, state) {
+                    return Column(
+                      children: [
+                        Text('Location: ${state.value?.name ?? "None"}'),
+                        if (state.hasError) Text('Error: ${state.validation.errorMessage}'),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),

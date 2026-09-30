@@ -11,22 +11,20 @@ void main() {
     const fieldId = FormixFieldID<bool>('agree');
 
     await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          home: Scaffold(
-            body: Formix(
-              autovalidateMode: FormixAutovalidateMode.always,
-              fields: [
-                FormixFieldConfig<bool>(
-                  id: fieldId,
-                  initialValue: false,
-                  validator: (val) => (val == true) ? null : 'Must agree',
-                ),
-              ],
-              child: const FormixCheckboxFormField(
-                fieldId: fieldId,
-                title: Text('Agree to terms'),
+      MaterialApp(
+        home: Scaffold(
+          body: Formix(
+            autovalidateMode: FormixAutovalidateMode.always,
+            fields: [
+              FormixFieldConfig<bool>(
+                id: fieldId,
+                initialValue: false,
+                validator: (val) => (val == true) ? null : 'Must agree',
               ),
+            ],
+            child: const FormixCheckboxFormField(
+              fieldId: fieldId,
+              title: Text('Agree to terms'),
             ),
           ),
         ),

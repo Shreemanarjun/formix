@@ -60,10 +60,23 @@ app.*.map.json
 **/android/app/debug
 **/android/app/profile
 **/android/app/release
-example/test/goldens/*
-**/test/goldens/
-
-goldens/*.png
-**/goldens/*.png
-goldens/*
+# Golden baselines are committed (test/goldens/, goldens/) so CI can compare
+# against them. Only the transient failure artifacts are ignored.
+# Golden-test failure artifacts (transient diff/master/test images)
+failures/
+**/failures/
 extension/devtools/build/*
+.agents/skills/*
+.claude/*
+.gitignore
+
+# Dart-VM coverage artifacts (tool/ coverage runs)
+coverage_json/
+*.lcov
+
+# Agent tooling (not package content)
+.agent/
+skills-lock.json
+SKILLS.md
+# Widget Preview related
+.widget_preview/

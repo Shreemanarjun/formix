@@ -1,3 +1,44 @@
+## 0.2.0 - Signals core (Breaking)
+
+Migrated from Riverpod to [signals](https://pub.dev/packages/signals_flutter) — same form
+logic, validators, and widget API, but faster and with no `ProviderScope`. See `MIGRATION.md`.
+
+### Breaking
+- Removed `flutter_riverpod`, `ProviderScope`, and all `*Provider` globals; build controllers with `FormixController(...)`.
+- `RiverpodFormController` → `FormixBaseController`.
+- Global messages: `formixMessagesProvider` → the reactive `formixGlobalMessages` signal.
+- `Formix.of(context)` is now non-null (throws if absent); use `Formix.maybeOf(context)`.
+- Field nullability follows the ID type: `FormixFieldID<String>` rejects `null`, `FormixFieldID<String?>` allows it.
+- `FormixAsyncField.asyncValue` now uses `AsyncState<T>`.
+
+### Added
+- Reactive slices: `valueSignal`/`validationSignal`/`dirtySignal`/`touchedSignal`/`pendingSignal`, form-level `isValidSignal`/`isDirtySignal`/`isSubmittingSignal`/`currentStepSignal`, plus `derived`, `debouncedValueSignal`, and reactive `enabled`/`readOnly`/`visible` flags.
+- Widgets: `FormixValue<T>` (one-field builder), `FormixSubmitButton` (auto-disable + spinner), `FormixFormField<T>` (native Flutter `Form` interop).
+- Controller sugar: `controller[id]` get/set, `batchUpdate((b) => …)`, `applyServerErrors(map)`, typed record groups `group2/3/4` (read) + `setGroup2/3/4` (write), `FormixScope.watch(id)`.
+- Type-scoped validators: `number().between()`, a `date()` chain (`after`/`before`/`between`), `any<T>().oneOf([...])` — wrong-type methods don't compile.
+- Sealed `FormixSubmission` state via `controller.submissionSignal` (idle/submitting/success/error).
+- `FormixFieldDefinition` — `fields:` accepts either `FormixField` or `FormixFieldConfig`.
+- `context.formix`/`context.maybeFormix`, `FormixControllerHost` mixin, and `package:formix/formix_test.dart` test helpers.
+- DevTools extension migrated to signals.
+
+### Performance & correctness
+- O(changed) per-keystroke updates (only the changed field's signals fire); aggregates are memoized `Computed`s. Pure overhead ~0.1ms/rebuild vs Flutter's ~12ms — see `BENCHMARKS.md`.
+- Debug-only duplicate field-key guard; async-validation generation guard drops stale results.
+
+## 0.1.3 - Dev (Unreleased)
+- **Message Updates & Localization**:
+  - Re-introduced optimization to prevent form controller resets during global message/locale updates by switching to `ref.listen` and excluding `messages` from `FormixParameter` equality.
+  - Added `messages` property to `Formix` widget for local message overrides, which now update reactively via `didUpdateWidget`.
+  - Added `updateMessages()` to `FormixController` to allow manual message updates without resetting state.
+  - Exported `FormixValidationKeys` for easier use of standard localized error messages in custom validators.
+- **Type Safety Persistence**:
+  - Restored strict nullability enforcement in `FormixFieldID.isTypeValid` and `FormixField.isTypeValid`. `null` is now only considered valid if the type parameter `T` is nullable (e.g., `FormixFieldID<String?>`). 
+- **Bug Fixes & Refactoring**:
+  - Fixed regression in standalone `FormixController` (outside of Riverpod `ProviderScope`) by safely handling `ref` access.
+  - Riverpod 3 migration improvements.
+  - Fixed cross field validation and multi step form validation issues.
+  - Add more examples and updated stability test suite (664 tests passing).
+
 ## 0.1.2
 
 ### ⚡ Performance Optimizations
