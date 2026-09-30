@@ -3,6 +3,7 @@ import 'dart:developer' as dev;
 import 'package:flutter/foundation.dart';
 import 'package:collection/collection.dart'; // Added for lastOrNull
 import '../controllers/formix_base_controller.dart';
+import '../controllers/submission.dart';
 import '../controllers/field_id.dart';
 
 /// Service for interacting with the Formix DevTools extension.
@@ -59,8 +60,16 @@ class FormixDevToolsService {
     if (controller == null) return null;
 
     final state = controller.state;
+    final submission = controller.submissionSignal.value;
     return <String, dynamic>{
       'values': state.values,
+      'submission': switch (submission) {
+        FormixSubmissionIdle() => 'idle',
+        FormixSubmissionSubmitting() => 'submitting',
+        FormixSubmissionSuccess() => 'success',
+        FormixSubmissionError() => 'error',
+      },
+      'submissionError': submission is FormixSubmissionError ? submission.error.toString() : null,
       'nestedValues': state.toNestedMap(),
       'validations': {
         for (final entry in state.validations.entries)

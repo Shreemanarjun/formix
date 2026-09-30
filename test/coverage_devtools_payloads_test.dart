@@ -45,6 +45,25 @@ void main() {
     expect(FormixDevToolsService.formDetailsPayload('does_not_exist'), isNull);
   });
 
+  test('formDetailsPayload exposes the sealed submission state (idle/success/error)', () async {
+    final c = make('dp_sub');
+    var p = FormixDevToolsService.formDetailsPayload('dp_sub')!;
+    expect(p['submission'], 'idle');
+    expect(p['submissionError'], isNull);
+
+    c.setValue(name, 'Ada');
+    await c.submit(onValid: (_) async {});
+    expect(FormixDevToolsService.formDetailsPayload('dp_sub')!['submission'], 'success');
+
+    await expectLater(
+      c.submit(onValid: (_) async => throw StateError('boom')),
+      throwsA(isA<StateError>()),
+    );
+    p = FormixDevToolsService.formDetailsPayload('dp_sub')!;
+    expect(p['submission'], 'error');
+    expect(p['submissionError'], contains('boom'));
+  });
+
   test('encodePayload handles DateTime and non-encodable values', () {
     final json = FormixDevToolsService.encodePayload({
       'date': DateTime(2021, 5, 6),
