@@ -809,6 +809,98 @@ Updates no longer crash on type mismatches or missing fields. They return a resu
 
 ---
 
+## ✨ New in 0.2.0 (Signals extras)
+
+### Server-side errors
+Map backend validation failures onto fields in one call:
+```dart
+try {
+  await api.save(scope.values);
+} on ApiValidationException catch (e) {
+  // e.fieldErrors == {'email': 'Already taken', 'username': 'Too short'}
+  scope.controller.applyServerErrors(e.fieldErrors);
+}
+```
+
+### Derived signals
+A memoized read-only signal computed from form state — rebuilds only when its result changes:
+```dart
+final total = controller.derived((s) => (s.getValue(qtyId) ?? 0) * (s.getValue(priceId) ?? 0));
+
+// In the tree:
+SignalBuilder(builder: (context) => Text('Total: ${total.value}'));
+```
+
+### Debounced values (search-as-you-type)
+```dart
+final query = controller.debouncedValueSignal(searchField, const Duration(milliseconds: 300));
+SignalBuilder(builder: (context) => ResultsList(query: query.value));
+```
+
+### Reactive enable / read-only / visibility
+Toggle fields from anywhere; built-in fields react automatically:
+```dart
+controller.setEnabled(couponField, hasCoupon);   // built-in fields disable reactively
+controller.setReadOnly(idField, true);            // text field becomes read-only
+// Watch visibility to show/hide:
+FormixBuilder(
+  builder: (context, scope) =>
+    scope.controller.visibleSignal(extraField).value ? MyExtra() : const SizedBox.shrink(),
+);
+```
+
+### Drop Formix into a native Flutter `Form`
+`FormixFormField` makes `Form.validate()/save()/reset()` participate with Formix:
+```dart
+Form(
+  key: formKey,
+  child: Formix(
+    fields: [FormixFieldConfig<String>(id: emailField, validator: FormixValidators.string().required().email().build())],
+    child: FormixFormField<String>(
+      fieldId: emailField,
+      builder: (context, value, error, onChanged) =>
+        TextField(onChanged: onChanged, decoration: InputDecoration(errorText: error)),
+    ),
+  ),
+)
+// formKey.currentState!.validate() now runs Formix validation.
+```
+
+### Reusable controller-bound widgets (`FormixControllerHost`)
+Mix into your own `State` to get controller resolution + a config-error widget for free:
+```dart
+class _MyWidgetState extends State<MyWidget> with FormixControllerHost<MyWidget> {
+  @override
+  String get formixWidgetName => 'MyWidget';
+  @override
+  void onControllerChanged(FormixController controller) {/* wire effects */}
+
+  @override
+  Widget build(BuildContext context) => formixErrorOrNull() ?? _content();
+}
+```
+
+### Testing helpers
+```dart
+import 'package:formix/formix_test.dart';
+
+testWidgets('only the watched field rebuilds', (tester) async {
+  final counter = RebuildCounter();
+  final c = await pumpFormix(tester,
+    initialValue: {'name': '', 'email': ''},
+    child: FormixBuilder(
+      builder: (context, scope) => counter.wrap((_) => Text('${scope.watchValue(nameId)}')),
+    ),
+  );
+
+  c.setValue(emailId, 'x@y.com');          // unwatched field
+  await tester.pump();
+  expect(counter, rebuiltExactly(1));      // no rebuild for the name text
+});
+```
+
+---
+
 ## 👨‍🍳 Cookbook
 
 ### Multi-step Form (Wizard)

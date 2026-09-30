@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart' hide FormState;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:formix/formix.dart';
-import 'package:formix/src/widgets/formix_controller_host.dart';
 
 /// A runtime (non-const) analytics subclass so the abstract base constructor
 /// (`const FormixAnalytics()`) is exercised through a real subclass instance.
@@ -162,7 +161,7 @@ void main() {
   });
 
   group('FormixControllerHost mixin', () {
-    testWidgets('detach + reattach fires host lifecycle hooks', (tester) async {
+    testWidgets('resolves an explicit controller and re-resolves on swap', (tester) async {
       final c1 = FormixController();
       final c2 = FormixController();
       addTearDown(c1.dispose);
@@ -176,18 +175,16 @@ void main() {
       );
       await tester.pump();
       expect(key.currentState!.attached, contains(c1));
+      expect(key.currentState!.controller, c1);
 
-      // Swap the controller -> onControllerDetached(c1) + onControllerChanged(c2).
+      // Swap the controller -> didUpdateWidget re-resolves -> onControllerChanged(c2).
       await tester.pumpWidget(
         MaterialApp(
           home: _HostWidget(key: key, controller: c2),
         ),
       );
       await tester.pump();
-      key.currentState!.refresh();
-      expect(key.currentState!.detached, contains(c1));
       expect(key.currentState!.attached, contains(c2));
-      expect(key.currentState!.controllerOrNull, c2);
       expect(key.currentState!.hasController, isTrue);
       expect(key.currentState!.controller, c2);
     });
@@ -368,7 +365,6 @@ class _HostWidget extends StatefulWidget {
 
 class _HostState extends State<_HostWidget> with FormixControllerHost<_HostWidget> {
   final attached = <FormixController>[];
-  final detached = <FormixController>[];
 
   @override
   FormixController? get explicitController => widget.controller;
@@ -378,11 +374,6 @@ class _HostState extends State<_HostWidget> with FormixControllerHost<_HostWidge
 
   @override
   void onControllerChanged(FormixController controller) => attached.add(controller);
-
-  @override
-  void onControllerDetached(FormixController oldController) => detached.add(oldController);
-
-  void refresh() => refreshControllerHost();
 
   @override
   Widget build(BuildContext context) {

@@ -63,7 +63,11 @@ class FormixController extends FormixBaseController {
   // Per-field slices are plain [Signal]s kept in sync via the `changedFields`
   // delta in [onStateChanged], so a single field update only touches that field's
   // signals — O(changed) — instead of re-evaluating every mounted watcher.
+  // Raw per-field value signals (type-erased), updated via the changedFields
+  // delta. Kept dynamic so a field's runtime type can change without a cast error.
   final Map<String, Signal<dynamic>> _valueSignals = {};
+  // Typed, type-change-safe views over the raw value signals, cached per (key, T).
+  final Map<String, ReadonlySignal<dynamic>> _valueViews = {};
   final Map<String, Signal<ValidationResult>> _validationSignals = {};
   final Map<String, Signal<bool>> _dirtySignals = {};
   final Map<String, Signal<bool>> _touchedSignals = {};
@@ -80,12 +84,21 @@ class FormixController extends FormixBaseController {
 
   /// Reactive value of a field. Read `.value` inside a [SignalBuilder] for a
   /// rebuild that fires only when this field's value changes.
+  ///
+  /// Type-change safe: the value is stored type-erased, and this returns a view
+  /// typed as `T?` that yields the value when it matches `T` (else null). A field
+  /// can therefore change its runtime type without ever throwing a cast error.
   ReadonlySignal<T?> valueSignal<T>(FormixFieldID<T> id) {
-    final existing = _valueSignals[id.key];
+    final raw = _valueSignals.putIfAbsent(id.key, () => signal<dynamic>(stateSignal.peek().values[id.key]));
+    final viewKey = '${id.key}/$T';
+    final existing = _valueViews[viewKey];
     if (existing != null) return existing as ReadonlySignal<T?>;
-    final created = signal<T?>(stateSignal.peek().getValue<T>(id));
-    _valueSignals[id.key] = created;
-    return created;
+    final view = computed<T?>(() {
+      final v = raw.value;
+      return v is T ? v : null;
+    });
+    _valueViews[viewKey] = view;
+    return view;
   }
 
   /// Reactive validation result of a field.
@@ -416,6 +429,7 @@ class FormixController extends FormixBaseController {
     // derived signals + reactive UI-flag signals).
     for (final ReadonlySignal<dynamic>? c in <ReadonlySignal<dynamic>?>[
       ..._valueSignals.values,
+      ..._valueViews.values,
       ..._validationSignals.values,
       ..._dirtySignals.values,
       ..._touchedSignals.values,

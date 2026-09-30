@@ -29,6 +29,42 @@ void main() {
     });
   });
 
+  group('runtime field type change (signals)', () {
+    test('valueSignal never throws when a key changes runtime type', () {
+      final c = FormixController();
+      addTearDown(c.dispose);
+      const asString = FormixFieldID<String>('poly');
+      const asInt = FormixFieldID<int>('poly');
+
+      final sStr = c.valueSignal(asString);
+      c.setValue(asString, 'hello');
+      expect(sStr.value, 'hello');
+
+      // Same key, now used as int — must not throw, and each typed view is correct.
+      c.setValue(asInt, 42);
+      final sInt = c.valueSignal(asInt);
+      expect(sInt.value, 42);
+      expect(sStr.value, isNull); // String view sees a non-String → null, no cast crash
+    });
+
+    testWidgets('a field widget re-typed at runtime rebinds without error', (tester) async {
+      // First render the key as a String text field, then as an int number field.
+      await tester.pumpWidget(
+        const MaterialApp(home: Scaffold(body: Formix(child: FormixTextFormField(fieldId: FormixFieldID<String>('dyn'))))),
+      );
+      await tester.pump();
+      await tester.enterText(find.byType(TextField), 'text');
+      await tester.pump();
+
+      await tester.pumpWidget(
+        const MaterialApp(home: Scaffold(body: Formix(child: FormixNumberFormField(fieldId: FormixFieldID<int>('dyn'))))),
+      );
+      await tester.pump();
+      // No exception thrown; the widget rebuilt bound to the int type.
+      expect(tester.takeException(), isNull);
+    });
+  });
+
   group('derived', () {
     test('recomputes only when its inputs change', () {
       final c = FormixController(initialValue: const {'qty': 2, 'price': 3});

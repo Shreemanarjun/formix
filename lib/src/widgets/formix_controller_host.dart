@@ -8,8 +8,7 @@ import '../controllers/formix_controller.dart';
 /// Mix this into a [State] to get, for free:
 /// * controller resolution — an [explicitController] if the widget provides one,
 ///   otherwise the nearest [Formix] ancestor via [Formix.controllerOf];
-/// * re-resolution in [didChangeDependencies] with [onControllerChanged] /
-///   [onControllerDetached] lifecycle hooks;
+/// * re-resolution in [didChangeDependencies] with an [onControllerChanged] hook;
 /// * a consistent configuration-error widget via [formixErrorOrNull].
 ///
 /// This removes the controller-lookup + error-widget code that would otherwise
@@ -17,9 +16,6 @@ import '../controllers/formix_controller.dart';
 /// dependent fields, sections, registries, listeners).
 mixin FormixControllerHost<W extends StatefulWidget> on State<W> {
   FormixController? _controller;
-
-  /// The resolved controller, or null if none is available yet.
-  FormixController? get controllerOrNull => _controller;
 
   /// The resolved controller. Only call when [hasController] is true.
   FormixController get controller => _controller!;
@@ -39,29 +35,25 @@ mixin FormixControllerHost<W extends StatefulWidget> on State<W> {
   /// effects and listeners here.
   void onControllerChanged(FormixController controller);
 
-  /// Called with the previous controller just before it is replaced. Tear down
-  /// effects/listeners here. Default is a no-op.
-  void onControllerDetached(FormixController oldController) {}
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _resolveController();
   }
 
-  /// Re-resolves the controller and fires the lifecycle hooks if it changed.
-  /// Call from `didUpdateWidget` too if [explicitController] can change.
+  @override
+  void didUpdateWidget(covariant W oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Pick up a changed [explicitController] (e.g. widget.controller swapped).
+    _resolveController();
+  }
+
   void _resolveController() {
     final next = explicitController ?? Formix.controllerOf(context);
     if (identical(next, _controller)) return;
-    final old = _controller;
-    if (old != null) onControllerDetached(old);
     _controller = next;
     if (next != null) onControllerChanged(next);
   }
-
-  /// Re-resolves the controller (public entry for `didUpdateWidget`).
-  void refreshControllerHost() => _resolveController();
 
   /// Returns a [FormixConfigurationErrorWidget] if no controller is available,
   /// otherwise null. Call at the top of `build`.
