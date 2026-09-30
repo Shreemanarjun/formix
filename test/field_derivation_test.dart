@@ -119,7 +119,7 @@ void main() {
       // Get controller to check values
       final controller = Formix.of(
         tester.element(find.byType(FormixFieldDerivation)),
-      )!;
+      );
 
       // Initial value should be derived
       expect(controller.getValue(targetField), 'INITIAL');
@@ -162,7 +162,7 @@ void main() {
 
       final controller = Formix.of(
         tester.element(find.byType(FormixFieldDerivation)),
-      )!;
+      );
 
       expect(controller.getValue(fullNameField), 'John Doe');
 
@@ -206,7 +206,7 @@ void main() {
 
       final controller = Formix.of(
         tester.element(find.byType(FormixFieldDerivation)),
-      )!;
+      );
 
       final expectedAge = DateTime.now().year - 2000;
       expect(controller.getValue(ageField), expectedAge);
@@ -239,7 +239,7 @@ void main() {
 
       final controller = Formix.of(
         tester.element(find.byType(FormixFieldDerivation)),
-      )!;
+      );
 
       // Should not crash, target field should keep its initial value
       expect(controller.getValue(targetField), 'target_initial');
@@ -274,7 +274,7 @@ void main() {
 
       final controller = Formix.of(
         tester.element(find.byType(FormixFieldDerivation)),
-      )!;
+      );
 
       expect(controller.getValue(targetField), 'INITIAL');
 
@@ -363,7 +363,7 @@ void main() {
 
       final controller = Formix.of(
         tester.element(find.byType(FormixFieldDerivations)),
-      )!;
+      );
 
       expect(controller.getValue(fullNameField), 'John Doe');
       expect(controller.getValue(displayNameField), 'John <john@example.com>');

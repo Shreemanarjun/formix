@@ -341,7 +341,7 @@ void main() {
       // Set submitting
       final controller = Formix.of(
         tester.element(find.text('Submitting: false')),
-      )!;
+      );
       controller.setSubmitting(true);
       await tester.pump();
 
@@ -419,7 +419,7 @@ void main() {
       // Change value externally
       final controller = Formix.of(
         tester.element(find.text('Controller: initial')),
-      )!;
+      );
       controller.setValue(id, 'external');
       await tester.pump();
 
@@ -502,15 +502,15 @@ void main() {
     });
 
     testWidgets('handles null values correctly', (tester) async {
-      const id = FormixFieldID<String>('nullable_field');
-      FormixTextFieldStateSnapshot<String>? capturedSnapshot;
+      const id = FormixFieldID<String?>('nullable_field');
+      FormixTextFieldStateSnapshot<String?>? capturedSnapshot;
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: Formix(
-              fields: const [FormixFieldConfig(id: id)],
-              child: FormixRawTextField<String>(
+              fields: const [FormixFieldConfig<String?>(id: id)],
+              child: FormixRawTextField<String?>(
                 fieldId: id,
                 valueToString: (v) => v ?? '',
                 stringToValue: (s) => s.isEmpty ? null : s,

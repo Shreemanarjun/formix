@@ -18,7 +18,7 @@ class FormixAncestorValidator {
       return null;
     }
 
-    final controller = Formix.of(context);
+    final controller = Formix.maybeOf(context);
     if (controller == null) {
       return FormixConfigurationErrorWidget(
         message: 'Missing Formix Ancestor',

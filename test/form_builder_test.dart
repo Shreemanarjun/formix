@@ -79,7 +79,7 @@ void main() {
     // Trigger a change
     final controller = Formix.of(
       tester.element(find.byType(CustomStatusDisplay)),
-    )!;
+    );
     controller.setValue(field1, 'dirty');
 
     await tester.pump();
@@ -128,7 +128,7 @@ void main() {
     expect(submitted, isFalse);
 
     // Set valid value
-    final controller = Formix.of(tester.element(find.text('Submit')))!;
+    final controller = Formix.of(tester.element(find.text('Submit')));
     controller.setValue(field1, 'valid');
     await tester.pump();
 
@@ -173,7 +173,7 @@ void main() {
     // Set valid value
     final controller = Formix.of(
       tester.element(find.text('Validation: false')),
-    )!;
+    );
     controller.setValue(field1, 'valid');
     await tester.pump();
 
@@ -203,7 +203,7 @@ void main() {
     expect(find.text('Dirty: false'), findsOneWidget);
 
     // Change value
-    final controller = Formix.of(tester.element(find.text('Dirty: false')))!;
+    final controller = Formix.of(tester.element(find.text('Dirty: false')));
     controller.setValue(field1, 'changed');
     await tester.pump();
 
@@ -232,7 +232,7 @@ void main() {
     expect(find.text('Touched: false'), findsOneWidget);
 
     // Mark as touched
-    final controller = Formix.of(tester.element(find.text('Touched: false')))!;
+    final controller = Formix.of(tester.element(find.text('Touched: false')));
     controller.markAsTouched(field1);
     await tester.pump();
 
@@ -264,7 +264,7 @@ void main() {
     // Change value
     final controller = Formix.of(
       tester.element(find.text('Form Dirty: false')),
-    )!;
+    );
     controller.setValue(field1, 'changed');
     await tester.pump();
 
@@ -292,7 +292,7 @@ void main() {
     // Set submitting
     final controller = Formix.of(
       tester.element(find.text('Submitting: false')),
-    )!;
+    );
     controller.setSubmitting(true);
     await tester.pump();
 
@@ -344,7 +344,7 @@ void main() {
     );
 
     // Initially not touched
-    final controller = Formix.of(tester.element(find.text('Mark Touched')))!;
+    final controller = Formix.of(tester.element(find.text('Mark Touched')));
     expect(controller.isFieldTouched(field1), false);
 
     // Mark as touched
@@ -389,7 +389,7 @@ void main() {
     expect(validationResult, false);
 
     // Set valid value
-    final controller = Formix.of(tester.element(find.text('Validate')))!;
+    final controller = Formix.of(tester.element(find.text('Validate')));
     controller.setValue(field1, 'valid');
     await tester.pump();
 
@@ -429,7 +429,7 @@ void main() {
     expect(find.text('Value: initial'), findsOneWidget);
 
     // Change value
-    final controller = Formix.of(tester.element(find.text('Value: initial')))!;
+    final controller = Formix.of(tester.element(find.text('Value: initial')));
     controller.setValue(field1, 'changed');
     await tester.pump();
 

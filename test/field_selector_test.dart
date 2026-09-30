@@ -569,13 +569,15 @@ void main() {
     });
 
     testWidgets('handles null values correctly', (tester) async {
+      // A genuinely nullable field: null is a valid (cleared) value.
+      const nullableField = FormixFieldID<String?>('nullable_string');
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: Formix(
-              fields: [FormixFieldConfig(id: stringField)],
-              child: TestValueSelector<String>(
-                fieldId: stringField,
+              fields: const [FormixFieldConfig<String?>(id: nullableField)],
+              child: TestValueSelector<String?>(
+                fieldId: nullableField,
                 builder: (context, value, child) {
                   return Text('Value: ${value ?? "is_null"}');
                 },
@@ -591,18 +593,18 @@ void main() {
       final controller = Formix.controllerOf(
         tester.element(
           find.byWidgetPredicate(
-            (widget) => widget is FormixFieldValueSelector<String>,
+            (widget) => widget is FormixFieldValueSelector<String?>,
           ),
         ),
       )!;
-      controller.setValue(stringField, 'not_null');
+      controller.setValue(nullableField, 'not_null');
 
       await tester.pump();
 
       expect(find.text('Value: not_null'), findsOneWidget);
 
       // Set back to null
-      controller.setValue(stringField, null);
+      controller.setValue(nullableField, null);
 
       await tester.pump();
 

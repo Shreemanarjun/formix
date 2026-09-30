@@ -6,8 +6,18 @@ import '../enums.dart';
 import 'form_state.dart';
 import '../validators/validators.dart';
 
+/// Common interface for anything that can define a form field.
+///
+/// Both [FormixFieldConfig] and `FormixField` implement it, so APIs that take a
+/// list of fields (`Formix(fields: ...)`, `FormixController(fields: ...)`) can
+/// accept either — statically typed, no `List<dynamic>` or runtime type checks.
+abstract interface class FormixFieldDefinition {
+  /// Normalizes this definition to a [FormixFieldConfig].
+  FormixFieldConfig<dynamic> toConfig();
+}
+
 /// Configuration for a form field
-class FormixFieldConfig<T> {
+class FormixFieldConfig<T> implements FormixFieldDefinition {
   /// Creates a configuration for a form field.
   const FormixFieldConfig({
     required this.id,
@@ -103,6 +113,10 @@ class FormixFieldConfig<T> {
 
   /// Callback when field is submitted
   final void Function(String)? onSubmitted;
+
+  /// A [FormixFieldConfig] is already a config; returns itself.
+  @override
+  FormixFieldConfig<T> toConfig() => this;
 
   /// Converts this configuration into a [FormixField].
   FormixField<T> toField() {

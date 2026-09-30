@@ -5,7 +5,7 @@ import 'form_state.dart';
 import 'field_config.dart';
 
 /// Form field definition with validation and type information
-class FormixField<T> {
+class FormixField<T> implements FormixFieldDefinition {
   /// Creates a [FormixField] definition.
   const FormixField({
     required this.id,
@@ -75,6 +75,7 @@ class FormixField<T> {
   final void Function(String)? onSubmitted;
 
   /// Creates a configuration object that correctly preserves type `<T>`
+  @override
   FormixFieldConfig<T> toConfig() {
     return FormixFieldConfig<T>(
       id: id,

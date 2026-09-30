@@ -60,7 +60,7 @@ void main() {
       // Get controller to check values
       final controller = Formix.of(
         tester.element(find.byType(FormixFieldTransformer<String, int>)),
-      )!;
+      );
 
       // Initial value should be transformed
       expect(controller.getValue(targetField), 2);
@@ -94,7 +94,7 @@ void main() {
 
       final controller = Formix.of(
         tester.element(find.byType(FormixFieldTransformer<String, int>)),
-      )!;
+      );
 
       expect(controller.getValue(targetField), 0);
 
@@ -129,7 +129,7 @@ void main() {
 
       final controller = Formix.of(
         tester.element(find.byType(FormixFieldTransformer<String, int>)),
-      )!;
+      );
 
       // Should not crash, target field should keep its initial value
       expect(controller.getValue(targetField), 100);
@@ -162,7 +162,7 @@ void main() {
 
       final controller = Formix.of(
         tester.element(find.byType(FormixFieldTransformer<String, int>)),
-      )!;
+      );
 
       expect(controller.getValue(targetField), 3); // "old".length
 
@@ -232,7 +232,7 @@ void main() {
         ),
       );
 
-      final controller = Formix.of(tester.element(find.byType(FormixFieldTransformer<Map<String, dynamic>, String>)))!;
+      final controller = Formix.of(tester.element(find.byType(FormixFieldTransformer<Map<String, dynamic>, String>)));
 
       // Initial transform on mount
       expect(transformCount, 1);

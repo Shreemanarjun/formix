@@ -33,7 +33,7 @@ void main() {
       expect(find.text('User: John'), findsOneWidget);
       final initialBuildCount = buildCount;
 
-      final controller = Formix.of(tester.element(find.byType(FormixDependentField<Map<String, dynamic>>)))!;
+      final controller = Formix.of(tester.element(find.byType(FormixDependentField<Map<String, dynamic>>)));
 
       // Change age (unselected)
       controller.setValue(objectField, <String, dynamic>{'name': 'John', 'age': 26});
@@ -82,7 +82,7 @@ void main() {
       expect(futureCallCount, 1);
       expect(find.text('Result: Hello John'), findsOneWidget);
 
-      final controller = Formix.of(tester.element(find.byType(FormixDependentAsyncField<String, Map<String, dynamic>>)))!;
+      final controller = Formix.of(tester.element(find.byType(FormixDependentAsyncField<String, Map<String, dynamic>>)));
 
       // Change age (unselected)
       controller.setValue(objectField, <String, dynamic>{'name': 'John', 'age': 26});
@@ -128,7 +128,7 @@ void main() {
         ),
       );
 
-      final controller = Formix.of(tester.element(find.byType(FormixFieldDerivation)))!;
+      final controller = Formix.of(tester.element(find.byType(FormixFieldDerivation)));
 
       await tester.pump(); // for initial microtask recalculation
       expect(deriveCount, 1);
@@ -176,7 +176,7 @@ void main() {
       await tester.pump();
       final initialBuildCount = buildCount;
 
-      final controller = Formix.of(tester.element(find.byType(FormixFieldSelector<Map<String, dynamic>>)))!;
+      final controller = Formix.of(tester.element(find.byType(FormixFieldSelector<Map<String, dynamic>>)));
 
       // Change age
       controller.setValue(objectField, <String, dynamic>{'name': 'John', 'age': 26});
@@ -218,7 +218,7 @@ void main() {
       await tester.pump();
       final initialBuildCount = buildCount;
 
-      final controller = Formix.of(tester.element(find.byType(FormixFieldValueSelector<Map<String, dynamic>>)))!;
+      final controller = Formix.of(tester.element(find.byType(FormixFieldValueSelector<Map<String, dynamic>>)));
 
       // Change age
       controller.setValue(objectField, <String, dynamic>{'name': 'John', 'age': 26});

@@ -97,7 +97,7 @@ void main() {
                     builder: (context) {
                       return ElevatedButton(
                         onPressed: () {
-                          Formix.of(context)?.reset();
+                          Formix.of(context).reset();
                         },
                         child: const Text('Reset Form'),
                       );

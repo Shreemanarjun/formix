@@ -43,6 +43,9 @@ class FormixScope {
   /// Only rebuilds the widget when this specific field's value changes.
   T? watchValue<T>(FormixFieldID<T> id) => _watch(controller.valueSignal(id));
 
+  /// Short alias for [watchValue].
+  T? watch<T>(FormixFieldID<T> id) => watchValue(id);
+
   /// Watch a specific field's validation state.
   ValidationResult watchValidation<T>(FormixFieldID<T> id) => _watch(controller.validationSignal(id));
 
@@ -282,7 +285,7 @@ mixin _FormixReactiveScopeMixin<W extends StatefulWidget> on State<W> {
     Object? Function(FormixData state)? select,
     Widget Function(BuildContext context, FormixScope scope) builder,
   ) {
-    final controller = Formix.of(context)!;
+    final controller = Formix.of(context);
 
     if (_scope == null || _previousController != controller) {
       _previousController = controller;

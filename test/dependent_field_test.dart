@@ -34,7 +34,7 @@ void main() {
       // Change the watched field value
       final controller = Formix.of(
         tester.element(find.text('Value: initial')),
-      )!;
+      );
       controller.setValue(watchedField, 'updated');
 
       await tester.pump();
@@ -87,7 +87,7 @@ void main() {
       // Change the unwatched field
       final controller = Formix.of(
         tester.element(find.text('Watched: initial')),
-      )!;
+      );
       controller.setValue(otherField, 'changed');
 
       await tester.pump();
@@ -120,7 +120,7 @@ void main() {
       expect(find.text('Number: 42'), findsOneWidget);
 
       // Change value
-      final controller = Formix.of(tester.element(find.text('Number: 42')))!;
+      final controller = Formix.of(tester.element(find.text('Number: 42')));
       controller.setValue(intField, 99);
 
       await tester.pump();
@@ -151,7 +151,7 @@ void main() {
       expect(find.text('Boolean: true'), findsOneWidget);
 
       // Change value
-      final controller = Formix.of(tester.element(find.text('Boolean: true')))!;
+      final controller = Formix.of(tester.element(find.text('Boolean: true')));
       controller.setValue(boolField, false);
 
       await tester.pump();
@@ -184,7 +184,7 @@ void main() {
       expect(find.text('Double: 3.14'), findsOneWidget);
 
       // Change value
-      final controller = Formix.of(tester.element(find.text('Double: 3.14')))!;
+      final controller = Formix.of(tester.element(find.text('Double: 3.14')));
       controller.setValue(doubleField, 2.71);
 
       await tester.pump();
@@ -193,14 +193,14 @@ void main() {
     });
 
     testWidgets('handles null values correctly', (tester) async {
-      const nullableField = FormixFieldID<String>('nullable_field');
+      const nullableField = FormixFieldID<String?>('nullable_field');
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: Formix(
-              fields: const [FormixFieldConfig(id: nullableField)],
-              child: FormixDependentField<String>(
+              fields: const [FormixFieldConfig<String?>(id: nullableField)],
+              child: FormixDependentField<String?>(
                 fieldId: nullableField,
                 builder: (context, value) {
                   return Text('Value: ${value ?? "null"}');
@@ -214,7 +214,7 @@ void main() {
       expect(find.text('Value: null'), findsOneWidget);
 
       // Set a value
-      final controller = Formix.of(tester.element(find.text('Value: null')))!;
+      final controller = Formix.of(tester.element(find.text('Value: null')));
       controller.setValue(nullableField, 'not null');
 
       await tester.pump();
@@ -375,7 +375,7 @@ void main() {
       // Change the list
       final controller = Formix.of(
         tester.element(find.text('List length: 3')),
-      )!;
+      );
       controller.setValue(listField, ['x', 'y']);
 
       await tester.pump();
@@ -410,7 +410,7 @@ void main() {
       // Change status
       final controller = Formix.of(
         tester.element(find.text('Status: ACTIVE')),
-      )!;
+      );
       controller.setValue(statusField, 'inactive');
 
       await tester.pump();
@@ -444,7 +444,7 @@ void main() {
       expect(buildCount, 1);
 
       // Make rapid changes
-      final controller = Formix.of(tester.element(find.text('Count: 0')))!;
+      final controller = Formix.of(tester.element(find.text('Count: 0')));
 
       controller.setValue(counterField, 1);
       await tester.pump();
@@ -487,7 +487,7 @@ void main() {
       expect(find.text('Value: null'), findsOneWidget);
 
       // Set invalid value
-      final controller = Formix.of(tester.element(find.text('Value: null')))!;
+      final controller = Formix.of(tester.element(find.text('Value: null')));
       controller.setValue(validatedField, 'ab');
 
       await tester.pump();
@@ -551,7 +551,7 @@ void main() {
         // Change field1
         final controller = Formix.of(
           tester.element(find.text('Field1: value1')),
-        )!;
+        );
         controller.setValue(field1, 'changed1');
 
         await tester.pump();
@@ -588,7 +588,7 @@ void main() {
       expect(find.text('Temp: exists'), findsOneWidget);
 
       // Remove the field
-      final controller = Formix.of(tester.element(find.text('Temp: exists')))!;
+      final controller = Formix.of(tester.element(find.text('Temp: exists')));
       controller.unregisterField(tempField);
 
       await tester.pump();

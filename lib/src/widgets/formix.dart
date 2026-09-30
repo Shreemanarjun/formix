@@ -70,7 +70,7 @@ class Formix extends StatefulWidget {
   final Map<String, dynamic> initialValue;
 
   /// Configuration for the fields in this form.
-  final List<FormixFieldConfig<dynamic>> fields;
+  final List<FormixFieldDefinition> fields;
 
   /// Optional persistence handler.
   final FormixPersistence? persistence;
@@ -106,14 +106,30 @@ class Formix extends StatefulWidget {
   @override
   State<Formix> createState() => FormixState();
 
-  /// Get the [FormixController] from the nearest [Formix] ancestor, or null.
-  static FormixController? of(BuildContext context) {
+  /// The [FormixController] of the nearest [Formix] ancestor.
+  ///
+  /// Throws a [FlutterError] if there is no ancestor — use [maybeOf] when the
+  /// absence of a form is a valid state.
+  static FormixController of(BuildContext context) {
+    final controller = maybeOf(context);
+    if (controller == null) {
+      throw FlutterError(
+        'Formix.of() was called with a context that does not contain a Formix.\n'
+        'Wrap the widget subtree in a Formix, pass an explicit controller, or use '
+        'Formix.maybeOf(context) if the form may be absent.',
+      );
+    }
+    return controller;
+  }
+
+  /// The [FormixController] of the nearest [Formix] ancestor, or null if none.
+  static FormixController? maybeOf(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<_FormixControllerScope>();
     return scope?.controller;
   }
 
-  /// Get the [FormixController] instance from the nearest [Formix] ancestor.
-  static FormixController? controllerOf(BuildContext context) => of(context);
+  /// Alias for [maybeOf] (nullable) — reads well at field call sites.
+  static FormixController? controllerOf(BuildContext context) => maybeOf(context);
 }
 
 /// State for [Formix], allowing external control via [GlobalKey].
@@ -139,7 +155,7 @@ class FormixState extends State<Formix> with AutomaticKeepAliveClientMixin {
   FormixParameter _createParameter() {
     return FormixParameter(
       initialValue: widget.initialValue,
-      fields: widget.fields,
+      fields: widget.fields.map((f) => f.toConfig()).toList(),
       persistence: widget.persistence,
       formId: widget.formId,
       namespace: _internalFormId,
@@ -157,7 +173,7 @@ class FormixState extends State<Formix> with AutomaticKeepAliveClientMixin {
       _ownsController = false;
       // Register this form's fields onto the externally-owned controller.
       if (widget.fields.isNotEmpty) {
-        external.registerFields(widget.fields.map((f) => f.toField()).toList());
+        external.registerFields(widget.fields.map((f) => f.toConfig().toField()).toList());
       }
       if (widget.messages != null) external.updateMessages(widget.messages);
       return external;
@@ -202,7 +218,7 @@ class FormixState extends State<Formix> with AutomaticKeepAliveClientMixin {
     }
 
     if (!const ListEquality().equals(widget.fields, oldWidget.fields)) {
-      _controller.registerFields(widget.fields.map((f) => f.toField()).toList());
+      _controller.registerFields(widget.fields.map((f) => f.toConfig().toField()).toList());
     }
   }
 
@@ -260,7 +276,7 @@ class _FormixControllerScope extends InheritedWidget {
   });
 
   final FormixController controller;
-  final List<FormixFieldConfig<dynamic>> fields;
+  final List<FormixFieldDefinition> fields;
 
   @override
   bool updateShouldNotify(_FormixControllerScope oldWidget) {

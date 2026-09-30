@@ -88,7 +88,7 @@ void main() {
       expect(find.text('123'), findsOneWidget);
 
       // Check that the controller has the updated value
-      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
+      final controller = Formix.of(tester.element(find.byType(TextFormField)));
       expect(controller.getValue(numField), 123);
     });
 
@@ -110,7 +110,7 @@ void main() {
 
       expect(find.text('123.45'), findsOneWidget);
 
-      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
+      final controller = Formix.of(tester.element(find.byType(TextFormField)));
       expect(controller.getValue(numField), 123.45);
     });
 
@@ -135,7 +135,7 @@ void main() {
       expect(find.text('5'), findsOneWidget);
 
       // But the controller value should remain unchanged
-      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
+      final controller = Formix.of(tester.element(find.byType(TextFormField)));
       expect(controller.getValue(numField), 50); // Should still be 50
     });
 
@@ -160,7 +160,7 @@ void main() {
       expect(find.text('150'), findsOneWidget);
 
       // But the controller value should remain unchanged
-      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
+      final controller = Formix.of(tester.element(find.byType(TextFormField)));
       expect(controller.getValue(numField), 50);
     });
 
@@ -182,7 +182,7 @@ void main() {
       await tester.pump();
 
       // Should use the current value as default (42.0)
-      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
+      final controller = Formix.of(tester.element(find.byType(TextFormField)));
       expect(controller.getValue(numField), 42.0);
     });
 
@@ -207,7 +207,7 @@ void main() {
       expect(find.text('not-a-number'), findsOneWidget);
 
       // Controller value should remain unchanged
-      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
+      final controller = Formix.of(tester.element(find.byType(TextFormField)));
       expect(controller.getValue(numField), 42);
     });
 
@@ -227,7 +227,7 @@ void main() {
       expect(find.text('42'), findsOneWidget);
 
       // Change value externally
-      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
+      final controller = Formix.of(tester.element(find.byType(TextFormField)));
       controller.setValue(numField, 99);
       await tester.pump();
 
@@ -391,7 +391,7 @@ void main() {
       await tester.enterText(find.byType(TextFormField), '123.7');
       await tester.pump();
 
-      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
+      final controller = Formix.of(tester.element(find.byType(TextFormField)));
       final value = controller.getValue(intField);
 
       expect(value, isA<int>());
@@ -416,7 +416,7 @@ void main() {
       await tester.enterText(find.byType(TextFormField), '123');
       await tester.pump();
 
-      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
+      final controller = Formix.of(tester.element(find.byType(TextFormField)));
       final value = controller.getValue(doubleField);
 
       expect(value, isA<double>());
@@ -438,7 +438,7 @@ void main() {
       // Should display empty text
       expect(find.text(''), findsOneWidget);
 
-      final controller = Formix.of(tester.element(find.byType(TextFormField)))!;
+      final controller = Formix.of(tester.element(find.byType(TextFormField)));
       expect(controller.getValue(numField), isNull);
     });
 

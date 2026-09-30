@@ -25,11 +25,17 @@ class _RecordingPersistence implements FormixPersistence {
 
 void main() {
   group('FormixController thin wrappers', () {
-    test('constructor throws for invalid field type', () {
-      expect(
-        () => FormixController(fields: const [42]),
-        throwsA(isA<ArgumentError>()),
+    test('constructor accepts FormixField and FormixFieldConfig together', () {
+      // FormixFieldDefinition unifies both — no List<dynamic>, no runtime check.
+      final c = FormixController(
+        fields: const [
+          FormixField<String>(id: FormixFieldID<String>('a'), initialValue: 'x'),
+          FormixFieldConfig<int>(id: FormixFieldID<int>('b'), initialValue: 1),
+        ],
       );
+      addTearDown(c.dispose);
+      expect(c.getValue(const FormixFieldID<String>('a')), 'x');
+      expect(c.getValue(const FormixFieldID<int>('b')), 1);
     });
 
     test('isPendingSignal / currentStepSignal expose state', () {

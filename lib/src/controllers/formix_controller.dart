@@ -5,7 +5,6 @@ import 'package:flutter/semantics.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'formix_base_controller.dart';
 import 'field_id.dart';
-import 'field.dart';
 import 'validation.dart';
 import '../enums.dart';
 import '../persistence/form_persistence.dart';
@@ -23,7 +22,7 @@ class FormixController extends FormixBaseController {
   /// Creates a [FormixController] with optional configuration.
   FormixController({
     Map<String, dynamic> initialValue = const {},
-    List<dynamic> fields = const [],
+    List<FormixFieldDefinition> fields = const [],
     FormixPersistence? persistence,
     String? formId,
     FormixAnalytics? analytics,
@@ -36,13 +35,7 @@ class FormixController extends FormixBaseController {
          FormixParameter(
            initialValue: initialValue,
            messages: messages,
-           fields: fields.map<FormixFieldConfig>((f) {
-             if (f is FormixFieldConfig) return f;
-             if (f is FormixField) {
-               return f.toConfig();
-             }
-             throw ArgumentError('Invalid field type: ${f.runtimeType}');
-           }).toList(),
+           fields: fields.map((f) => f.toConfig()).toList(),
            persistence: persistence,
            formId: formId,
            analytics: analytics,
@@ -118,6 +111,42 @@ class FormixController extends FormixBaseController {
 
   /// Reactive dirtiness of a field-name group.
   ReadonlySignal<bool> groupDirtySignal(String prefix) => _groupDirtySignals.putIfAbsent(prefix, () => computed(() => state.isGroupDirty(prefix)));
+
+  // --- Typed record groups (Dart 3 records) ---
+  // Read several typed fields as one destructurable record inside a
+  // [SignalBuilder]; the record signal composes the per-field value signals, so
+  // it rebuilds only when one of its members changes — no cast, full type safety.
+  final Map<String, ReadonlySignal<dynamic>> _recordGroupSignals = {};
+
+  /// Two typed fields as a reactive `(A?, B?)` record.
+  ///
+  /// ```dart
+  /// final (email, password) = c.group2(emailId, passwordId).value;
+  /// ```
+  ReadonlySignal<(A?, B?)> group2<A, B>(FormixFieldID<A> a, FormixFieldID<B> b) {
+    return _recordGroupSignals.putIfAbsent('2:${a.key}<$A>|${b.key}<$B>', () {
+      final sa = valueSignal(a), sb = valueSignal(b);
+      return computed<(A?, B?)>(() => (sa.value, sb.value));
+    }) as ReadonlySignal<(A?, B?)>;
+  }
+
+  /// Three typed fields as a reactive `(A?, B?, C?)` record.
+  ReadonlySignal<(A?, B?, C?)> group3<A, B, C>(FormixFieldID<A> a, FormixFieldID<B> b, FormixFieldID<C> c) {
+    return _recordGroupSignals.putIfAbsent('3:${a.key}<$A>|${b.key}<$B>|${c.key}<$C>', () {
+      final sa = valueSignal(a), sb = valueSignal(b), sc = valueSignal(c);
+      return computed<(A?, B?, C?)>(() => (sa.value, sb.value, sc.value));
+    }) as ReadonlySignal<(A?, B?, C?)>;
+  }
+
+  /// Four typed fields as a reactive `(A?, B?, C?, D?)` record.
+  // ponytail: arity capped at 4 (covers login/name/address forms); for 5+
+  // compose a `derived((s) => (...))` reading each field.
+  ReadonlySignal<(A?, B?, C?, D?)> group4<A, B, C, D>(FormixFieldID<A> a, FormixFieldID<B> b, FormixFieldID<C> c, FormixFieldID<D> d) {
+    return _recordGroupSignals.putIfAbsent('4:${a.key}<$A>|${b.key}<$B>|${c.key}<$C>|${d.key}<$D>', () {
+      final sa = valueSignal(a), sb = valueSignal(b), sc = valueSignal(c), sd = valueSignal(d);
+      return computed<(A?, B?, C?, D?)>(() => (sa.value, sb.value, sc.value, sd.value));
+    }) as ReadonlySignal<(A?, B?, C?, D?)>;
+  }
 
   /// Reactive form validity.
   ReadonlySignal<bool> get isValidSignal => _isValidSignal ??= computed(() => state.isValid);
@@ -436,6 +465,7 @@ class FormixController extends FormixBaseController {
       ..._pendingSignals.values,
       ..._groupValidSignals.values,
       ..._groupDirtySignals.values,
+      ..._recordGroupSignals.values,
       ..._derivedSignals,
       ..._enabledSignals.values,
       ..._readOnlySignals.values,

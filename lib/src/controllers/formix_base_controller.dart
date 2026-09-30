@@ -637,6 +637,26 @@ class FormixBaseController {
     return _batchUpdate(batch.updates, strict: strict);
   }
 
+  /// Builds and applies a [FormixBatch] in one step:
+  /// ```dart
+  /// controller.batchUpdate((b) => b..set(nameId, 'Ada')..set(ageId, 36));
+  /// ```
+  FormixBatchResult batchUpdate(void Function(FormixBatch batch) build, {bool strict = false}) {
+    final batch = FormixBatch();
+    build(batch);
+    return applyBatch(batch, strict: strict);
+  }
+
+  /// Terse value accessor: `controller[fieldId]`.
+  ///
+  /// Returns the value as `dynamic` (operators can't be generic in Dart); prefer
+  /// [getValue] for a statically-typed result. Runtime type safety is preserved.
+  dynamic operator [](FormixFieldID<dynamic> fieldId) => getValue(fieldId);
+
+  /// Terse setter: `controller[fieldId] = value`. Equivalent to [setValue] and
+  /// still type-checked at runtime against the field's declared type.
+  void operator []=(FormixFieldID<dynamic> fieldId, dynamic value) => setValue(fieldId, value);
+
   FormixBatchResult _batchUpdate(
     Map<dynamic, dynamic> updates, {
     bool strict = false,

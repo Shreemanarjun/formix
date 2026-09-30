@@ -203,15 +203,21 @@ void main() {
       expect(find.text('Form 2 Valid: true'), findsOneWidget);
     });
 
-    testWidgets('Formix.of returns null when no form is present', (
+    testWidgets('Formix.maybeOf returns null; Formix.of throws when absent', (
       tester,
     ) async {
+      Object? thrown;
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
             body: Builder(
               builder: (context) {
-                final provider = Formix.of(context);
+                final provider = Formix.maybeOf(context);
+                try {
+                  Formix.of(context);
+                } catch (e) {
+                  thrown = e;
+                }
                 return Text('No Form: ${provider == null}');
               },
             ),
@@ -220,6 +226,7 @@ void main() {
       );
 
       expect(find.text('No Form: true'), findsOneWidget);
+      expect(thrown, isA<FlutterError>());
     });
 
     testWidgets('Dynamic form replacement works seamlessly', (tester) async {

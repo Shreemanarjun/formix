@@ -93,7 +93,7 @@ void main() {
                     fields: List.from(fields), // New list instance every time
                     child: Builder(
                       builder: (context) {
-                        final controller = Formix.of(context)!;
+                        final controller = Formix.of(context);
                         stateAfter = controller.state; // Keep track of latest state
                         return const Text('Watching');
                       },

@@ -28,7 +28,7 @@ class _FakePersistence implements FormixPersistence {
 
 FormixController _make({
   Map<String, dynamic> initialValue = const {},
-  List<dynamic> fields = const [],
+  List<FormixFieldDefinition> fields = const [],
   FormixAutovalidateMode mode = FormixAutovalidateMode.always,
   FormixPersistence? persistence,
   String? formId,

@@ -67,7 +67,7 @@ void main() {
         tester.element(
           find.byType(FormixFieldAsyncTransformer<String, String>),
         ),
-      )!;
+      );
 
       // Wait for initial transform if any (none expected if values match)
       await tester.pumpAndSettle();
@@ -115,7 +115,7 @@ void main() {
         tester.element(
           find.byType(FormixFieldAsyncTransformer<String, String>),
         ),
-      )!;
+      );
 
       // Wait for initial value debounce to settle completely
       await tester.pump(const Duration(seconds: 1));
@@ -168,7 +168,7 @@ void main() {
         tester.element(
           find.byType(FormixFieldAsyncTransformer<String, String>),
         ),
-      )!;
+      );
 
       // Trigger error
       controller.setValue(sourceField, 'new');
@@ -206,7 +206,7 @@ void main() {
           tester.element(
             find.byType(FormixFieldAsyncTransformer<String, String>),
           ),
-        )!;
+        );
 
         // Trigger async operation
         controller.setValue(sourceField, 'new');
@@ -249,7 +249,7 @@ void main() {
         ),
       );
 
-      final controller = Formix.of(tester.element(find.byType(FormixFieldAsyncTransformer<Map<String, dynamic>, String>)))!;
+      final controller = Formix.of(tester.element(find.byType(FormixFieldAsyncTransformer<Map<String, dynamic>, String>)));
 
       // Initial transform on mount
       await tester.pumpAndSettle();

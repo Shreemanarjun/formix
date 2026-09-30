@@ -21,6 +21,8 @@ export 'src/widgets/formix_listener.dart';
 export 'src/widgets/base_form_field.dart';
 export 'src/widgets/formix_controller_host.dart' show FormixControllerHost;
 export 'src/widgets/formix_form_field.dart';
+export 'src/widgets/formix_value.dart';
+export 'src/formix_context.dart';
 export 'src/widgets/checkbox_form_field.dart';
 export 'src/widgets/dropdown_form_field.dart';
 export 'src/widgets/form_status.dart';
