@@ -127,6 +127,7 @@ class FormixAsyncFieldState<T> extends FormixFieldWidgetState<T> {
   int _activeFutureVersion = 0;
   Timer? _debounceTimer;
   Future<T>? _currentFuture;
+  bool _didInitAsync = false;
 
   /// Force a re-execution (if using [future]) or refresh (if using [asyncValue]).
   Future<void> refresh() async {
@@ -147,8 +148,16 @@ class FormixAsyncFieldState<T> extends FormixFieldWidgetState<T> {
     if (widget.asyncValue != null) {
       _asyncState = widget.asyncValue!;
     }
+    // NB: the initial fetch is triggered in didChangeDependencies, once the
+    // controller has been resolved, so pending state is applied correctly.
+  }
 
-    if (!widget.manual) {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final widget = this.widget as FormixAsyncField<T>;
+    if (!_didInitAsync && !widget.manual) {
+      _didInitAsync = true;
       _initAsyncState();
     }
   }
@@ -209,15 +218,14 @@ class FormixAsyncFieldState<T> extends FormixFieldWidgetState<T> {
   }
 
   void _updatePendingState(bool isPending) {
-    if (hasController) {
-      // Use microtask to avoid "Tried to modify a provider while the widget tree was building"
-      // during initState/didUpdateWidget.
-      Future.microtask(() {
-        if (mounted && hasController) {
-          controller.setPending(widget.fieldId, isPending);
-        }
-      });
-    }
+    // Defer with a microtask so we never mutate state during a build phase, and
+    // so the controller (resolved in didChangeDependencies) is available by the
+    // time this runs.
+    Future.microtask(() {
+      if (mounted && hasController) {
+        controller.setPending(widget.fieldId, isPending);
+      }
+    });
   }
 
   @override

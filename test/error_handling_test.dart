@@ -3,28 +3,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:formix/formix.dart';
 
 void main() {
-  testWidgets('FormixField used without ProviderScope or Formix should show helpful error', (tester) async {
-    // This is expected to throw "No ProviderScope found" from Riverpod.
-    // We want to avoid the "too much render error" and show something better if possible,
-    // or at least ensure we don't have infinite loops.
-
+  testWidgets('FormixField used without a Formix ancestor shows a helpful error', (tester) async {
+    // Formix is self-contained (no ProviderScope required). A field used outside
+    // of a Formix ancestor — and without an explicit controller — should render a
+    // helpful configuration error rather than crashing or looping.
     await tester.pumpWidget(
       const MaterialApp(
         home: Scaffold(
-          body: Formix(
-            child: FormixTextFormField(
-              fieldId: FormixFieldID('name'),
-            ),
+          body: FormixTextFormField(
+            fieldId: FormixFieldID('name'),
           ),
         ),
       ),
     );
 
-    // We expect the widget to catch the error and display FormixConfigurationErrorWidget
     await tester.pump();
     final errorWidget = find.byType(FormixConfigurationErrorWidget);
 
     expect(errorWidget, findsOneWidget);
-    expect(find.textContaining('Missing ProviderScope'), findsOneWidget);
+    expect(find.textContaining('Missing Formix Ancestor'), findsOneWidget);
   });
 }

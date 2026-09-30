@@ -17,66 +17,79 @@ class FormixScope {
   /// The [FormixController] instance for the current form.
   final FormixController controller;
 
+  /// Records a signal as a rebuild dependency of the owning builder. Provided by
+  /// [FormixBuilder]/[FormixWidget] so `watch*` works even inside nested
+  /// builders (where synchronous signal tracking would not reach).
+  final void Function(ReadonlySignal<dynamic> signal)? _track;
+
   /// Creates a [FormixScope].
   FormixScope({
     required this.context,
     required this.controller,
-  });
+    void Function(ReadonlySignal<dynamic> signal)? track,
+  }) : _track = track;
 
-  // --- Reactive Accessors (read signal slices; reactive inside a SignalBuilder) ---
+  T _watch<T>(ReadonlySignal<T> signal) {
+    _track?.call(signal);
+    // peek() when tracked manually (avoids double-subscription); otherwise fall
+    // back to .value so the scope still works inside a plain SignalBuilder.
+    return _track != null ? signal.peek() : signal.value;
+  }
+
+  // --- Reactive Accessors ---
 
   /// Watch a specific field's value.
   ///
   /// Only rebuilds the widget when this specific field's value changes.
-  T? watchValue<T>(FormixFieldID<T> id) => controller.valueSignal(id).value;
+  T? watchValue<T>(FormixFieldID<T> id) => _watch(controller.valueSignal(id));
 
   /// Watch a specific field's validation state.
-  ValidationResult watchValidation<T>(FormixFieldID<T> id) => controller.validationSignal(id).value;
+  ValidationResult watchValidation<T>(FormixFieldID<T> id) => _watch(controller.validationSignal(id));
 
   /// Watch only the error message of a field. Returns null if valid.
   ///
   /// More efficient than [watchValidation] if you only need the message.
-  String? watchError<T>(FormixFieldID<T> id) => controller.validationSignal(id).value.errorMessage;
+  String? watchError<T>(FormixFieldID<T> id) => _watch(controller.validationSignal(id)).errorMessage;
 
   /// Watch if a field is currently being validated (async).
-  bool watchIsValidating<T>(FormixFieldID<T> id) => controller.validationSignal(id).value.isValidating;
+  bool watchIsValidating<T>(FormixFieldID<T> id) => _watch(controller.validationSignal(id)).isValidating;
 
   /// Watch if a specific field is valid.
-  bool watchFieldIsValid<T>(FormixFieldID<T> id) => controller.validationSignal(id).value.isValid;
+  bool watchFieldIsValid<T>(FormixFieldID<T> id) => _watch(controller.validationSignal(id)).isValid;
 
   /// Watch if a specific field is dirty (its value differs from initial).
-  bool watchIsDirty<T>(FormixFieldID<T> id) => controller.dirtySignal(id).value;
+  bool watchIsDirty<T>(FormixFieldID<T> id) => _watch(controller.dirtySignal(id));
 
   /// Watch if a specific field has been touched (focused or modified).
-  bool watchIsTouched<T>(FormixFieldID<T> id) => controller.touchedSignal(id).value;
+  bool watchIsTouched<T>(FormixFieldID<T> id) => _watch(controller.touchedSignal(id));
 
   /// Watch if a specific field is pending (optimistic update or async).
-  bool watchIsPending<T>(FormixFieldID<T> id) => controller.pendingSignal(id).value;
+  bool watchIsPending<T>(FormixFieldID<T> id) => _watch(controller.pendingSignal(id));
 
   /// Watch the overall validity of the form.
-  bool get watchIsValid => controller.isValidSignal.value;
+  bool get watchIsValid => _watch(controller.isValidSignal);
 
   /// Watch if the form has any modifications at all.
-  bool get watchIsFormDirty => controller.isDirtySignal.value;
+  bool get watchIsFormDirty => _watch(controller.isDirtySignal);
 
   /// Watch if the form is currently submitting or performing async validation.
-  bool get watchIsSubmitting => controller.isSubmittingSignal.value;
+  bool get watchIsSubmitting => _watch(controller.isSubmittingSignal);
 
   /// Watch the current step in a multi-step form.
-  int get watchCurrentStep => controller.currentStepSignal.value;
+  int get watchCurrentStep => _watch(controller.currentStepSignal);
 
   /// Get the current form state (watches the entire state object).
   ///
   /// WARNING: Using this will cause the widget to rebuild whenever ANY field
   /// in the form changes. For better performance, use field-specific watchers
   /// like [watchValue] or [watchValidation].
-  FormixData get watchState => controller.state;
+  FormixData get watchState => _watch(controller.stateSignal);
 
   /// Watch if a specific group of fields is valid.
-  bool watchGroupIsValid(String prefix) => controller.groupValidSignal(prefix).value;
+  bool watchGroupIsValid(String prefix) => _watch(controller.groupValidSignal(prefix));
 
   /// Watch if a specific group of fields contains any modifications.
-  bool watchGroupIsDirty(String prefix) => controller.groupDirtySignal(prefix).value;
+  bool watchGroupIsDirty(String prefix) => _watch(controller.groupDirtySignal(prefix));
 
   // --- Action Methods (Non-reactive) ---
 
@@ -226,43 +239,84 @@ class FormixBuilder extends StatefulWidget {
   State<FormixBuilder> createState() => _FormixBuilderState();
 }
 
-class _FormixBuilderState extends State<FormixBuilder> {
-  FormixScope? _scope;
-  FormixController? _previousController;
-  Computed<Object?>? _selected;
-
-  @override
-  void dispose() {
-    _selected?.dispose();
-    super.dispose();
-  }
-
+class _FormixBuilderState extends State<FormixBuilder> with _FormixReactiveScopeMixin {
   @override
   Widget build(BuildContext context) {
     final errorWidget = FormixAncestorValidator.validate(
       context,
       widgetName: 'FormixBuilder',
     );
-
     if (errorWidget != null) return errorWidget;
 
+    return buildReactive(context, widget.select, (context, scope) => widget.builder(context, scope));
+  }
+}
+
+/// Shared reactive plumbing for [FormixBuilder] and [FormixWidget].
+///
+/// `scope.watch*` records each accessed signal via [_track]; this mixin keeps a
+/// live subscription per signal that calls [setState] on change. This makes
+/// `watch*` reactive even when called from a nested builder (where synchronous
+/// signal tracking would not reach), matching the old `ref.watch` behaviour.
+mixin _FormixReactiveScopeMixin<W extends StatefulWidget> on State<W> {
+  FormixScope? _scope;
+  FormixController? _previousController;
+  final Map<ReadonlySignal<dynamic>, VoidCallback> _subs = {};
+  Computed<Object?>? _selected;
+  VoidCallback? _selectedSub;
+
+  void _track(ReadonlySignal<dynamic> signal) {
+    if (_subs.containsKey(signal)) return;
+    var first = true;
+    _subs[signal] = signal.subscribe((_) {
+      if (first) {
+        first = false; // skip the immediate synchronous callback
+        return;
+      }
+      if (mounted) setState(() {});
+    });
+  }
+
+  Widget buildReactive(
+    BuildContext context,
+    Object? Function(FormixData state)? select,
+    Widget Function(BuildContext context, FormixScope scope) builder,
+  ) {
     final controller = Formix.of(context)!;
 
     if (_scope == null || _previousController != controller) {
-      _scope = FormixScope(context: context, controller: controller);
       _previousController = controller;
+      _scope = FormixScope(context: context, controller: controller, track: _track);
+      _selectedSub?.call();
       _selected?.dispose();
-      _selected = widget.select != null ? computed(() => widget.select!(controller.state)) : null;
+      _selected = null;
+      _selectedSub = null;
+      if (select != null) {
+        final selected = computed(() => select(controller.state));
+        _selected = selected;
+        var first = true;
+        _selectedSub = selected.subscribe((_) {
+          if (first) {
+            first = false;
+            return;
+          }
+          if (mounted) setState(() {});
+        });
+      }
     }
 
-    return SignalBuilder(
-      builder: (context) {
-        // Subscribe to the selected slice (if provided); scope.watch* calls
-        // inside the builder add their own fine-grained subscriptions.
-        _selected?.value;
-        return widget.builder(context, _scope!);
-      },
-    );
+    return builder(context, _scope!);
+  }
+
+  @override
+  void dispose() {
+    for (final unsub in _subs.values) {
+      unsub();
+    }
+    _subs.clear();
+    _selectedSub?.call();
+    _selected?.dispose();
+    super.dispose();
   }
 }
 
@@ -302,40 +356,15 @@ abstract class FormixWidget extends StatefulWidget {
   Widget buildForm(BuildContext context, FormixScope scope);
 }
 
-class _FormixWidgetState extends State<FormixWidget> {
-  FormixScope? _scope;
-  FormixController? _previousController;
-  Computed<Object?>? _selected;
-
-  @override
-  void dispose() {
-    _selected?.dispose();
-    super.dispose();
-  }
-
+class _FormixWidgetState extends State<FormixWidget> with _FormixReactiveScopeMixin {
   @override
   Widget build(BuildContext context) {
     final errorWidget = FormixAncestorValidator.validate(
       context,
       widgetName: widget.runtimeType.toString(),
     );
-
     if (errorWidget != null) return errorWidget;
 
-    final controller = Formix.of(context)!;
-
-    if (_scope == null || _previousController != controller) {
-      _scope = FormixScope(context: context, controller: controller);
-      _previousController = controller;
-      _selected?.dispose();
-      _selected = widget.select != null ? computed(() => widget.select!(controller.state)) : null;
-    }
-
-    return SignalBuilder(
-      builder: (context) {
-        _selected?.value;
-        return widget.buildForm(context, _scope!);
-      },
-    );
+    return buildReactive(context, widget.select, (context, scope) => widget.buildForm(context, scope));
   }
 }

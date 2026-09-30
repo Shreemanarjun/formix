@@ -209,7 +209,10 @@ class FormixState extends State<Formix> with AutomaticKeepAliveClientMixin {
   @override
   void dispose() {
     _removeChangeListener?.call();
-    if (_ownsController) {
+    // Dispose only a controller we own. With keepAlive, ownership transfers to
+    // the caller (retain it via a GlobalKey/controller ref) so its state
+    // survives this widget being unmounted (e.g. navigating away).
+    if (_ownsController && !widget.keepAlive) {
       _controller.dispose();
     }
     super.dispose();

@@ -66,6 +66,8 @@ class _FormixFieldAsyncTransformerState<T, S> extends State<FormixFieldAsyncTran
   VoidCallback? _formListenerRemover;
   VoidCallback? _disposeEffect;
   bool _wasSubmitting = false;
+  bool _primed = false;
+  Object? _lastDep;
   Object? _initializationError;
 
   @override
@@ -111,16 +113,27 @@ class _FormixFieldAsyncTransformerState<T, S> extends State<FormixFieldAsyncTran
     _initializationError = null;
   }
 
-  /// Subscribes to the source field; the effect re-runs (and feeds the debounce
-  /// stream) whenever the source value (or its selected part) changes.
+  /// Subscribes to the source field and feeds the debounce stream whenever the
+  /// source value (or its selected part) actually changes.
+  ///
+  /// The effect tracks ONLY the source value; the side-effect runs [untracked]
+  /// so mutating the target does not re-trigger this effect (which would
+  /// otherwise cause an infinite transform loop). It transforms on the first run
+  /// (initial mount) and thereafter only when the selected part actually changes.
   void _wireEffect() {
     _disposeEffect?.call();
+    _primed = false;
     final controller = _controller;
     if (controller == null) return;
     _disposeEffect = effect(() {
       final value = controller.valueSignal(widget.sourceField).value;
-      if (widget.select != null) widget.select!(value);
-      _onSourceChanged();
+      final dep = widget.select != null ? widget.select!(value) : value;
+      final shouldTransform = !_primed || dep != _lastDep;
+      _primed = true;
+      _lastDep = dep;
+      if (shouldTransform) {
+        untracked(() => _onSourceChanged(value));
+      }
     });
   }
 
@@ -167,22 +180,17 @@ class _FormixFieldAsyncTransformerState<T, S> extends State<FormixFieldAsyncTran
     super.dispose();
   }
 
-  void _onSourceChanged() {
+  void _onSourceChanged(T? sourceValue) {
     if (!mounted || _controller == null) return;
 
-    // Mark as pending. Use microtask since this might be called during build
-    // (e.g. didChangeDependencies)
+    // Mark as pending; deferred so it never mutates state during a build phase.
     Future.microtask(() {
       if (mounted && _controller != null) {
         _controller!.setPending(widget.targetField, true);
       }
     });
 
-    // Get source value
-    final dynamic rawValue = _controller!.getValue(widget.sourceField);
-    final T? sourceValue = rawValue as T?;
-
-    // Emit to stream for debouncing and processing
+    // Emit to the (optionally debounced) stream for processing.
     _inputController.add(sourceValue);
   }
 
@@ -191,8 +199,7 @@ class _FormixFieldAsyncTransformerState<T, S> extends State<FormixFieldAsyncTran
 
     final isSubmitting = state.isSubmitting;
     if (isSubmitting && !_wasSubmitting) {
-      // Started submitting, re-trigger transform
-      _onSourceChanged();
+      _onSourceChanged(state.getValue(widget.sourceField));
     }
     _wasSubmitting = isSubmitting;
   }
@@ -234,12 +241,9 @@ class _FormixFieldAsyncTransformerState<T, S> extends State<FormixFieldAsyncTran
     if (_initializationError != null) {
       return FormixConfigurationErrorWidget(
         message: _initializationError is String ? _initializationError as String : 'Failed to initialize FormixFieldAsyncTransformer',
-        details: _initializationError.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.'
-            : 'Error: $_initializationError',
+        details: 'Error: $_initializationError',
       );
     }
-    // Reactivity is handled by the effect wired in didChangeDependencies.
     return const SizedBox.shrink();
   }
 }

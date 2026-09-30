@@ -68,6 +68,8 @@ class _FormixFieldDerivationState extends State<FormixFieldDerivation> {
   FormixController? _controller;
   Object? _initializationError;
   VoidCallback? _disposeEffect;
+  bool _primed = false;
+  List<Object?>? _lastSig;
 
   @override
   void didChangeDependencies() {
@@ -90,40 +92,42 @@ class _FormixFieldDerivationState extends State<FormixFieldDerivation> {
     _initializationError = null;
   }
 
-  /// Subscribes to the dependency signals; the effect re-runs (and recalculates)
-  /// whenever any watched dependency value changes.
+  /// Subscribes to the dependency signals and recalculates whenever the watched
+  /// dependency values (respecting optional selectors) actually change.
+  ///
+  /// The effect tracks only the dependency values; the recalculation runs
+  /// [untracked] so writing the target never re-triggers it. It derives on the
+  /// first run (mount) and thereafter only when a selected part changes.
   void _wireEffect() {
     _disposeEffect?.call();
+    _primed = false;
     final controller = _controller;
     if (controller == null) return;
     _disposeEffect = effect(() {
-      // Read (subscribe to) each dependency, respecting the optional selector.
+      final values = <FormixFieldID<dynamic>, dynamic>{};
+      final sig = <Object?>[];
       for (final fieldId in widget.dependencies) {
         final value = controller.valueSignal(fieldId).value;
+        values[fieldId] = value;
         final selector = widget.selectors?[fieldId];
-        if (selector != null) selector(value);
+        sig.add(selector != null ? selector(value) : value);
       }
-      _recalculate();
+      final shouldDerive = !_primed || !listEquals(sig, _lastSig);
+      _primed = true;
+      _lastSig = sig;
+      if (shouldDerive) {
+        untracked(() => _recalculate(values));
+      }
     });
   }
 
-  void _recalculate() {
+  void _recalculate(Map<FormixFieldID<dynamic>, dynamic> values) {
     if (_controller == null || !mounted) return;
 
     try {
-      // Get current values of all dependencies
-      final values = <FormixFieldID<dynamic>, dynamic>{};
-      for (final fieldId in widget.dependencies) {
-        values[fieldId] = _controller!.getValue(fieldId);
-      }
-
-      // Compute the derived value
       final derivedValue = widget.derive(values);
-
-      // Only update if the value has actually changed to avoid infinite loops
       final currentValue = _controller!.getValue(widget.targetField);
       if (currentValue != derivedValue) {
-        // Defer the update to avoid modifying provider during widget building
         scheduleMicrotask(() {
           if (_controller != null && mounted) {
             _controller!.setValue(widget.targetField, derivedValue);
@@ -131,11 +135,9 @@ class _FormixFieldDerivationState extends State<FormixFieldDerivation> {
         });
       }
     } catch (e) {
-      // Log error in debug mode
       if (kDebugMode) {
         debugPrint('Error in field derivation for ${widget.targetField}: $e');
       }
-      // In production, we silently ignore errors to prevent crashes
     }
   }
 
@@ -161,14 +163,9 @@ class _FormixFieldDerivationState extends State<FormixFieldDerivation> {
     if (_initializationError != null) {
       return FormixConfigurationErrorWidget(
         message: _initializationError is String ? _initializationError as String : 'Failed to initialize FormixFieldDerivation',
-        details: _initializationError.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.'
-            : 'Error: $_initializationError',
+        details: 'Error: $_initializationError',
       );
     }
-
-    // Reactivity is handled by the effect wired in didChangeDependencies.
-    // This widget doesn't render anything visible.
     return const SizedBox.shrink();
   }
 }
@@ -226,34 +223,36 @@ class _FormixFieldDerivationsState extends State<FormixFieldDerivations> {
     if (controller == null) return;
 
     for (final config in widget.derivations) {
+      // Per-config baseline so each derivation gates independently and derives on
+      // its own first run, then only when a selected dependency part changes.
+      var primed = false;
+      List<Object?>? lastSig;
       _disposeEffects.add(effect(() {
+        final values = <FormixFieldID<dynamic>, dynamic>{};
+        final sig = <Object?>[];
         for (final dep in config.dependencies) {
           final value = controller.valueSignal(dep).value;
+          values[dep] = value;
           final selector = config.selectors?[dep];
-          if (selector != null) selector(value);
+          sig.add(selector != null ? selector(value) : value);
         }
-        _recalculate(config);
+        final shouldDerive = !primed || !listEquals(sig, lastSig);
+        primed = true;
+        lastSig = sig;
+        if (shouldDerive) {
+          untracked(() => _recalculate(config, values));
+        }
       }));
     }
   }
 
-  void _recalculate(FieldDerivationConfig config) {
+  void _recalculate(FieldDerivationConfig config, Map<FormixFieldID<dynamic>, dynamic> values) {
     if (_controller == null || !mounted) return;
 
     try {
-      // Get current values of all dependencies
-      final values = <FormixFieldID<dynamic>, dynamic>{};
-      for (final fieldId in config.dependencies) {
-        values[fieldId] = _controller!.getValue(fieldId);
-      }
-
-      // Compute the derived value
       final derivedValue = config.derive(values);
-
-      // Only update if the value has actually changed to avoid infinite loops
       final currentValue = _controller!.getValue(config.targetField);
       if (currentValue != derivedValue) {
-        // Defer the update to avoid modifying provider during widget building
         scheduleMicrotask(() {
           if (_controller != null && mounted) {
             _controller!.setValue(config.targetField, derivedValue);
@@ -292,13 +291,9 @@ class _FormixFieldDerivationsState extends State<FormixFieldDerivations> {
     if (_initializationError != null) {
       return FormixConfigurationErrorWidget(
         message: _initializationError is String ? _initializationError as String : 'Failed to initialize FormixFieldDerivations',
-        details: _initializationError.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.'
-            : 'Error: $_initializationError',
+        details: 'Error: $_initializationError',
       );
     }
-
-    // Reactivity is handled by the effects wired in didChangeDependencies.
     return const SizedBox.shrink();
   }
 }

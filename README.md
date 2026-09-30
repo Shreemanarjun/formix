@@ -1138,15 +1138,21 @@ Formix is engineered for massive scale with continuous performance optimizations
 - **Impact**: Surgical signal-driven rebuilds — a field change only rebuilds widgets that read that field
 - **Benefit**: Cleaner, more efficient code path for common use cases
 
-### Benchmark Results (M1 Pro, Averaged over 3 runs × 1000 iterations)
+### Benchmark Results — Riverpod (0.1.x) vs Signals (0.2.0)
 
-| Metric | Time | Notes |
-|--------|------|-------|
-| **Pure Formix Overhead (Rebuild)** | **0.097ms** | Minimal overhead per rebuild |
-| **Pure Formix (Mount/Unmount)** | **0.054ms** | Efficient lifecycle management |
-| **Full Widget Passive Rebuild** | **9.548ms** | Includes Material widgets |
-| **Full Widget Mount/Unmount** | **13.133ms** | Complete widget lifecycle |
-| **Mount/Unmount Cycles** | **1.584ms** | Field creation/disposal |
+Same benchmark suite, same machine. The signals core is faster across the board.
+See [`BENCHMARKS.md`](BENCHMARKS.md) for the full methodology and comparison.
+
+| Metric | 0.1.x (Riverpod) | 0.2.0 (Signals) | Change |
+|--------|-----------------:|----------------:|--------|
+| **Pure Formix overhead / rebuild** | 0.097ms | **0.088ms** | −9.3% |
+| **Pure Formix mount/unmount** | 0.054ms | **0.049ms** | −9.3% |
+| **Full widget passive rebuild** | 9.548ms | **9.392ms** | −1.6% |
+| **Field mount/unmount cycle** | 1.584ms | **1.189ms** | −24.9% |
+| **Bulk update 1000 fields** | ~1000ms | **286ms** | ~3.5× faster |
+
+**Surgical rebuilds:** updating one field among 1000 rebuilds exactly one widget
+(verified in `test/benchmark_surgical_rebuild_test.dart`).
 
 ### Performance Improvements
 

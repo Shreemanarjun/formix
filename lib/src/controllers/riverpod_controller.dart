@@ -191,7 +191,11 @@ class FormixBaseController {
   void _applyState(FormixData value) {
     if (!mounted) return;
 
-    _stateSignal.value = value;
+    // We only reach here when the state genuinely changed (mutations build a new
+    // instance and batch updates return early on no-op), so force the write to
+    // skip the O(n) FormixData equality check Signal.value would otherwise run
+    // on every keystroke.
+    _stateSignal.set(value, force: true);
 
     // We notify AFTER setting the state to ensure that listeners (and getValue calls) see the new state.
     onStateChanged(value);
@@ -201,6 +205,10 @@ class FormixBaseController {
   /// reactive context) subscribes to every form change; prefer the fine-grained
   /// slices on [FormixController] for surgical rebuilds.
   FormixData get state => _stateSignal.value;
+
+  /// The whole-form state as a read-only [Signal], for callers that need to
+  /// subscribe explicitly (e.g. [FormixScope.watchState]).
+  ReadonlySignal<FormixData> get stateSignal => _stateSignal;
 
   /// Hook for subclasses (like [FormixController]) to react to state changes.
   @protected
@@ -488,6 +496,9 @@ class FormixBaseController {
           values: newValues,
           validations: newValidations,
           dirtyStates: newDirtyStates,
+          // A persisted load can touch many fields; clear the delta so every live
+          // reactive slice re-syncs from the loaded state.
+          clearChangedFields: true,
         );
       }
     }
@@ -1648,6 +1659,7 @@ class FormixBaseController {
     state = state.copyWith(
       validations: currentValidations,
       errorCount: newErrorCount,
+      changedFields: {key},
     );
   }
 
@@ -1683,6 +1695,7 @@ class FormixBaseController {
       validations: currentValidations,
       errorCount: newErrorCount,
       pendingCount: newPendingCount,
+      changedFields: {key},
     );
   }
 

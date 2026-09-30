@@ -50,6 +50,8 @@ class _FormixFieldTransformerState<T, S> extends State<FormixFieldTransformer<T,
   FormixController? _controller;
   Object? _initializationError;
   VoidCallback? _disposeEffect;
+  bool _primed = false;
+  Object? _lastDep;
 
   @override
   void didChangeDependencies() {
@@ -72,33 +74,35 @@ class _FormixFieldTransformerState<T, S> extends State<FormixFieldTransformer<T,
     _initializationError = null;
   }
 
-  /// Subscribes to the source field; the effect re-runs (and re-transforms)
-  /// whenever the source value (or its selected part) changes.
+  /// Subscribes to the source field and re-transforms whenever the source value
+  /// (or its selected part) actually changes.
+  ///
+  /// The effect tracks ONLY the source value; the transform runs [untracked] so
+  /// writing the target never re-triggers this effect. It transforms on the
+  /// first run (mount) and thereafter only when the selected part changes.
   void _wireEffect() {
     _disposeEffect?.call();
+    _primed = false;
     final controller = _controller;
     if (controller == null) return;
     _disposeEffect = effect(() {
       final value = controller.valueSignal(widget.sourceField).value;
-      if (widget.select != null) widget.select!(value);
-      _transformValue();
+      final dep = widget.select != null ? widget.select!(value) : value;
+      final shouldTransform = !_primed || dep != _lastDep;
+      _primed = true;
+      _lastDep = dep;
+      if (shouldTransform) {
+        untracked(() => _transformValue(value));
+      }
     });
   }
 
-  void _transformValue() {
+  void _transformValue(T? sourceValue) {
     if (!mounted || _controller == null) return;
 
     try {
-      // Get source value
-      final dynamic rawValue = _controller!.getValue(widget.sourceField);
-      final T? sourceValue = rawValue as T?;
-
-      // Transform
       final S newValue = widget.transform(sourceValue);
-
-      // Get current target value to avoid infinite loops
-      final dynamic rawTarget = _controller!.getValue(widget.targetField);
-      final S? currentTarget = rawTarget as S?;
+      final S? currentTarget = _controller!.getValue(widget.targetField);
 
       if (currentTarget != newValue) {
         scheduleMicrotask(() {
@@ -138,13 +142,9 @@ class _FormixFieldTransformerState<T, S> extends State<FormixFieldTransformer<T,
     if (_initializationError != null) {
       return FormixConfigurationErrorWidget(
         message: _initializationError is String ? _initializationError as String : 'Failed to initialize FormixFieldTransformer',
-        details: _initializationError.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.'
-            : 'Error: $_initializationError',
+        details: 'Error: $_initializationError',
       );
     }
-
-    // Reactivity is handled by the effect wired in didChangeDependencies.
     return const SizedBox.shrink();
   }
 }

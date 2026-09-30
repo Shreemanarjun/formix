@@ -51,22 +51,59 @@ class FormixDependentField<T> extends StatefulWidget {
 }
 
 class _FormixDependentFieldState<T> extends State<FormixDependentField<T>> {
-  Computed<Object?>? _selected;
-  FormixController? _computedController;
+  FormixController? _controller;
+  VoidCallback? _disposeEffect;
+  T? _value;
+  Object? _lastDep;
+  bool _primed = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final controller = widget.controller ?? Formix.controllerOf(context);
+    if (controller != _controller) {
+      _controller = controller;
+      _wire();
+    }
+  }
+
+  @override
+  void didUpdateWidget(FormixDependentField<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final controller = widget.controller ?? Formix.controllerOf(context);
+    if (controller != _controller || oldWidget.fieldId != widget.fieldId) {
+      _controller = controller;
+      _wire();
+    }
+  }
+
+  /// Tracks the field value via an effect and rebuilds only when the selected
+  /// projection actually changes (deterministic gating, independent of computed
+  /// equality). The whole value is always kept for the builder.
+  void _wire() {
+    _disposeEffect?.call();
+    _disposeEffect = null;
+    _primed = false;
+    final controller = _controller;
+    if (controller == null) return;
+    _disposeEffect = effect(() {
+      final value = controller.valueSignal(widget.fieldId).value;
+      final dep = widget.select != null ? widget.select!(value) : value;
+      final firstRun = !_primed;
+      final changed = firstRun || dep != _lastDep;
+      _primed = true;
+      _lastDep = dep;
+      _value = value; // always keep the latest raw value for the builder
+      if (changed && !firstRun && mounted) {
+        setState(() {});
+      }
+    });
+  }
 
   @override
   void dispose() {
-    _selected?.dispose();
+    _disposeEffect?.call();
     super.dispose();
-  }
-
-  Computed<Object?> _selectComputed(FormixController controller) {
-    if (_selected == null || _computedController != controller) {
-      _selected?.dispose();
-      _computedController = controller;
-      _selected = computed(() => widget.select!(controller.valueSignal(widget.fieldId).value));
-    }
-    return _selected!;
   }
 
   @override
@@ -80,26 +117,13 @@ class _FormixDependentFieldState<T> extends State<FormixDependentField<T>> {
 
     if (errorWidget != null) return errorWidget;
 
-    final controller = widget.controller ?? Formix.controllerOf(context);
-    if (controller == null) {
+    if (_controller == null) {
       return const FormixConfigurationErrorWidget(
         message: 'Failed to initialize FormixDependentField',
         details: 'FormixDependentField must be used inside a Formix widget or given an explicit controller.',
       );
     }
 
-    return SignalBuilder(
-      builder: (context) {
-        final T? value;
-        if (widget.select != null) {
-          // Subscribe only to the selected part, but pass the whole value to the builder.
-          _selectComputed(controller).value;
-          value = controller.valueSignal(widget.fieldId).peek();
-        } else {
-          value = controller.valueSignal(widget.fieldId).value;
-        }
-        return widget.builder(context, value);
-      },
-    );
+    return widget.builder(context, _value);
   }
 }

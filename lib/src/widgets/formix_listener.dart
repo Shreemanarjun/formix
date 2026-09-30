@@ -165,9 +165,7 @@ class _FormixListenerState extends State<FormixListener> {
     if (_initializationError != null) {
       return FormixConfigurationErrorWidget(
         message: _initializationError is String ? _initializationError as String : 'Failed to initialize FormixListener',
-        details: _initializationError.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application in a ProviderScope widget.'
-            : 'Error: $_initializationError',
+        details: 'Error: $_initializationError',
       );
     }
     return widget.child;

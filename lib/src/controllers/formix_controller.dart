@@ -58,11 +58,16 @@ class FormixController extends FormixBaseController {
   // Each is a memoized `computed` over the state signal, so a widget reading one
   // inside a `SignalBuilder` only rebuilds when THAT slice's value changes.
 
-  final Map<String, ReadonlySignal<dynamic>> _valueSignals = {};
-  final Map<String, ReadonlySignal<ValidationResult>> _validationSignals = {};
-  final Map<String, ReadonlySignal<bool>> _dirtySignals = {};
-  final Map<String, ReadonlySignal<bool>> _touchedSignals = {};
-  final Map<String, ReadonlySignal<bool>> _pendingSignals = {};
+  // Per-field slices are plain [Signal]s kept in sync via the `changedFields`
+  // delta in [onStateChanged], so a single field update only touches that field's
+  // signals — O(changed) — instead of re-evaluating every mounted watcher.
+  final Map<String, Signal<dynamic>> _valueSignals = {};
+  final Map<String, Signal<ValidationResult>> _validationSignals = {};
+  final Map<String, Signal<bool>> _dirtySignals = {};
+  final Map<String, Signal<bool>> _touchedSignals = {};
+  final Map<String, Signal<bool>> _pendingSignals = {};
+  // Group + form-level slices are computed over the whole state (rare, and O(1)
+  // to evaluate), so a plain computed is the right tool.
   final Map<String, ReadonlySignal<bool>> _groupValidSignals = {};
   final Map<String, ReadonlySignal<bool>> _groupDirtySignals = {};
   ReadonlySignal<bool>? _isValidSignal;
@@ -76,28 +81,26 @@ class FormixController extends FormixBaseController {
   ReadonlySignal<T?> valueSignal<T>(FormixFieldID<T> id) {
     final existing = _valueSignals[id.key];
     if (existing != null) return existing as ReadonlySignal<T?>;
-    // Build the computed with an explicit type argument so the stored signal is
-    // `ReadonlySignal<T?>` (not `<dynamic>`) and the retrieval cast succeeds.
-    final created = computed<T?>(() => state.getValue<T>(id));
+    final created = signal<T?>(stateSignal.peek().getValue<T>(id));
     _valueSignals[id.key] = created;
     return created;
   }
 
   /// Reactive validation result of a field.
   ReadonlySignal<ValidationResult> validationSignal<T>(FormixFieldID<T> id) =>
-      _validationSignals.putIfAbsent(id.key, () => computed(() => state.getValidation(id)));
+      _validationSignals.putIfAbsent(id.key, () => signal(stateSignal.peek().getValidation(id)));
 
   /// Reactive dirty flag of a field.
   ReadonlySignal<bool> dirtySignal<T>(FormixFieldID<T> id) =>
-      _dirtySignals.putIfAbsent(id.key, () => computed(() => state.isFieldDirty(id)));
+      _dirtySignals.putIfAbsent(id.key, () => signal(stateSignal.peek().isFieldDirty(id)));
 
   /// Reactive touched flag of a field.
   ReadonlySignal<bool> touchedSignal<T>(FormixFieldID<T> id) =>
-      _touchedSignals.putIfAbsent(id.key, () => computed(() => state.isFieldTouched(id)));
+      _touchedSignals.putIfAbsent(id.key, () => signal(stateSignal.peek().isFieldTouched(id)));
 
   /// Reactive pending (async) flag of a field.
   ReadonlySignal<bool> pendingSignal<T>(FormixFieldID<T> id) =>
-      _pendingSignals.putIfAbsent(id.key, () => computed(() => state.isFieldPending(id)));
+      _pendingSignals.putIfAbsent(id.key, () => signal(stateSignal.peek().isFieldPending(id)));
 
   /// Reactive validity of a field-name group (e.g. `'user'`).
   ReadonlySignal<bool> groupValidSignal(String prefix) =>
@@ -153,12 +156,37 @@ class FormixController extends FormixBaseController {
   ValueNotifier<bool>? _isSubmittingNotifier;
   ValueNotifier<bool>? _isPendingNotifier;
 
+  /// Pushes the latest state into the per-field signal slices. Uses the
+  /// `changedFields` delta for O(changed) updates; falls back to syncing every
+  /// live slice when the delta is absent (e.g. reset / initial load).
+  void _syncFieldSignals(FormixData state, Set<String>? changedKeys) {
+    void sync<T>(Map<String, Signal<T>> signals, T Function(String key) read) {
+      if (signals.isEmpty) return;
+      final keys = changedKeys != null ? changedKeys.where(signals.containsKey) : signals.keys;
+      for (final key in keys) {
+        signals[key]!.value = read(key);
+      }
+    }
+
+    batch(() {
+      sync<dynamic>(_valueSignals, (k) => state.values[k]);
+      sync<ValidationResult>(_validationSignals, (k) => state.validations[k] ?? ValidationResult.valid);
+      sync<bool>(_dirtySignals, (k) => state.dirtyStates[k] ?? false);
+      sync<bool>(_touchedSignals, (k) => state.touchedStates[k] ?? false);
+      sync<bool>(_pendingSignals, (k) => state.pendingStates[k] ?? false);
+    });
+  }
+
   @override
   void onStateChanged(FormixData state) {
     super.onStateChanged(state);
     // Optimization: If changedFields is present, only update notifiers for those keys.
     // If null, we fall back to checking all cached notifiers (e.g. initial load).
     final changedKeys = state.changedFields;
+
+    // Sync the per-field reactive slices from the delta, coalesced into a single
+    // batch so dependent widgets rebuild at most once per state change.
+    _syncFieldSignals(state, changedKeys);
 
     // Helper to update a specific notifier map
     void updateNotifiers<T>(
@@ -316,8 +344,8 @@ class FormixController extends FormixBaseController {
     _isSubmittingNotifier?.dispose();
     _isPendingNotifier?.dispose();
 
-    // Dispose reactive computed slices.
-    for (final c in [
+    // Dispose reactive slices (per-field signals + group/form-level computeds).
+    for (final ReadonlySignal<dynamic>? c in <ReadonlySignal<dynamic>?>[
       ..._valueSignals.values,
       ..._validationSignals.values,
       ..._dirtySignals.values,

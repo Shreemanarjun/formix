@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../formix.dart'; // For Formix.of
 import 'ancestor_validator.dart';
+import 'formix_controller_host.dart';
 
 /// A widget that registers a specific set of fields with the parent [Formix].
 ///
@@ -52,40 +53,24 @@ class FormixSection extends StatefulWidget {
   State<FormixSection> createState() => _FormixSectionState();
 }
 
-class _FormixSectionState extends State<FormixSection> {
-  FormixController? _controller;
-  Object? _initializationError;
+class _FormixSectionState extends State<FormixSection> with FormixControllerHost<FormixSection> {
+  @override
+  String get formixWidgetName => 'FormixSection';
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _initController();
-    _registerFields();
-  }
+  void onControllerChanged(FormixController controller) => _registerFields();
 
   @override
   void didUpdateWidget(FormixSection oldWidget) {
     super.didUpdateWidget(oldWidget);
     // If fields changed, register the new ones.
-    // controller.registerFields handles already-registered fields gracefully.
+    // registerFields handles already-registered fields gracefully.
     _registerFields();
   }
 
-  void _initController() {
-    final controller = Formix.controllerOf(context);
-    if (controller == null) {
-      return;
-    }
-    _controller = controller;
-    _initializationError = null;
-  }
-
   void _registerFields() {
-    if (_controller == null) return;
-    final controller = _controller!;
-
+    if (!hasController) return;
     final fieldsToRegister = widget.fields.where((f) => !controller.isFieldRegistered(f.id)).map((f) => f.toField()).toList();
-
     if (fieldsToRegister.isNotEmpty) {
       controller.registerFields(fieldsToRegister);
     }
@@ -93,14 +78,13 @@ class _FormixSectionState extends State<FormixSection> {
 
   @override
   void dispose() {
-    if (!widget.keepAlive && _controller != null) {
-      final controller = _controller!;
+    if (!widget.keepAlive && hasController) {
+      final c = controller;
       final ids = widget.fields.map((f) => f.id).toList();
-
-      // Defer unregistration to avoid issues if state is being updated
+      // Defer unregistration to avoid issues if state is being updated.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (controller.mounted) {
-          controller.unregisterFields(ids);
+        if (c.mounted) {
+          c.unregisterFields(ids);
         }
       });
     }
@@ -113,17 +97,7 @@ class _FormixSectionState extends State<FormixSection> {
       context,
       widgetName: 'FormixSection',
     );
-
     if (errorWidget != null) return errorWidget;
-
-    if (_initializationError != null) {
-      return FormixConfigurationErrorWidget(
-        message: 'Failed to initialize FormixSection',
-        details: _initializationError.toString().contains('No ProviderScope found')
-            ? 'Missing ProviderScope. Please wrap your application (or this form) in a ProviderScope widget.\n\nExample:\nvoid main() {\n  runApp(ProviderScope(child: MyApp()));\n}'
-            : 'Error: $_initializationError',
-      );
-    }
     return widget.child;
   }
 }
