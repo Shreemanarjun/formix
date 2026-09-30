@@ -48,11 +48,7 @@ class FormixDevToolsService {
   static Map<String, dynamic> listFormsPayload() {
     return {
       'latestActiveId': _latestActiveId,
-      'forms': _allFormHistory
-          .toList()
-          .reversed
-          .map((id) => {'id': id, 'isActive': _activeControllers.containsKey(id)})
-          .toList(),
+      'forms': _allFormHistory.toList().reversed.map((id) => {'id': id, 'isActive': _activeControllers.containsKey(id)}).toList(),
     };
   }
 

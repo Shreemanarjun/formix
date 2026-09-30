@@ -20,10 +20,12 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(_app(
-        const FormixTextFormField(fieldId: id, forceErrorText: 'forced!'),
-        controller: c,
-      ));
+      await tester.pumpWidget(
+        _app(
+          const FormixTextFormField(fieldId: id, forceErrorText: 'forced!'),
+          controller: c,
+        ),
+      );
       await tester.pump();
       expect(find.text('forced!'), findsOneWidget);
     });
@@ -36,17 +38,19 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(_app(
-        const FormixDropdownFormField<String>(
-          fieldId: id,
-          forceErrorText: 'bad choice',
-          items: [
-            DropdownMenuItem(value: 'a', child: Text('A')),
-            DropdownMenuItem(value: 'b', child: Text('B')),
-          ],
+      await tester.pumpWidget(
+        _app(
+          const FormixDropdownFormField<String>(
+            fieldId: id,
+            forceErrorText: 'bad choice',
+            items: [
+              DropdownMenuItem(value: 'a', child: Text('A')),
+              DropdownMenuItem(value: 'b', child: Text('B')),
+            ],
+          ),
+          controller: c,
         ),
-        controller: c,
-      ));
+      );
       await tester.pump();
       expect(find.text('bad choice'), findsOneWidget);
     });
@@ -59,14 +63,16 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(_app(
-        const FormixCheckboxFormField(
-          fieldId: id,
-          title: Text('Agree'),
-          forceErrorText: 'must agree',
+      await tester.pumpWidget(
+        _app(
+          const FormixCheckboxFormField(
+            fieldId: id,
+            title: Text('Agree'),
+            forceErrorText: 'must agree',
+          ),
+          controller: c,
         ),
-        controller: c,
-      ));
+      );
       await tester.pump();
       expect(find.text('must agree'), findsOneWidget);
     });
@@ -83,10 +89,12 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(_app(
-        const FormixTextFormField(fieldId: id),
-        controller: c,
-      ));
+      await tester.pumpWidget(
+        _app(
+          const FormixTextFormField(fieldId: id),
+          controller: c,
+        ),
+      );
       await tester.pump();
       c.setFieldValidating(id, isValidating: true);
       await tester.pump();
@@ -101,10 +109,12 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(_app(
-        const FormixNumberFormField<int>(fieldId: id),
-        controller: c,
-      ));
+      await tester.pumpWidget(
+        _app(
+          const FormixNumberFormField<int>(fieldId: id),
+          controller: c,
+        ),
+      );
       await tester.pump();
       c.setFieldValidating(id, isValidating: true);
       await tester.pump();
@@ -119,16 +129,18 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(_app(
-        const FormixDropdownFormField<String>(
-          fieldId: id,
-          items: [
-            DropdownMenuItem(value: 'a', child: Text('A')),
-            DropdownMenuItem(value: 'b', child: Text('B')),
-          ],
+      await tester.pumpWidget(
+        _app(
+          const FormixDropdownFormField<String>(
+            fieldId: id,
+            items: [
+              DropdownMenuItem(value: 'a', child: Text('A')),
+              DropdownMenuItem(value: 'b', child: Text('B')),
+            ],
+          ),
+          controller: c,
         ),
-        controller: c,
-      ));
+      );
       await tester.pump();
       c.setFieldValidating(id, isValidating: true);
       await tester.pump();
@@ -143,10 +155,12 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(_app(
-        const FormixCupertinoTextFormField(fieldId: id),
-        controller: c,
-      ));
+      await tester.pumpWidget(
+        _app(
+          const FormixCupertinoTextFormField(fieldId: id),
+          controller: c,
+        ),
+      );
       await tester.pump();
       c.setFieldValidating(id, isValidating: true);
       await tester.pump();
@@ -161,10 +175,12 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(_app(
-        const FormixCheckboxFormField(fieldId: id, title: Text('Agree')),
-        controller: c,
-      ));
+      await tester.pumpWidget(
+        _app(
+          const FormixCheckboxFormField(fieldId: id, title: Text('Agree')),
+          controller: c,
+        ),
+      );
       await tester.pump();
       c.setFieldValidating(id, isValidating: true);
       await tester.pump();
@@ -188,10 +204,12 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(_app(
-        const FormixCupertinoTextFormField(fieldId: id),
-        controller: c,
-      ));
+      await tester.pumpWidget(
+        _app(
+          const FormixCupertinoTextFormField(fieldId: id),
+          controller: c,
+        ),
+      );
       await tester.pump();
       c.markAsTouched(id);
       c.setValue(id, '');
@@ -209,17 +227,19 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: FormixTheme(
-            data: const FormixThemeData(enabled: false),
-            child: Formix(
-              controller: c,
-              child: const FormixNumberFormField<int>(fieldId: id),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FormixTheme(
+              data: const FormixThemeData(enabled: false),
+              child: Formix(
+                controller: c,
+                child: const FormixNumberFormField<int>(fieldId: id),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pump();
       expect(find.byType(TextFormField), findsOneWidget);
     });
@@ -232,23 +252,25 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: FormixTheme(
-            data: const FormixThemeData(enabled: false),
-            child: Formix(
-              controller: c,
-              child: const FormixDropdownFormField<String>(
-                fieldId: id,
-                items: [
-                  DropdownMenuItem(value: 'a', child: Text('A')),
-                  DropdownMenuItem(value: 'b', child: Text('B')),
-                ],
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: FormixTheme(
+              data: const FormixThemeData(enabled: false),
+              child: Formix(
+                controller: c,
+                child: const FormixDropdownFormField<String>(
+                  fieldId: id,
+                  items: [
+                    DropdownMenuItem(value: 'a', child: Text('A')),
+                    DropdownMenuItem(value: 'b', child: Text('B')),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pump();
       expect(find.byType(DropdownButton<String>), findsOneWidget);
     });
@@ -264,13 +286,15 @@ void main() {
       addTearDown(c.dispose);
 
       int? submitted;
-      await tester.pumpWidget(_app(
-        FormixNumberFormField<int>(
-          fieldId: id,
-          onFieldSubmitted: (v) => submitted = v,
+      await tester.pumpWidget(
+        _app(
+          FormixNumberFormField<int>(
+            fieldId: id,
+            onFieldSubmitted: (v) => submitted = v,
+          ),
+          controller: c,
         ),
-        controller: c,
-      ));
+      );
       await tester.pump();
 
       await tester.enterText(find.byType(TextFormField), '42');
@@ -295,23 +319,25 @@ void main() {
       final nextNode = FocusNode();
       addTearDown(nextNode.dispose);
 
-      await tester.pumpWidget(_app(
-        Column(
-          children: [
-            FormixDropdownFormField<String>(
-              fieldId: id,
-              textInputAction: TextInputAction.next,
-              onSubmitted: (v) => submitted = v,
-              items: const [
-                DropdownMenuItem(value: 'a', child: Text('A')),
-                DropdownMenuItem(value: 'b', child: Text('B')),
-              ],
-            ),
-            FormixTextFormField(fieldId: next, focusNode: nextNode),
-          ],
+      await tester.pumpWidget(
+        _app(
+          Column(
+            children: [
+              FormixDropdownFormField<String>(
+                fieldId: id,
+                textInputAction: TextInputAction.next,
+                onSubmitted: (v) => submitted = v,
+                items: const [
+                  DropdownMenuItem(value: 'a', child: Text('A')),
+                  DropdownMenuItem(value: 'b', child: Text('B')),
+                ],
+              ),
+              FormixTextFormField(fieldId: next, focusNode: nextNode),
+            ],
+          ),
+          controller: c,
         ),
-        controller: c,
-      ));
+      );
       await tester.pump();
 
       await tester.tap(find.byType(DropdownButton<String>));
@@ -348,26 +374,28 @@ void main() {
       addTearDown(node2.dispose);
 
       var useNode1 = true;
-      await tester.pumpWidget(_app(
-        StatefulBuilder(
-          builder: (context, setState) => Column(
-            children: [
-              FormixTextFormField(
-                fieldId: id,
-                focusNode: useNode1 ? node1 : node2,
-                // Providing a widget-level validator forces re-registration,
-                // exercising the preserved-validator branch.
-                validator: (v) => null,
-              ),
-              ElevatedButton(
-                onPressed: () => setState(() => useNode1 = false),
-                child: const Text('swap-node'),
-              ),
-            ],
+      await tester.pumpWidget(
+        _app(
+          StatefulBuilder(
+            builder: (context, setState) => Column(
+              children: [
+                FormixTextFormField(
+                  fieldId: id,
+                  focusNode: useNode1 ? node1 : node2,
+                  // Providing a widget-level validator forces re-registration,
+                  // exercising the preserved-validator branch.
+                  validator: (v) => null,
+                ),
+                ElevatedButton(
+                  onPressed: () => setState(() => useNode1 = false),
+                  child: const Text('swap-node'),
+                ),
+              ],
+            ),
           ),
+          controller: c,
         ),
-        controller: c,
-      ));
+      );
       await tester.pump();
 
       // Swap the focusNode -> didUpdateWidget focusNode branch.
@@ -399,15 +427,17 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(_app(
-        const Column(
-          children: [
-            _BaseText(fieldId: textId),
-            _BaseNumber(fieldId: numId),
-          ],
+      await tester.pumpWidget(
+        _app(
+          const Column(
+            children: [
+              _BaseText(fieldId: textId),
+              _BaseNumber(fieldId: numId),
+            ],
+          ),
+          controller: c,
         ),
-        controller: c,
-      ));
+      );
       await tester.pump();
 
       // Drive both base fields into a shown error (touched path) so the
@@ -444,13 +474,15 @@ void main() {
       // Mount a widget that provides NO validator but a DIFFERENT
       // autovalidateMode, which forces re-registration and exercises the
       // preserved async (236) and cross-field (241) branches.
-      await tester.pumpWidget(_app(
-        const FormixTextFormField(
-          fieldId: id,
-          autovalidateMode: FormixAutovalidateMode.always,
+      await tester.pumpWidget(
+        _app(
+          const FormixTextFormField(
+            fieldId: id,
+            autovalidateMode: FormixAutovalidateMode.always,
+          ),
+          controller: c,
         ),
-        controller: c,
-      ));
+      );
       await tester.pump();
       expect(c.isFieldRegistered(id), isTrue);
     });

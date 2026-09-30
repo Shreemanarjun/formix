@@ -125,10 +125,8 @@ class _FormixDependentAsyncFieldState<T, D> extends State<FormixDependentAsyncFi
 
         // Detect a change (respecting the optional selector) to recreate the
         // future and reset the related field.
-        final bool changed = !_initialized ||
-            (widget.select != null
-                ? widget.select!(dependencyValue) != widget.select!(_lastDependencyValue)
-                : dependencyValue != _lastDependencyValue);
+        final bool changed =
+            !_initialized || (widget.select != null ? widget.select!(dependencyValue) != widget.select!(_lastDependencyValue) : dependencyValue != _lastDependencyValue);
 
         if (changed) {
           final bool wasInitialized = _initialized;

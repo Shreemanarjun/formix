@@ -1669,6 +1669,35 @@ class FormixBaseController {
     );
   }
 
+  /// Applies a batch of backend/server validation errors in a single update.
+  ///
+  /// Keys are field keys ([FormixFieldID.key]); values are the error messages to
+  /// display. This is the idiomatic way to surface API validation failures:
+  /// ```dart
+  /// try {
+  ///   await api.save(controller.state.values);
+  /// } on ApiValidationException catch (e) {
+  ///   controller.applyServerErrors(e.fieldErrors); // {'email': 'Already taken'}
+  /// }
+  /// ```
+  void applyServerErrors(Map<String, String> errors) {
+    if (!mounted || errors.isEmpty) return;
+    final currentValidations = {...state.validations};
+    int newErrorCount = state.errorCount;
+
+    for (final entry in errors.entries) {
+      final oldRes = currentValidations[entry.key] ?? ValidationResult.valid;
+      currentValidations[entry.key] = ValidationResult(isValid: false, errorMessage: entry.value);
+      if (oldRes.isValid) newErrorCount++;
+    }
+
+    state = state.copyWith(
+      validations: currentValidations,
+      errorCount: newErrorCount,
+      changedFields: errors.keys.toSet(),
+    );
+  }
+
   /// Manually set the validating state of a field.
   void setFieldValidating<T>(
     FormixFieldID<T> fieldId, {

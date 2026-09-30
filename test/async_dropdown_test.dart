@@ -36,8 +36,7 @@ void main() {
                     fieldId: const FormixFieldID<List<String>>('model_options'),
                     dependency: makeField,
                     future: (make) => fetchModels(make ?? ''),
-                    loadingBuilder: (context) =>
-                        const Text('Loading models...'),
+                    loadingBuilder: (context) => const Text('Loading models...'),
                     asyncErrorBuilder: (context, e) => Text('Error: $e'),
                     builder: (context, state) {
                       final models = state.asyncState.value ?? const <String>[];
@@ -45,8 +44,7 @@ void main() {
                         fieldId: modelField,
                         items: models
                             .map(
-                              (m) =>
-                                  DropdownMenuItem(value: m, child: Text(m)),
+                              (m) => DropdownMenuItem(value: m, child: Text(m)),
                             )
                             .toList(),
                         decoration: const InputDecoration(labelText: 'Model'),

@@ -135,22 +135,21 @@ void main() {
 
   group('SchemaBasedFormController', () {
     FormSchema buildSchema({bool required = true}) => FormSchema(
-          fields: [
-            TextFieldSchema(
-              id: const FormixFieldID<String>('name'),
-              initialValue: '',
-              isRequired: required,
-            ),
-            ConditionalFieldSchema<String>(
-              id: const FormixFieldID<String>('extra'),
-              initialValue: '',
-              visibilityCondition: (state) => state['name'] == 'show',
-            ),
-          ],
-        );
+      fields: [
+        TextFieldSchema(
+          id: const FormixFieldID<String>('name'),
+          initialValue: '',
+          isRequired: required,
+        ),
+        ConditionalFieldSchema<String>(
+          id: const FormixFieldID<String>('extra'),
+          initialValue: '',
+          visibilityCondition: (state) => state['name'] == 'show',
+        ),
+      ],
+    );
 
-    testWidgets('validateForm updates field notifiers and reflects errors',
-        (tester) async {
+    testWidgets('validateForm updates field notifiers and reflects errors', (tester) async {
       final controller = SchemaBasedFormController(schema: buildSchema());
       addTearDown(controller.dispose);
 
@@ -159,8 +158,7 @@ void main() {
 
       final result = await controller.validateForm();
       expect(result.isValid, isFalse);
-      final notifier = controller
-          .fieldValidationNotifier<dynamic>(const FormixFieldID<String>('name'));
+      final notifier = controller.fieldValidationNotifier<dynamic>(const FormixFieldID<String>('name'));
       expect(notifier.value.isValid, isFalse);
     });
 
@@ -181,8 +179,7 @@ void main() {
         ],
         onSubmit: (_) async => called = true,
       );
-      final controller =
-          SchemaBasedFormController(schema: schema, initialValue: {'name': 'ok'});
+      final controller = SchemaBasedFormController(schema: schema, initialValue: {'name': 'ok'});
       addTearDown(controller.dispose);
       final result = await controller.submitForm();
       expect(result.success, isTrue);
@@ -210,17 +207,17 @@ void main() {
 
   group('FormixData (form_state)', () {
     FormixData valid() => FormixData.withCalculatedCounts(
-          values: {'a': 1, 'user.name': 'bob'},
-          validations: {
-            'a': ValidationResult.valid,
-            'user.name': const ValidationResult(
-              isValid: false,
-              errorMessage: 'bad name',
-            ),
-          },
-          dirtyStates: {'a': true, 'user.name': false},
-          touchedStates: {'a': false},
-        );
+      values: {'a': 1, 'user.name': 'bob'},
+      validations: {
+        'a': ValidationResult.valid,
+        'user.name': const ValidationResult(
+          isValid: false,
+          errorMessage: 'bad name',
+        ),
+      },
+      dirtyStates: {'a': true, 'user.name': false},
+      touchedStates: {'a': false},
+    );
 
     test('errors and errorMessages expose failing fields', () {
       final s = valid();

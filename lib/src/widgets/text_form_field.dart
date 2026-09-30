@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 import 'base_form_field.dart';
 import '../enums.dart';
 import 'form_theme.dart';
@@ -265,122 +266,129 @@ class FormixTextFormFieldState extends FormixFieldWidgetState<String> with Formi
 
     final fieldWidget = widget as FormixTextFormField;
 
-    // Use combined notifier for better performance (1 listenable instead of 4)
-    return AnimatedBuilder(
-      animation: controller.getFieldStateNotifier(widget.fieldId),
-      builder: (context, _) {
-        final validation = this.validation;
-        final isTouched = this.isTouched;
-        final isDirty = this.isDirty;
-        final isSubmitting = controller.isSubmitting;
-        final validationMode = controller.getValidationMode(widget.fieldId);
+    // Reactive enabled/readOnly via the controller's signals; validation/touched/
+    // dirty/submitting via the combined field-state notifier.
+    return SignalBuilder(
+      builder: (context) {
+        final effEnabled = effectiveEnabled;
+        final effReadOnly = fieldWidget.readOnly || effectiveReadOnly;
+        return AnimatedBuilder(
+          animation: controller.getFieldStateNotifier(widget.fieldId),
+          builder: (context, _) {
+            final validation = this.validation;
+            final isTouched = this.isTouched;
+            final isDirty = this.isDirty;
+            final isSubmitting = controller.isSubmitting;
+            final validationMode = controller.getValidationMode(widget.fieldId);
 
-        final showImmediate = validationMode == FormixAutovalidateMode.always;
+            final showImmediate = validationMode == FormixAutovalidateMode.always;
 
-        final shouldShowError = (isTouched || isSubmitting || showImmediate) && !validation.isValid;
+            final shouldShowError = (isTouched || isSubmitting || showImmediate) && !validation.isValid;
 
-        final formTheme = FormixTheme.of(context);
+            final formTheme = FormixTheme.of(context);
 
-        // Cache base decoration to avoid repeated theme resolution
-        if (_cachedBaseDecoration == null ||
-            fieldWidget.decoration != _lastWidgetDecoration ||
-            formTheme != _lastFormTheme ||
-            (formTheme.enabled && formTheme.decorationTheme != _lastDecorationTheme)) {
-          _lastWidgetDecoration = fieldWidget.decoration;
-          _lastFormTheme = formTheme;
-          _lastDecorationTheme = formTheme.decorationTheme;
+            // Cache base decoration to avoid repeated theme resolution
+            if (_cachedBaseDecoration == null ||
+                fieldWidget.decoration != _lastWidgetDecoration ||
+                formTheme != _lastFormTheme ||
+                (formTheme.enabled && formTheme.decorationTheme != _lastDecorationTheme)) {
+              _lastWidgetDecoration = fieldWidget.decoration;
+              _lastFormTheme = formTheme;
+              _lastDecorationTheme = formTheme.decorationTheme;
 
-          _cachedBaseDecoration = formTheme.enabled
-              ? fieldWidget.decoration.applyDefaults(
-                  formTheme.decorationTheme ?? Theme.of(context).inputDecorationTheme,
-                )
-              : fieldWidget.decoration;
+              _cachedBaseDecoration = formTheme.enabled
+                  ? fieldWidget.decoration.applyDefaults(
+                      formTheme.decorationTheme ?? Theme.of(context).inputDecorationTheme,
+                    )
+                  : fieldWidget.decoration;
 
-          // Invalidate effective decoration cache when base changes
-          _cachedEffectiveDecoration = null;
-        }
+              // Invalidate effective decoration cache when base changes
+              _cachedEffectiveDecoration = null;
+            }
 
-        final suffixIcon = _getSuffixIcon(isDirty, validation.isValidating, formTheme, fieldWidget);
+            final suffixIcon = _getSuffixIcon(isDirty, validation.isValidating, formTheme, fieldWidget);
 
-        // Cache formatters list
-        final fieldFormatters = controller.getField(widget.fieldId)?.inputFormatters;
-        final widgetFormatters = fieldWidget.inputFormatters;
+            // Cache formatters list
+            final fieldFormatters = controller.getField(widget.fieldId)?.inputFormatters;
+            final widgetFormatters = fieldWidget.inputFormatters;
 
-        if (_cachedFormatters == null || fieldFormatters != _lastFieldFormatters || widgetFormatters != _lastWidgetFormatters) {
-          _lastFieldFormatters = fieldFormatters;
-          _lastWidgetFormatters = widgetFormatters;
-          _cachedFormatters = [
-            ...?fieldFormatters,
-            ...?widgetFormatters,
-          ];
-        }
+            if (_cachedFormatters == null || fieldFormatters != _lastFieldFormatters || widgetFormatters != _lastWidgetFormatters) {
+              _lastFieldFormatters = fieldFormatters;
+              _lastWidgetFormatters = widgetFormatters;
+              _cachedFormatters = [
+                ...?fieldFormatters,
+                ...?widgetFormatters,
+              ];
+            }
 
-        // Cache effective decoration
-        final errorText = shouldShowError ? validation.errorMessage : null;
-        final helperText = validation.isValidating ? 'Validating...' : null;
+            // Cache effective decoration
+            final errorText = shouldShowError ? validation.errorMessage : null;
+            final helperText = validation.isValidating ? 'Validating...' : null;
 
-        if (_cachedEffectiveDecoration == null || errorText != _lastErrorText || suffixIcon != _lastSuffixIcon || helperText != _lastHelperText) {
-          _lastErrorText = errorText;
-          _lastSuffixIcon = suffixIcon;
-          _lastHelperText = helperText;
+            if (_cachedEffectiveDecoration == null || errorText != _lastErrorText || suffixIcon != _lastSuffixIcon || helperText != _lastHelperText) {
+              _lastErrorText = errorText;
+              _lastSuffixIcon = suffixIcon;
+              _lastHelperText = helperText;
 
-          _cachedEffectiveDecoration = _cachedBaseDecoration!.copyWith(
-            errorText: errorText,
-            suffixIcon: suffixIcon,
-            helperText: helperText,
-          );
-        }
+              _cachedEffectiveDecoration = _cachedBaseDecoration!.copyWith(
+                errorText: errorText,
+                suffixIcon: suffixIcon,
+                helperText: helperText,
+              );
+            }
 
-        return TextFormField(
-          controller: textController,
-          focusNode: focusNode,
-          decoration: _cachedEffectiveDecoration,
-          mouseCursor: fieldWidget.mouseCursor ?? (fieldWidget.readOnly ? SystemMouseCursors.basic : null),
-          keyboardType: fieldWidget.keyboardType,
-          maxLength: fieldWidget.maxLength,
-          inputFormatters: _cachedFormatters,
-          textInputAction: fieldWidget.textInputAction,
-          onFieldSubmitted: (val) {
-            fieldWidget.onFieldSubmitted?.call(val);
+            return TextFormField(
+              controller: textController,
+              focusNode: focusNode,
+              decoration: _cachedEffectiveDecoration,
+              mouseCursor: fieldWidget.mouseCursor ?? (effReadOnly ? SystemMouseCursors.basic : null),
+              keyboardType: fieldWidget.keyboardType,
+              maxLength: fieldWidget.maxLength,
+              inputFormatters: _cachedFormatters,
+              textInputAction: fieldWidget.textInputAction,
+              onFieldSubmitted: (val) {
+                fieldWidget.onFieldSubmitted?.call(val);
+              },
+              readOnly: effReadOnly,
+              maxLines: fieldWidget.maxLines,
+              minLines: fieldWidget.minLines,
+              expands: fieldWidget.expands,
+              obscureText: fieldWidget.obscureText,
+              style: fieldWidget.style,
+              enabled: effEnabled,
+              autocorrect: fieldWidget.autocorrect,
+              autofillHints: fieldWidget.autofillHints,
+              autofocus: fieldWidget.autofocus,
+              buildCounter: fieldWidget.buildCounter,
+              cursorColor: fieldWidget.cursorColor,
+              cursorHeight: fieldWidget.cursorHeight,
+              cursorRadius: fieldWidget.cursorRadius,
+              cursorWidth: fieldWidget.cursorWidth,
+              enableInteractiveSelection: fieldWidget.enableInteractiveSelection,
+              enableSuggestions: fieldWidget.enableSuggestions,
+              keyboardAppearance: fieldWidget.keyboardAppearance,
+              maxLengthEnforcement: fieldWidget.maxLengthEnforcement,
+              onChanged: (val) {
+                didChange(val);
+              },
+              onEditingComplete: fieldWidget.onEditingComplete,
+              onTap: fieldWidget.onTap,
+              onTapOutside: fieldWidget.onTapOutside,
+              scrollController: fieldWidget.scrollController,
+              scrollPadding: fieldWidget.scrollPadding,
+              scrollPhysics: fieldWidget.scrollPhysics,
+              selectionControls: fieldWidget.selectionControls,
+              showCursor: fieldWidget.showCursor,
+              smartDashesType: fieldWidget.smartDashesType,
+              smartQuotesType: fieldWidget.smartQuotesType,
+              strutStyle: fieldWidget.strutStyle,
+              textAlign: fieldWidget.textAlign,
+              textAlignVertical: fieldWidget.textAlignVertical,
+              textCapitalization: fieldWidget.textCapitalization,
+              textDirection: fieldWidget.textDirection,
+              restorationId: fieldWidget.restorationId,
+            );
           },
-          readOnly: fieldWidget.readOnly,
-          maxLines: fieldWidget.maxLines,
-          minLines: fieldWidget.minLines,
-          expands: fieldWidget.expands,
-          obscureText: fieldWidget.obscureText,
-          style: fieldWidget.style,
-          enabled: fieldWidget.enabled,
-          autocorrect: fieldWidget.autocorrect,
-          autofillHints: fieldWidget.autofillHints,
-          autofocus: fieldWidget.autofocus,
-          buildCounter: fieldWidget.buildCounter,
-          cursorColor: fieldWidget.cursorColor,
-          cursorHeight: fieldWidget.cursorHeight,
-          cursorRadius: fieldWidget.cursorRadius,
-          cursorWidth: fieldWidget.cursorWidth,
-          enableInteractiveSelection: fieldWidget.enableInteractiveSelection,
-          enableSuggestions: fieldWidget.enableSuggestions,
-          keyboardAppearance: fieldWidget.keyboardAppearance,
-          maxLengthEnforcement: fieldWidget.maxLengthEnforcement,
-          onChanged: (val) {
-            didChange(val);
-          },
-          onEditingComplete: fieldWidget.onEditingComplete,
-          onTap: fieldWidget.onTap,
-          onTapOutside: fieldWidget.onTapOutside,
-          scrollController: fieldWidget.scrollController,
-          scrollPadding: fieldWidget.scrollPadding,
-          scrollPhysics: fieldWidget.scrollPhysics,
-          selectionControls: fieldWidget.selectionControls,
-          showCursor: fieldWidget.showCursor,
-          smartDashesType: fieldWidget.smartDashesType,
-          smartQuotesType: fieldWidget.smartQuotesType,
-          strutStyle: fieldWidget.strutStyle,
-          textAlign: fieldWidget.textAlign,
-          textAlignVertical: fieldWidget.textAlignVertical,
-          textCapitalization: fieldWidget.textCapitalization,
-          textDirection: fieldWidget.textDirection,
-          restorationId: fieldWidget.restorationId,
         );
       },
     );

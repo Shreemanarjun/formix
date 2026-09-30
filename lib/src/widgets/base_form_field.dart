@@ -111,6 +111,15 @@ abstract class FormixFieldWidgetState<T> extends State<FormixFieldWidget<T>> {
   /// Whether the field is enabled.
   bool get enabled => widget.enabled;
 
+  /// The effective enabled state: the widget's [enabled] AND the controller's
+  /// reactive [FormixController.enabledSignal]. Read inside a reactive builder
+  /// (e.g. [SignalBuilder]) so `controller.setEnabled(id, ...)` toggles the field.
+  bool get effectiveEnabled => widget.enabled && (hasController ? controller.enabledSignal(widget.fieldId).value : true);
+
+  /// The effective read-only state, driven reactively by the controller's
+  /// [FormixController.readOnlySignal]. Read inside a reactive builder.
+  bool get effectiveReadOnly => hasController && controller.readOnlySignal(widget.fieldId).value;
+
   /// Whether the form is currently submitting.
   bool get isSubmitting => controller.isSubmitting;
 

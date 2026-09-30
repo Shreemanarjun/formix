@@ -236,13 +236,15 @@ void main() {
       const d = FormixFieldID<double>('d');
       const b = FormixFieldID<bool>('b');
       const dt = FormixFieldID<DateTime>('dt');
-      final c = _make(fields: [
-        const FormixField<String>(id: s, initialValue: ''),
-        const FormixField<int>(id: i, initialValue: 0),
-        const FormixField<double>(id: d, initialValue: 0.0),
-        const FormixField<bool>(id: b, initialValue: false),
-        FormixField<DateTime>(id: dt, initialValue: DateTime(2020)),
-      ]);
+      final c = _make(
+        fields: [
+          const FormixField<String>(id: s, initialValue: ''),
+          const FormixField<int>(id: i, initialValue: 0),
+          const FormixField<double>(id: d, initialValue: 0.0),
+          const FormixField<bool>(id: b, initialValue: false),
+          FormixField<DateTime>(id: dt, initialValue: DateTime(2020)),
+        ],
+      );
       addTearDown(c.dispose);
 
       c.debugFillDummyData();
@@ -268,9 +270,11 @@ void main() {
       expect(c.validate(), isFalse); // would normally block submit
 
       Map<String, dynamic>? received;
-      await c.debugForceSubmit(onValid: (values) async {
-        received = values;
-      });
+      await c.debugForceSubmit(
+        onValid: (values) async {
+          received = values;
+        },
+      );
       expect(received, isNotNull);
       expect(c.isSubmitting, isFalse);
     });
@@ -281,7 +285,9 @@ void main() {
     const f = FormixFieldID<String>('f');
 
     test('setFieldError sets and clears a manual error and error count', () {
-      final c = _make(fields: [const FormixField<String>(id: f, initialValue: '')]);
+      final c = _make(
+        fields: [const FormixField<String>(id: f, initialValue: '')],
+      );
       addTearDown(c.dispose);
 
       c.setFieldError(f, 'backend error');
@@ -295,7 +301,9 @@ void main() {
     });
 
     test('setFieldValidating toggles validating & pending count', () {
-      final c = _make(fields: [const FormixField<String>(id: f, initialValue: '')]);
+      final c = _make(
+        fields: [const FormixField<String>(id: f, initialValue: '')],
+      );
       addTearDown(c.dispose);
 
       c.setFieldValidating(f);
@@ -308,7 +316,9 @@ void main() {
     });
 
     test('setPending increments and decrements the pending count', () {
-      final c = _make(fields: [const FormixField<String>(id: f, initialValue: '')]);
+      final c = _make(
+        fields: [const FormixField<String>(id: f, initialValue: '')],
+      );
       addTearDown(c.dispose);
 
       c.setPending(f, true);
@@ -320,7 +330,9 @@ void main() {
     });
 
     test('markAsTouched marks a registered field and is a no-op otherwise', () {
-      final c = _make(fields: [const FormixField<String>(id: f, initialValue: '')]);
+      final c = _make(
+        fields: [const FormixField<String>(id: f, initialValue: '')],
+      );
       addTearDown(c.dispose);
 
       c.markAsTouched(f);
@@ -333,7 +345,9 @@ void main() {
     });
 
     test('manual setters are no-ops after dispose', () {
-      final c = _make(fields: [const FormixField<String>(id: f, initialValue: '')]);
+      final c = _make(
+        fields: [const FormixField<String>(id: f, initialValue: '')],
+      );
       c.dispose();
       expect(c.mounted, isFalse);
       // These early-return on !mounted
@@ -348,9 +362,11 @@ void main() {
     const f = FormixFieldID<String>('f');
 
     test('returns the value when present, throws StateError when null', () {
-      final c = _make(fields: [
-        const FormixField<String>(id: f, initialValue: 'here'),
-      ]);
+      final c = _make(
+        fields: [
+          const FormixField<String>(id: f, initialValue: 'here'),
+        ],
+      );
       addTearDown(c.dispose);
       expect(c.requireValue(f), 'here');
 
@@ -381,13 +397,15 @@ void main() {
     });
 
     test('resetFields with clearErrors removes validations', () {
-      final c = _make(fields: [
-        FormixField<String>(
-          id: f,
-          initialValue: '',
-          validator: (v) => (v == null || v.isEmpty) ? 'req' : null,
-        ),
-      ]);
+      final c = _make(
+        fields: [
+          FormixField<String>(
+            id: f,
+            initialValue: '',
+            validator: (v) => (v == null || v.isEmpty) ? 'req' : null,
+          ),
+        ],
+      );
       addTearDown(c.dispose);
       c.validate();
       expect(c.getValidation(f).isValid, isFalse);
@@ -397,9 +415,11 @@ void main() {
     });
 
     test('resetFields with clear strategy uses empty default', () {
-      final c = _make(fields: [
-        const FormixField<String>(id: f, initialValue: 'x'),
-      ]);
+      final c = _make(
+        fields: [
+          const FormixField<String>(id: f, initialValue: 'x'),
+        ],
+      );
       addTearDown(c.dispose);
       c.setValue(f, 'y');
       c.resetFields([f], strategy: ResetStrategy.clear);
@@ -407,16 +427,17 @@ void main() {
     });
 
     test('resetFields re-validates dependents', () {
-      final c = _make(fields: [
-        const FormixField<String>(id: f, initialValue: 'a'),
-        FormixField<String>(
-          id: g,
-          initialValue: 'b',
-          dependsOn: [f],
-          crossFieldValidator: (v, state) =>
-              state.getValue(f) == 'a' ? null : 'f must be a',
-        ),
-      ]);
+      final c = _make(
+        fields: [
+          const FormixField<String>(id: f, initialValue: 'a'),
+          FormixField<String>(
+            id: g,
+            initialValue: 'b',
+            dependsOn: [f],
+            crossFieldValidator: (v, state) => state.getValue(f) == 'a' ? null : 'f must be a',
+          ),
+        ],
+      );
       addTearDown(c.dispose);
       c.setValue(f, 'z');
       expect(c.getValidation(g).isValid, isFalse);
@@ -425,9 +446,11 @@ void main() {
     });
 
     test('reset with clear strategy on whole form', () {
-      final c = _make(fields: [
-        const FormixField<int>(id: FormixFieldID<int>('n'), initialValue: 5),
-      ]);
+      final c = _make(
+        fields: [
+          const FormixField<int>(id: FormixFieldID<int>('n'), initialValue: 5),
+        ],
+      );
       addTearDown(c.dispose);
       c.reset(strategy: ResetStrategy.clear);
       expect(c.getValue(const FormixFieldID<int>('n')), 0);
@@ -440,7 +463,9 @@ void main() {
     const g = FormixFieldID<String>('g');
 
     test('unregisterField removes state unless preserveState', () {
-      final c = _make(fields: [const FormixField<String>(id: f, initialValue: 'a')]);
+      final c = _make(
+        fields: [const FormixField<String>(id: f, initialValue: 'a')],
+      );
       addTearDown(c.dispose);
       c.setValue(f, 'b');
 
@@ -450,7 +475,9 @@ void main() {
     });
 
     test('unregisterField preserveState keeps the value', () {
-      final c = _make(fields: [const FormixField<String>(id: f, initialValue: 'a')]);
+      final c = _make(
+        fields: [const FormixField<String>(id: f, initialValue: 'a')],
+      );
       addTearDown(c.dispose);
       c.setValue(f, 'b');
 
@@ -460,10 +487,12 @@ void main() {
     });
 
     test('unregisterFields (bulk) with dependents cleans the graph', () {
-      final c = _make(fields: [
-        const FormixField<String>(id: f, initialValue: 'a'),
-        const FormixField<String>(id: g, initialValue: 'b', dependsOn: [f]),
-      ]);
+      final c = _make(
+        fields: [
+          const FormixField<String>(id: f, initialValue: 'a'),
+          const FormixField<String>(id: g, initialValue: 'b', dependsOn: [f]),
+        ],
+      );
       addTearDown(c.dispose);
       c.unregisterFields([f, g]);
       expect(c.isFieldRegistered(f), isFalse);
@@ -471,7 +500,9 @@ void main() {
     });
 
     test('unregisterFields with empty list is a no-op', () {
-      final c = _make(fields: [const FormixField<String>(id: f, initialValue: 'a')]);
+      final c = _make(
+        fields: [const FormixField<String>(id: f, initialValue: 'a')],
+      );
       addTearDown(c.dispose);
       c.unregisterFields([]);
       expect(c.isFieldRegistered(f), isTrue);
@@ -533,10 +564,12 @@ void main() {
     const b = FormixFieldID<String>('b');
 
     test('updateFromMap only touches registered fields', () {
-      final c = _make(fields: [
-        const FormixField<String>(id: a, initialValue: ''),
-        const FormixField<String>(id: b, initialValue: ''),
-      ]);
+      final c = _make(
+        fields: [
+          const FormixField<String>(id: a, initialValue: ''),
+          const FormixField<String>(id: b, initialValue: ''),
+        ],
+      );
       addTearDown(c.dispose);
 
       final result = c.updateFromMap({'a': 'x', 'b': 'y', 'ghost': 'z'});
@@ -546,10 +579,12 @@ void main() {
     });
 
     test('getChangedValues returns only dirty fields', () {
-      final c = _make(fields: [
-        const FormixField<String>(id: a, initialValue: 'a0'),
-        const FormixField<String>(id: b, initialValue: 'b0'),
-      ]);
+      final c = _make(
+        fields: [
+          const FormixField<String>(id: a, initialValue: 'a0'),
+          const FormixField<String>(id: b, initialValue: 'b0'),
+        ],
+      );
       addTearDown(c.dispose);
       c.setValue(a, 'a1');
       final changed = c.getChangedValues();
@@ -562,25 +597,29 @@ void main() {
     const f = FormixFieldID<String>('f');
 
     FormixController valid() {
-      final c = _make(fields: [
-        FormixField<String>(
-          id: f,
-          initialValue: 'ok',
-          validator: (v) => (v == null || v.isEmpty) ? 'req' : null,
-        ),
-      ]);
+      final c = _make(
+        fields: [
+          FormixField<String>(
+            id: f,
+            initialValue: 'ok',
+            validator: (v) => (v == null || v.isEmpty) ? 'req' : null,
+          ),
+        ],
+      );
       addTearDown(c.dispose);
       return c;
     }
 
     test('onError is called on invalid submit', () async {
-      final c = _make(fields: [
-        FormixField<String>(
-          id: f,
-          initialValue: '',
-          validator: (v) => (v == null || v.isEmpty) ? 'req' : null,
-        ),
-      ]);
+      final c = _make(
+        fields: [
+          FormixField<String>(
+            id: f,
+            initialValue: '',
+            validator: (v) => (v == null || v.isEmpty) ? 'req' : null,
+          ),
+        ],
+      );
       addTearDown(c.dispose);
 
       Map<String, ValidationResult>? errors;
@@ -611,10 +650,12 @@ void main() {
       var calls = 0;
       // First call is cancelled by the second (its future is intentionally
       // orphaned by the package's debounce implementation); only await the last.
-      unawaited(c.submit(
-        onValid: (_) async => calls++,
-        debounce: const Duration(milliseconds: 30),
-      ));
+      unawaited(
+        c.submit(
+          onValid: (_) async => calls++,
+          debounce: const Duration(milliseconds: 30),
+        ),
+      );
       await c.submit(
         onValid: (_) async => calls++,
         debounce: const Duration(milliseconds: 30),
@@ -651,11 +692,11 @@ void main() {
     const f = FormixFieldID<String>('f');
 
     FormixField<String> reqField(FormixAutovalidateMode mode) => FormixField<String>(
-          id: f,
-          initialValue: '',
-          validationMode: mode,
-          validator: (v) => (v == null || v.isEmpty) ? 'req' : null,
-        );
+      id: f,
+      initialValue: '',
+      validationMode: mode,
+      validator: (v) => (v == null || v.isEmpty) ? 'req' : null,
+    );
 
     test('disabled mode does not auto-validate on change', () {
       final c = _make(fields: [reqField(FormixAutovalidateMode.disabled)]);
@@ -702,13 +743,15 @@ void main() {
     const step1 = FormixFieldID<String>('s1');
 
     test('goToStep / nextStep / previousStep / validateStep', () {
-      final c = _make(fields: [
-        FormixField<String>(
-          id: step1,
-          initialValue: 'ok',
-          validator: (v) => (v == null || v.isEmpty) ? 'req' : null,
-        ),
-      ]);
+      final c = _make(
+        fields: [
+          FormixField<String>(
+            id: step1,
+            initialValue: 'ok',
+            validator: (v) => (v == null || v.isEmpty) ? 'req' : null,
+          ),
+        ],
+      );
       addTearDown(c.dispose);
 
       expect(c.state.currentStep, 0);
@@ -728,13 +771,15 @@ void main() {
     });
 
     test('nextStep returns false and stays when invalid', () {
-      final c = _make(fields: [
-        FormixField<String>(
-          id: step1,
-          initialValue: '',
-          validator: (v) => (v == null || v.isEmpty) ? 'req' : null,
-        ),
-      ]);
+      final c = _make(
+        fields: [
+          FormixField<String>(
+            id: step1,
+            initialValue: '',
+            validator: (v) => (v == null || v.isEmpty) ? 'req' : null,
+          ),
+        ],
+      );
       addTearDown(c.dispose);
       expect(c.nextStep(fields: [step1]), isFalse);
       expect(c.state.currentStep, 0);
@@ -748,14 +793,16 @@ void main() {
 
     test('loads saved state and marks fields dirty vs initial', () async {
       final persistence = _FakePersistence({'f': 'loaded', ghost: 'extra'});
-      final c = FormixController.fromParameter(FormixParameter(
-        formId: 'form1',
-        initialValue: const {'f': 'initial'},
-        persistence: persistence,
-        fields: [
-          const FormixField<String>(id: f, initialValue: 'initial').toConfig(),
-        ],
-      ));
+      final c = FormixController.fromParameter(
+        FormixParameter(
+          formId: 'form1',
+          initialValue: const {'f': 'initial'},
+          persistence: persistence,
+          fields: [
+            const FormixField<String>(id: f, initialValue: 'initial').toConfig(),
+          ],
+        ),
+      );
       addTearDown(c.dispose);
 
       // _loadPersistedState runs in a microtask.
@@ -768,14 +815,16 @@ void main() {
 
     test('null saved state leaves initial values untouched', () async {
       final persistence = _FakePersistence(null);
-      final c = FormixController.fromParameter(FormixParameter(
-        formId: 'form2',
-        initialValue: const {'f': 'initial'},
-        persistence: persistence,
-        fields: [
-          const FormixField<String>(id: f, initialValue: 'initial').toConfig(),
-        ],
-      ));
+      final c = FormixController.fromParameter(
+        FormixParameter(
+          formId: 'form2',
+          initialValue: const {'f': 'initial'},
+          persistence: persistence,
+          fields: [
+            const FormixField<String>(id: f, initialValue: 'initial').toConfig(),
+          ],
+        ),
+      );
       addTearDown(c.dispose);
       await Future<void>.delayed(const Duration(milliseconds: 20));
       expect(c.getValue(f), 'initial');
@@ -786,16 +835,17 @@ void main() {
   group('updateMessages', () {
     test('re-validates and updates error strings; global signal drives it', () {
       const f = FormixFieldID<String>('f');
-      final c = _make(fields: [
-        FormixField<String>(
-          id: f,
-          initialValue: '',
-          validator: FormixValidators.string().required().build(),
-        ),
-      ]);
+      final c = _make(
+        fields: [
+          FormixField<String>(
+            id: f,
+            initialValue: '',
+            validator: FormixValidators.string().required().build(),
+          ),
+        ],
+      );
       addTearDown(c.dispose);
-      addTearDown(() =>
-          formixGlobalMessages.value = const DefaultFormixMessages());
+      addTearDown(() => formixGlobalMessages.value = const DefaultFormixMessages());
 
       c.validate();
       final before = c.getValidation(f).errorMessage;

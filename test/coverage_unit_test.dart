@@ -65,11 +65,7 @@ void main() {
       expect(chain.build()(false), 'must be true');
       expect(chain.build()(true), isNull);
 
-      final asyncV = FormixValidators.string()
-          .required()
-          .async((v) async => v == 'taken' ? 'unavailable' : null)
-          .debounce(const Duration(milliseconds: 10))
-          .buildAsync();
+      final asyncV = FormixValidators.string().required().async((v) async => v == 'taken' ? 'unavailable' : null).debounce(const Duration(milliseconds: 10)).buildAsync();
       expect(await asyncV('taken'), 'unavailable');
       expect(await asyncV('free'), isNull);
       // sync failure short-circuits async

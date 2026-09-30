@@ -143,7 +143,7 @@ class FormixCheckboxFormFieldState extends FormixFieldWidgetState<bool> {
         child: CheckboxListTile(
           value: val ?? false,
           title: checkboxWidget.title,
-          enabled: checkboxWidget.enabled,
+          enabled: effectiveEnabled,
           focusNode: focusNode,
           activeColor: checkboxWidget.activeColor,
           checkColor: checkboxWidget.checkColor,
@@ -181,7 +181,7 @@ class FormixCheckboxFormFieldState extends FormixFieldWidgetState<bool> {
                               style: TextStyle(fontSize: 12),
                             )
                           : null)),
-          onChanged: checkboxWidget.enabled
+          onChanged: effectiveEnabled
               ? (newValue) {
                   didChange(newValue ?? false);
                 }

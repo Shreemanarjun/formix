@@ -163,8 +163,7 @@ void main() {
       // Raw-key path: num vs num => valid; custom obj vs custom obj => valid.
       // (Fields aren't registered, so they land in missingFields, but the type
       // validation branch still runs and reports no type mismatches.)
-      final batch = FormixBatch()
-        ..addAll({'count': 2, 'obj': _B()});
+      final batch = FormixBatch()..addAll({'count': 2, 'obj': _B()});
       final res = c.applyBatch(batch);
       expect(res.typeMismatches, isEmpty);
     });
@@ -315,8 +314,7 @@ void main() {
             initialValue: '',
             dependsOn: [pw],
             validationMode: FormixAutovalidateMode.onUserInteraction,
-            crossFieldValidator: (v, state) =>
-                v == state.values['pw'] ? null : 'mismatch',
+            crossFieldValidator: (v, state) => v == state.values['pw'] ? null : 'mismatch',
           ),
         ],
         autovalidateMode: FormixAutovalidateMode.onUserInteraction,
@@ -341,8 +339,7 @@ void main() {
             initialValue: '',
             dependsOn: [pw],
             validationMode: FormixAutovalidateMode.onBlur,
-            crossFieldValidator: (v, state) =>
-                v == state.values['pw'] ? null : 'mismatch',
+            crossFieldValidator: (v, state) => v == state.values['pw'] ? null : 'mismatch',
           ),
         ],
         autovalidateMode: FormixAutovalidateMode.onBlur,
@@ -720,8 +717,7 @@ void main() {
             initialValue: '',
             dependsOn: [src],
             validationMode: FormixAutovalidateMode.onUserInteraction,
-            crossFieldValidator: (v, s) =>
-                v == s.values['src'] ? null : 'mismatch',
+            crossFieldValidator: (v, s) => v == s.values['src'] ? null : 'mismatch',
           ),
         ],
         autovalidateMode: FormixAutovalidateMode.onUserInteraction,
@@ -751,8 +747,7 @@ void main() {
             initialValue: '',
             dependsOn: [src],
             validationMode: FormixAutovalidateMode.onBlur,
-            crossFieldValidator: (v, s) =>
-                v == s.values['src'] ? null : 'mismatch',
+            crossFieldValidator: (v, s) => v == s.values['src'] ? null : 'mismatch',
           ),
         ],
         autovalidateMode: FormixAutovalidateMode.onBlur,

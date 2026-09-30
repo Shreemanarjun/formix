@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../formix.dart'; // For Formix.of
 import 'ancestor_validator.dart';
-import 'formix_controller_host.dart';
 
 /// A widget that registers a specific set of fields with the parent [Formix].
 ///

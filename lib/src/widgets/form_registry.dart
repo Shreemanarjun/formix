@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../formix.dart';
-import 'formix_controller_host.dart';
 
 /// A widget that dynamically registers and unregisters fields for a specific part of the form.
 ///

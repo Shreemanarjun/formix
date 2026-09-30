@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/semantics.dart';
@@ -11,7 +12,6 @@ import '../persistence/form_persistence.dart';
 import '../analytics/form_analytics.dart';
 import '../i18n.dart';
 import 'batch.dart';
-
 
 /// The form controller: the object you hold to drive a form.
 ///
@@ -32,24 +32,26 @@ class FormixController extends FormixBaseController {
     FormixAutovalidateMode autovalidateMode = FormixAutovalidateMode.always,
     FormixData? initialData,
     FormixMessages? messages,
-  }) : super(FormixParameter(
-          initialValue: initialValue,
-          messages: messages,
-          fields: fields.map<FormixFieldConfig>((f) {
-            if (f is FormixFieldConfig) return f;
-            if (f is FormixField) {
-              return f.toConfig();
-            }
-            throw ArgumentError('Invalid field type: ${f.runtimeType}');
-          }).toList(),
-          persistence: persistence,
-          formId: formId,
-          analytics: analytics,
-          keepAlive: keepAlive,
-          namespace: namespace,
-          autovalidateMode: autovalidateMode,
-          initialData: initialData,
-        ));
+  }) : super(
+         FormixParameter(
+           initialValue: initialValue,
+           messages: messages,
+           fields: fields.map<FormixFieldConfig>((f) {
+             if (f is FormixFieldConfig) return f;
+             if (f is FormixField) {
+               return f.toConfig();
+             }
+             throw ArgumentError('Invalid field type: ${f.runtimeType}');
+           }).toList(),
+           persistence: persistence,
+           formId: formId,
+           analytics: analytics,
+           keepAlive: keepAlive,
+           namespace: namespace,
+           autovalidateMode: autovalidateMode,
+           initialData: initialData,
+         ),
+       );
 
   /// Creates a [FormixController] directly from a [FormixParameter].
   FormixController.fromParameter(super.parameter);
@@ -87,28 +89,22 @@ class FormixController extends FormixBaseController {
   }
 
   /// Reactive validation result of a field.
-  ReadonlySignal<ValidationResult> validationSignal<T>(FormixFieldID<T> id) =>
-      _validationSignals.putIfAbsent(id.key, () => signal(stateSignal.peek().getValidation(id)));
+  ReadonlySignal<ValidationResult> validationSignal<T>(FormixFieldID<T> id) => _validationSignals.putIfAbsent(id.key, () => signal(stateSignal.peek().getValidation(id)));
 
   /// Reactive dirty flag of a field.
-  ReadonlySignal<bool> dirtySignal<T>(FormixFieldID<T> id) =>
-      _dirtySignals.putIfAbsent(id.key, () => signal(stateSignal.peek().isFieldDirty(id)));
+  ReadonlySignal<bool> dirtySignal<T>(FormixFieldID<T> id) => _dirtySignals.putIfAbsent(id.key, () => signal(stateSignal.peek().isFieldDirty(id)));
 
   /// Reactive touched flag of a field.
-  ReadonlySignal<bool> touchedSignal<T>(FormixFieldID<T> id) =>
-      _touchedSignals.putIfAbsent(id.key, () => signal(stateSignal.peek().isFieldTouched(id)));
+  ReadonlySignal<bool> touchedSignal<T>(FormixFieldID<T> id) => _touchedSignals.putIfAbsent(id.key, () => signal(stateSignal.peek().isFieldTouched(id)));
 
   /// Reactive pending (async) flag of a field.
-  ReadonlySignal<bool> pendingSignal<T>(FormixFieldID<T> id) =>
-      _pendingSignals.putIfAbsent(id.key, () => signal(stateSignal.peek().isFieldPending(id)));
+  ReadonlySignal<bool> pendingSignal<T>(FormixFieldID<T> id) => _pendingSignals.putIfAbsent(id.key, () => signal(stateSignal.peek().isFieldPending(id)));
 
   /// Reactive validity of a field-name group (e.g. `'user'`).
-  ReadonlySignal<bool> groupValidSignal(String prefix) =>
-      _groupValidSignals.putIfAbsent(prefix, () => computed(() => state.isGroupValid(prefix)));
+  ReadonlySignal<bool> groupValidSignal(String prefix) => _groupValidSignals.putIfAbsent(prefix, () => computed(() => state.isGroupValid(prefix)));
 
   /// Reactive dirtiness of a field-name group.
-  ReadonlySignal<bool> groupDirtySignal(String prefix) =>
-      _groupDirtySignals.putIfAbsent(prefix, () => computed(() => state.isGroupDirty(prefix)));
+  ReadonlySignal<bool> groupDirtySignal(String prefix) => _groupDirtySignals.putIfAbsent(prefix, () => computed(() => state.isGroupDirty(prefix)));
 
   /// Reactive form validity.
   ReadonlySignal<bool> get isValidSignal => _isValidSignal ??= computed(() => state.isValid);
@@ -125,6 +121,71 @@ class FormixController extends FormixBaseController {
   /// Reactive current step (multi-step forms).
   ReadonlySignal<int> get currentStepSignal => _currentStepSignal ??= computed(() => state.currentStep);
 
+  // --- Derived signals & reactive UI flags (signals-native extras) ---
+
+  final List<ReadonlySignal<dynamic>> _derivedSignals = [];
+  final Map<String, Signal<bool>> _enabledSignals = {};
+  final Map<String, Signal<bool>> _readOnlySignals = {};
+  final Map<String, Signal<bool>> _visibleSignals = {};
+  final Map<String, ReadonlySignal<dynamic>> _debouncedSignals = {};
+  final List<VoidCallback> _debouncedDisposers = [];
+
+  /// Creates a memoized, read-only signal derived from the whole form [state].
+  ///
+  /// Read `.value` inside a [SignalBuilder] to rebuild only when the derived
+  /// value changes. Example:
+  /// ```dart
+  /// final total = controller.derived((s) => s.getValue(qtyId)! * s.getValue(priceId)!);
+  /// ```
+  ReadonlySignal<R> derived<R>(R Function(FormixData state) compute) {
+    final c = computed(() => compute(state));
+    _derivedSignals.add(c);
+    return c;
+  }
+
+  /// A debounced view of a field's value: it only emits [duration] after the
+  /// field stops changing. Ideal for search-as-you-type. Cached per (field, duration).
+  ReadonlySignal<T?> debouncedValueSignal<T>(FormixFieldID<T> id, Duration duration) {
+    final key = '${id.key}@${duration.inMicroseconds}';
+    final existing = _debouncedSignals[key];
+    if (existing != null) return existing as ReadonlySignal<T?>;
+
+    final source = valueSignal(id);
+    final out = signal<T?>(source.peek());
+    Timer? timer;
+    final disposeEffect = effect(() {
+      final v = source.value;
+      timer?.cancel();
+      timer = Timer(duration, () => out.value = v);
+    });
+    _debouncedSignals[key] = out;
+    _debouncedDisposers.add(() {
+      timer?.cancel();
+      disposeEffect();
+      out.dispose();
+    });
+    return out;
+  }
+
+  /// Reactive "enabled" flag for a field (default true). Built-in field widgets
+  /// combine this with their own `enabled` property.
+  ReadonlySignal<bool> enabledSignal<T>(FormixFieldID<T> id) => _enabledSignals.putIfAbsent(id.key, () => signal(true));
+
+  /// Reactive "read-only" flag for a field (default false).
+  ReadonlySignal<bool> readOnlySignal<T>(FormixFieldID<T> id) => _readOnlySignals.putIfAbsent(id.key, () => signal(false));
+
+  /// Reactive "visible" flag for a field (default true). Watch it (e.g. in a
+  /// [FormixBuilder]) to show/hide fields reactively.
+  ReadonlySignal<bool> visibleSignal<T>(FormixFieldID<T> id) => _visibleSignals.putIfAbsent(id.key, () => signal(true));
+
+  /// Enable/disable a field reactively.
+  void setEnabled<T>(FormixFieldID<T> id, bool enabled) => _enabledSignals.putIfAbsent(id.key, () => signal(true)).value = enabled;
+
+  /// Mark a field read-only (or not) reactively.
+  void setReadOnly<T>(FormixFieldID<T> id, bool readOnly) => _readOnlySignals.putIfAbsent(id.key, () => signal(false)).value = readOnly;
+
+  /// Show/hide a field reactively.
+  void setVisible<T>(FormixFieldID<T> id, bool visible) => _visibleSignals.putIfAbsent(id.key, () => signal(true)).value = visible;
 
   /// Adds a listener to be notified when the form state changes.
   VoidCallback addListener(void Function(FormixData) listener, {bool fireImmediately = true}) {
@@ -344,7 +405,15 @@ class FormixController extends FormixBaseController {
     _isSubmittingNotifier?.dispose();
     _isPendingNotifier?.dispose();
 
-    // Dispose reactive slices (per-field signals + group/form-level computeds).
+    // Tear down debounced-signal timers/effects first.
+    for (final d in _debouncedDisposers) {
+      d();
+    }
+    _debouncedDisposers.clear();
+    _debouncedSignals.clear();
+
+    // Dispose reactive slices (per-field signals + group/form-level computeds +
+    // derived signals + reactive UI-flag signals).
     for (final ReadonlySignal<dynamic>? c in <ReadonlySignal<dynamic>?>[
       ..._valueSignals.values,
       ..._validationSignals.values,
@@ -353,6 +422,10 @@ class FormixController extends FormixBaseController {
       ..._pendingSignals.values,
       ..._groupValidSignals.values,
       ..._groupDirtySignals.values,
+      ..._derivedSignals,
+      ..._enabledSignals.values,
+      ..._readOnlySignals.values,
+      ..._visibleSignals.values,
       _isValidSignal,
       _isDirtySignal,
       _isSubmittingSignal,

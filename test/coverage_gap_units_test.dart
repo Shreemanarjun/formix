@@ -75,8 +75,7 @@ void main() {
       // Build via a function so the two field-equal instances are NOT
       // canonicalized to the same object; `identical` is false and the `==`
       // body evaluates through to lines 32/33 (loadingIcon/editIcon).
-      FormixThemeData make(Widget edit) =>
-          FormixThemeData(enabled: true, loadingIcon: icon1, editIcon: edit);
+      FormixThemeData make(Widget edit) => FormixThemeData(enabled: true, loadingIcon: icon1, editIcon: edit);
       final a = make(icon1);
       final b = make(icon1);
       final cDiff = make(icon2);
@@ -124,17 +123,19 @@ void main() {
     });
 
     testWidgets('of() falls back to forLocale when no widget present (line 141)', (tester) async {
-      await tester.pumpWidget(Directionality(
-        textDirection: TextDirection.ltr,
-        child: Localizations(
-          locale: const Locale('en'),
-          delegates: const [
-            DefaultWidgetsLocalizations.delegate,
-            DefaultMaterialLocalizations.delegate,
-          ],
-          child: const _LocaleProbe(),
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: Localizations(
+            locale: const Locale('en'),
+            delegates: const [
+              DefaultWidgetsLocalizations.delegate,
+              DefaultMaterialLocalizations.delegate,
+            ],
+            child: const _LocaleProbe(),
+          ),
         ),
-      ));
+      );
       await tester.pump();
       expect(find.byType(_LocaleProbe), findsOneWidget);
     });
@@ -168,16 +169,20 @@ void main() {
       addTearDown(c2.dispose);
 
       final key = GlobalKey<_HostState>();
-      await tester.pumpWidget(MaterialApp(
-        home: _HostWidget(key: key, controller: c1),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: _HostWidget(key: key, controller: c1),
+        ),
+      );
       await tester.pump();
       expect(key.currentState!.attached, contains(c1));
 
       // Swap the controller -> onControllerDetached(c1) + onControllerChanged(c2).
-      await tester.pumpWidget(MaterialApp(
-        home: _HostWidget(key: key, controller: c2),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: _HostWidget(key: key, controller: c2),
+        ),
+      );
       await tester.pump();
       key.currentState!.refresh();
       expect(key.currentState!.detached, contains(c1));
@@ -204,19 +209,21 @@ void main() {
       addTearDown(c.dispose);
 
       late FormixScope captured;
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Formix(
-            controller: c,
-            child: FormixBuilder(
-              builder: (context, scope) {
-                captured = scope;
-                return Text('step ${scope.watchCurrentStep}');
-              },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              controller: c,
+              child: FormixBuilder(
+                builder: (context, scope) {
+                  captured = scope;
+                  return Text('step ${scope.watchCurrentStep}');
+                },
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pump();
 
       expect(captured.isFieldPending(a), isFalse);
@@ -293,14 +300,16 @@ void main() {
 
   group('formix errors widget documentation button', () {
     testWidgets('tapping the docs button runs its callback (line 83)', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(
-          body: FormixConfigurationErrorWidget(
-            message: 'msg',
-            details: 'details',
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: FormixConfigurationErrorWidget(
+              message: 'msg',
+              details: 'details',
+            ),
           ),
         ),
-      ));
+      );
       await tester.tap(find.text('View Documentation'));
       await tester.pump();
       expect(find.byType(FormixConfigurationErrorWidget), findsOneWidget);
@@ -312,23 +321,27 @@ void main() {
       final c = FormixController();
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Formix(
-            controller: c,
-            // Non-const so the const constructor is invoked at runtime (line 10).
-            // ignore: prefer_const_constructors
-            child: FormixFormStatus(),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              controller: c,
+              // Non-const so the const constructor is invoked at runtime (line 10).
+              // ignore: prefer_const_constructors
+              child: FormixFormStatus(),
+            ),
           ),
         ),
-      ));
+      );
       await tester.pump();
 
       // Trigger submitting state while onValid is in flight. Don't await the
       // future directly (that would deadlock the fake clock) — pump the delay.
-      unawaited(c.submit(
-        onValid: (_) => Future<void>.delayed(const Duration(milliseconds: 50)),
-      ));
+      unawaited(
+        c.submit(
+          onValid: (_) => Future<void>.delayed(const Duration(milliseconds: 50)),
+        ),
+      );
       await tester.pump();
       expect(find.text('Submitting...'), findsOneWidget);
       await tester.pump(const Duration(milliseconds: 100));

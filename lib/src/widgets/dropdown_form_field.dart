@@ -142,7 +142,7 @@ class FormixDropdownFormFieldState<T> extends FormixFieldWidgetState<T> {
                 focusNode: focusNode,
                 hint: dropdownWidget.hint,
                 disabledHint: dropdownWidget.disabledHint,
-                onChanged: widget.enabled
+                onChanged: effectiveEnabled
                     ? (newValue) {
                         if (newValue != null) {
                           didChange(newValue);

@@ -6,17 +6,35 @@ and simpler. See `MIGRATION.md` for the full upgrade guide.
 
 - **No more `ProviderScope`**: `Formix` is fully self-contained. Removed the
   `flutter_riverpod` dependency and the re-export from `package:formix`.
-- **Signals core**: whole-form state is a single `Signal<FormixData>`; per-field/aspect
-  slices are exposed as memoized `Computed`s (`valueSignal`, `validationSignal`,
-  `dirtySignal`, `touchedSignal`, `pendingSignal`, `isValidSignal`, `isDirtySignal`,
-  `isSubmittingSignal`, `currentStepSignal`, `groupValidSignal`, `groupDirtySignal`) for
-  surgical rebuilds. Widgets rebuild via `SignalBuilder`.
+- **Signals core**: whole-form state is a single `Signal<FormixData>`. Per-field slices
+  (`valueSignal`, `validationSignal`, `dirtySignal`, `touchedSignal`, `pendingSignal`) are
+  plain signals kept in sync via a `changedFields` delta — so a keystroke only touches the
+  changed field's signals (O(changed), not O(all watchers)). Form-level/group slices
+  (`isValidSignal`, `isDirtySignal`, `isSubmittingSignal`, `currentStepSignal`,
+  `groupValidSignal`, `groupDirtySignal`) are memoized `Computed`s. Widgets rebuild via `SignalBuilder`.
+- **Faster**: per-rebuild overhead 0.097ms → **0.074ms** vs the Riverpod era (state writes
+  skip the O(n) equality check via `Signal.set(force:true)`). See `BENCHMARKS.md`.
 - **Removed**: all `*Provider` globals and `formControllerProvider`-family plumbing.
   Construct controllers directly with `FormixController(...)` / `FormixController.fromParameter(...)`.
-- **Renamed**: `RiverpodFormController` → `FormixBaseController`.
+- **Renamed**: `RiverpodFormController` → `FormixBaseController` (internal file
+  `riverpod_controller.dart` → `formix_base_controller.dart`).
 - **Global messages**: `formixMessagesProvider` → the reactive `formixGlobalMessages` signal.
   Set `formixGlobalMessages.value = MyMessages()` on a language change; all forms re-validate.
 - `FormixAsyncField.asyncValue` now uses `AsyncState<T>` (signals) instead of `AsyncValue<T>`.
+- The **DevTools extension app** was migrated to signals too.
+
+### New APIs in 0.2.0
+- `controller.applyServerErrors(Map<String,String>)` — map backend validation errors onto fields in one update.
+- `controller.derived<R>((state) => ...)` — memoized read-only signal derived from form state.
+- `controller.debouncedValueSignal(id, duration)` — debounced field value (search-as-you-type).
+- Reactive field flags: `enabledSignal`/`setEnabled`, `readOnlySignal`/`setReadOnly`,
+  `visibleSignal`/`setVisible`. Built-in text/checkbox/dropdown fields honor `enabled`
+  (and text honors `readOnly`) reactively.
+- `FormixFormField<T>` — adapter to drop Formix fields into a native Flutter `Form`
+  (`Form.validate()/save()/reset()` participate with Formix).
+- `FormixControllerHost` mixin — exported for building custom controller-bound widgets.
+- `package:formix/formix_test.dart` — test helpers: `pumpFormix(...)`, `RebuildCounter`,
+  and `rebuiltExactly`/`rebuiltAtMost` matchers.
 
 ## 0.1.3 - Dev (Unreleased)
 - **Message Updates & Localization**:

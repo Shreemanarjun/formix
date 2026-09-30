@@ -227,22 +227,24 @@ class _FormixFieldDerivationsState extends State<FormixFieldDerivations> {
       // its own first run, then only when a selected dependency part changes.
       var primed = false;
       List<Object?>? lastSig;
-      _disposeEffects.add(effect(() {
-        final values = <FormixFieldID<dynamic>, dynamic>{};
-        final sig = <Object?>[];
-        for (final dep in config.dependencies) {
-          final value = controller.valueSignal(dep).value;
-          values[dep] = value;
-          final selector = config.selectors?[dep];
-          sig.add(selector != null ? selector(value) : value);
-        }
-        final shouldDerive = !primed || !listEquals(sig, lastSig);
-        primed = true;
-        lastSig = sig;
-        if (shouldDerive) {
-          untracked(() => _recalculate(config, values));
-        }
-      }));
+      _disposeEffects.add(
+        effect(() {
+          final values = <FormixFieldID<dynamic>, dynamic>{};
+          final sig = <Object?>[];
+          for (final dep in config.dependencies) {
+            final value = controller.valueSignal(dep).value;
+            values[dep] = value;
+            final selector = config.selectors?[dep];
+            sig.add(selector != null ? selector(value) : value);
+          }
+          final shouldDerive = !primed || !listEquals(sig, lastSig);
+          primed = true;
+          lastSig = sig;
+          if (shouldDerive) {
+            untracked(() => _recalculate(config, values));
+          }
+        }),
+      );
     }
   }
 

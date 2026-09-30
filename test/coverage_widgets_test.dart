@@ -23,74 +23,83 @@ Widget _inFormix(Widget child, {FormixController? controller, List<FormixFieldCo
 void main() {
   group('logic widgets error out when used outside Formix', () {
     testWidgets('FormixFieldDerivation shows config error', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: FormixFieldDerivation(
-          dependencies: const [_a],
-          targetField: _derived,
-          derive: (_) => 'x',
+      await tester.pumpWidget(
+        MaterialApp(
+          home: FormixFieldDerivation(
+            dependencies: const [_a],
+            targetField: _derived,
+            derive: (_) => 'x',
+          ),
         ),
-      ));
+      );
       await tester.pump();
       expect(find.byType(FormixConfigurationErrorWidget), findsOneWidget);
     });
 
     testWidgets('FormixFieldDerivations shows config error', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: FormixFieldDerivations(
-          derivations: [
-            FieldDerivationConfig(
-              dependencies: [_a],
-              targetField: _derived,
-              derive: (_) => 'x',
-            ),
-          ],
+      await tester.pumpWidget(
+        MaterialApp(
+          home: FormixFieldDerivations(
+            derivations: [
+              FieldDerivationConfig(
+                dependencies: [_a],
+                targetField: _derived,
+                derive: (_) => 'x',
+              ),
+            ],
+          ),
         ),
-      ));
+      );
       await tester.pump();
       expect(find.byType(FormixConfigurationErrorWidget), findsOneWidget);
     });
 
     testWidgets('FormixFieldTransformer shows config error', (tester) async {
-      await tester.pumpWidget(MaterialApp(
-        home: FormixFieldTransformer<String, String>(
-          sourceField: _a,
-          targetField: _upper,
-          transform: (v) => (v ?? '').toUpperCase(),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: FormixFieldTransformer<String, String>(
+            sourceField: _a,
+            targetField: _upper,
+            transform: (v) => (v ?? '').toUpperCase(),
+          ),
         ),
-      ));
+      );
       await tester.pump();
       expect(find.byType(FormixConfigurationErrorWidget), findsOneWidget);
     });
 
     testWidgets('FormixFieldRegistry shows config error', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: FormixFieldRegistry(
-          fields: [
-            FormixFieldConfig<String>(id: _a, initialValue: ''),
-          ],
-          child: SizedBox(),
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: FormixFieldRegistry(
+            fields: [
+              FormixFieldConfig<String>(id: _a, initialValue: ''),
+            ],
+            child: SizedBox(),
+          ),
         ),
-      ));
+      );
       await tester.pump();
       expect(find.byType(FormixConfigurationErrorWidget), findsOneWidget);
     });
   });
 
   group('FormixFieldDerivation', () {
-    testWidgets('derives on mount and when a selected dependency part changes',
-        (tester) async {
-      await tester.pumpWidget(_inFormix(
-        FormixFieldDerivation(
-          dependencies: const [_a],
-          targetField: _derived,
-          selectors: {_a: (v) => (v as String?)?.length},
-          derive: (values) => 'len=${(values[_a] as String? ?? '').length}',
+    testWidgets('derives on mount and when a selected dependency part changes', (tester) async {
+      await tester.pumpWidget(
+        _inFormix(
+          FormixFieldDerivation(
+            dependencies: const [_a],
+            targetField: _derived,
+            selectors: {_a: (v) => (v as String?)?.length},
+            derive: (values) => 'len=${(values[_a] as String? ?? '').length}',
+          ),
+          fields: [
+            const FormixFieldConfig<String>(id: _a, initialValue: ''),
+            const FormixFieldConfig<String>(id: _derived, initialValue: ''),
+          ],
         ),
-        fields: [
-          const FormixFieldConfig<String>(id: _a, initialValue: ''),
-          const FormixFieldConfig<String>(id: _derived, initialValue: ''),
-        ],
-      ));
+      );
       await tester.pump(); // register + first derive
       await tester.pump(); // microtask setValue
       final controller = Formix.controllerOf(
@@ -105,17 +114,19 @@ void main() {
     });
 
     testWidgets('derive throwing is swallowed (no crash)', (tester) async {
-      await tester.pumpWidget(_inFormix(
-        FormixFieldDerivation(
-          dependencies: const [_a],
-          targetField: _derived,
-          derive: (_) => throw StateError('bad derive'),
+      await tester.pumpWidget(
+        _inFormix(
+          FormixFieldDerivation(
+            dependencies: const [_a],
+            targetField: _derived,
+            derive: (_) => throw StateError('bad derive'),
+          ),
+          fields: [
+            const FormixFieldConfig<String>(id: _a, initialValue: ''),
+            const FormixFieldConfig<String>(id: _derived, initialValue: ''),
+          ],
         ),
-        fields: [
-          const FormixFieldConfig<String>(id: _a, initialValue: ''),
-          const FormixFieldConfig<String>(id: _derived, initialValue: ''),
-        ],
-      ));
+      );
       await tester.pump();
       await tester.pump();
       expect(tester.takeException(), isNull);
@@ -128,29 +139,31 @@ void main() {
       const c2 = FormixFieldID<String>('c2');
       const out1 = FormixFieldID<String>('out1');
       const out2 = FormixFieldID<String>('out2');
-      await tester.pumpWidget(_inFormix(
-        FormixFieldDerivations(
-          derivations: [
-            FieldDerivationConfig(
-              dependencies: [c1],
-              targetField: out1,
-              selectors: {c1: (v) => v},
-              derive: (values) => 'a:${values[c1]}',
-            ),
-            FieldDerivationConfig(
-              dependencies: [c2],
-              targetField: out2,
-              derive: (values) => 'b:${values[c2]}',
-            ),
+      await tester.pumpWidget(
+        _inFormix(
+          FormixFieldDerivations(
+            derivations: [
+              FieldDerivationConfig(
+                dependencies: [c1],
+                targetField: out1,
+                selectors: {c1: (v) => v},
+                derive: (values) => 'a:${values[c1]}',
+              ),
+              FieldDerivationConfig(
+                dependencies: [c2],
+                targetField: out2,
+                derive: (values) => 'b:${values[c2]}',
+              ),
+            ],
+          ),
+          fields: [
+            const FormixFieldConfig<String>(id: c1, initialValue: '1'),
+            const FormixFieldConfig<String>(id: c2, initialValue: '2'),
+            const FormixFieldConfig<String>(id: out1, initialValue: ''),
+            const FormixFieldConfig<String>(id: out2, initialValue: ''),
           ],
         ),
-        fields: [
-          const FormixFieldConfig<String>(id: c1, initialValue: '1'),
-          const FormixFieldConfig<String>(id: c2, initialValue: '2'),
-          const FormixFieldConfig<String>(id: out1, initialValue: ''),
-          const FormixFieldConfig<String>(id: out2, initialValue: ''),
-        ],
-      ));
+      );
       await tester.pump();
       await tester.pump();
       final controller = Formix.controllerOf(
@@ -163,18 +176,20 @@ void main() {
 
   group('FormixFieldTransformer', () {
     testWidgets('transforms source into target on change', (tester) async {
-      await tester.pumpWidget(_inFormix(
-        FormixFieldTransformer<String, String>(
-          sourceField: _a,
-          targetField: _upper,
-          select: (v) => v,
-          transform: (v) => (v ?? '').toUpperCase(),
+      await tester.pumpWidget(
+        _inFormix(
+          FormixFieldTransformer<String, String>(
+            sourceField: _a,
+            targetField: _upper,
+            select: (v) => v,
+            transform: (v) => (v ?? '').toUpperCase(),
+          ),
+          fields: [
+            const FormixFieldConfig<String>(id: _a, initialValue: 'hi'),
+            const FormixFieldConfig<String>(id: _upper, initialValue: ''),
+          ],
         ),
-        fields: [
-          const FormixFieldConfig<String>(id: _a, initialValue: 'hi'),
-          const FormixFieldConfig<String>(id: _upper, initialValue: ''),
-        ],
-      ));
+      );
       await tester.pump();
       await tester.pump();
       final controller = Formix.controllerOf(
@@ -188,25 +203,26 @@ void main() {
   });
 
   group('FormixDependentField', () {
-    testWidgets('rebuilds when the watched field changes and honors select',
-        (tester) async {
+    testWidgets('rebuilds when the watched field changes and honors select', (tester) async {
       final controller = FormixController(
         fields: [const FormixField<String>(id: _a, initialValue: 'x')],
       );
       addTearDown(controller.dispose);
 
       var builds = 0;
-      await tester.pumpWidget(MaterialApp(
-        home: FormixDependentField<String>(
-          fieldId: _a,
-          controller: controller,
-          select: (v) => v?.length,
-          builder: (context, value) {
-            builds++;
-            return Text('v=$value', textDirection: TextDirection.ltr);
-          },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: FormixDependentField<String>(
+            fieldId: _a,
+            controller: controller,
+            select: (v) => v?.length,
+            builder: (context, value) {
+              builds++;
+              return Text('v=$value', textDirection: TextDirection.ltr);
+            },
+          ),
         ),
-      ));
+      );
       await tester.pump();
       final buildsAfterMount = builds;
 
@@ -222,20 +238,21 @@ void main() {
     });
 
     testWidgets('didUpdateWidget rewires when fieldId changes', (tester) async {
-      final controller = FormixController(fields: [
-        const FormixField<String>(id: _a, initialValue: 'aaa'),
-        const FormixField<String>(id: _b, initialValue: 'bbb'),
-      ]);
+      final controller = FormixController(
+        fields: [
+          const FormixField<String>(id: _a, initialValue: 'aaa'),
+          const FormixField<String>(id: _b, initialValue: 'bbb'),
+        ],
+      );
       addTearDown(controller.dispose);
 
       Widget build(FormixFieldID<String> id) => MaterialApp(
-            home: FormixDependentField<String>(
-              fieldId: id,
-              controller: controller,
-              builder: (context, value) =>
-                  Text('v=$value', textDirection: TextDirection.ltr),
-            ),
-          );
+        home: FormixDependentField<String>(
+          fieldId: id,
+          controller: controller,
+          builder: (context, value) => Text('v=$value', textDirection: TextDirection.ltr),
+        ),
+      );
 
       await tester.pumpWidget(build(_a));
       await tester.pump();
@@ -248,34 +265,33 @@ void main() {
   });
 
   group('FormixListener', () {
-    testWidgets('external key: listens, select gates, formKey change rewires',
-        (tester) async {
+    testWidgets('external key: listens, select gates, formKey change rewires', (tester) async {
       final key1 = GlobalKey<FormixState>();
       final key2 = GlobalKey<FormixState>();
       final notifications = <bool>[];
 
       Widget build(GlobalKey<FormixState> key) => MaterialApp(
-            home: Column(
-              children: [
-                Formix(
-                  key: key1,
-                  fields: const [FormixFieldConfig<String>(id: _a, initialValue: '')],
-                  child: const SizedBox(),
-                ),
-                Formix(
-                  key: key2,
-                  fields: const [FormixFieldConfig<String>(id: _b, initialValue: '')],
-                  child: const SizedBox(),
-                ),
-                FormixListener(
-                  formKey: key,
-                  select: (s) => s.isValid,
-                  listener: (context, state) => notifications.add(state.isValid),
-                  child: const SizedBox(),
-                ),
-              ],
+        home: Column(
+          children: [
+            Formix(
+              key: key1,
+              fields: const [FormixFieldConfig<String>(id: _a, initialValue: '')],
+              child: const SizedBox(),
             ),
-          );
+            Formix(
+              key: key2,
+              fields: const [FormixFieldConfig<String>(id: _b, initialValue: '')],
+              child: const SizedBox(),
+            ),
+            FormixListener(
+              formKey: key,
+              select: (s) => s.isValid,
+              listener: (context, state) => notifications.add(state.isValid),
+              child: const SizedBox(),
+            ),
+          ],
+        ),
+      );
 
       await tester.pumpWidget(build(key1));
       await tester.pump(); // post-frame subscribe
@@ -295,13 +311,15 @@ void main() {
 
     testWidgets('missing key shows config error', (tester) async {
       final orphan = GlobalKey<FormixState>();
-      await tester.pumpWidget(MaterialApp(
-        home: FormixListener(
-          formKey: orphan,
-          listener: (_, __) {},
-          child: const SizedBox(),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: FormixListener(
+            formKey: orphan,
+            listener: (_, __) {},
+            child: const SizedBox(),
+          ),
         ),
-      ));
+      );
       await tester.pump();
       await tester.pump();
       expect(find.byType(FormixConfigurationErrorWidget), findsOneWidget);
@@ -309,22 +327,21 @@ void main() {
   });
 
   group('FormixFieldRegistry lazy fields', () {
-    testWidgets('registers on mount and reacts to fields prop changes',
-        (tester) async {
+    testWidgets('registers on mount and reacts to fields prop changes', (tester) async {
       final controller = FormixController();
       addTearDown(controller.dispose);
       const f1 = FormixFieldConfig<String>(id: _a, initialValue: '');
       const f2 = FormixFieldConfig<String>(id: _b, initialValue: '');
 
       Widget build(List<FormixFieldConfig<dynamic>> fields) => MaterialApp(
-            home: Formix(
-              controller: controller,
-              child: FormixFieldRegistry(
-                fields: fields,
-                child: const SizedBox(),
-              ),
-            ),
-          );
+        home: Formix(
+          controller: controller,
+          child: FormixFieldRegistry(
+            fields: fields,
+            child: const SizedBox(),
+          ),
+        ),
+      );
 
       await tester.pumpWidget(build([f1]));
       await tester.pump();
@@ -341,26 +358,29 @@ void main() {
 
   group('Formix.didUpdateWidget', () {
     testWidgets('keepAlive toggle and external controller swap', (tester) async {
-      final c1 = FormixController(fields: [
-        const FormixField<String>(id: _a, initialValue: 'one'),
-      ]);
-      final c2 = FormixController(fields: [
-        const FormixField<String>(id: _a, initialValue: 'two'),
-      ]);
+      final c1 = FormixController(
+        fields: [
+          const FormixField<String>(id: _a, initialValue: 'one'),
+        ],
+      );
+      final c2 = FormixController(
+        fields: [
+          const FormixField<String>(id: _a, initialValue: 'two'),
+        ],
+      );
       addTearDown(c1.dispose);
       addTearDown(c2.dispose);
 
       Widget build(FormixController controller, bool keepAlive) => MaterialApp(
-            home: Formix(
-              controller: controller,
-              keepAlive: keepAlive,
-              child: FormixDependentField<String>(
-                fieldId: _a,
-                builder: (context, value) =>
-                    Text('v=$value', textDirection: TextDirection.ltr),
-              ),
-            ),
-          );
+        home: Formix(
+          controller: controller,
+          keepAlive: keepAlive,
+          child: FormixDependentField<String>(
+            fieldId: _a,
+            builder: (context, value) => Text('v=$value', textDirection: TextDirection.ltr),
+          ),
+        ),
+      );
 
       await tester.pumpWidget(build(c1, false));
       await tester.pump();

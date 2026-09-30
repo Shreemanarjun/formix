@@ -23,9 +23,12 @@ dependencies:
 
   meta: ^1.17.0
   stream_transform: ^2.1.1
-dev_dependencies:
+  # Powers the optional `package:formix/formix_test.dart` test helpers. It is a
+  # separate entry point (not exported by the main library), so it is tree-shaken
+  # out of production apps that don't import it.
   flutter_test:
     sdk: flutter
+dev_dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_lints: ^5.0.0

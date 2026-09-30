@@ -20,30 +20,32 @@ void main() {
       var useA = true;
       Object? sel(String? v) => v;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Formix(
-            controller: c,
-            child: StatefulBuilder(
-              builder: (context, setState) {
-                return Column(
-                  children: [
-                    FormixFieldSelector<String>(
-                      fieldId: useA ? a : b,
-                      select: sel,
-                      builder: (context, info, child) => Text('v=${info.value}'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => setState(() => useA = !useA),
-                      child: const Text('swap'),
-                    ),
-                  ],
-                );
-              },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              controller: c,
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    children: [
+                      FormixFieldSelector<String>(
+                        fieldId: useA ? a : b,
+                        select: sel,
+                        builder: (context, info, child) => Text('v=${info.value}'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => setState(() => useA = !useA),
+                        child: const Text('swap'),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pump();
       expect(find.text('v=A0'), findsOneWidget);
 
@@ -68,32 +70,32 @@ void main() {
 
       var upper = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Formix(
-            controller: c,
-            child: StatefulBuilder(
-              builder: (context, setState) {
-                return Column(
-                  children: [
-                    FormixFieldSelector<String>(
-                      fieldId: a,
-                      select: upper
-                          ? (v) => v?.toUpperCase()
-                          : (v) => v?.toLowerCase(),
-                      builder: (context, info, child) => Text('sel=${info.value}'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => setState(() => upper = !upper),
-                      child: const Text('toggle'),
-                    ),
-                  ],
-                );
-              },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              controller: c,
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    children: [
+                      FormixFieldSelector<String>(
+                        fieldId: a,
+                        select: upper ? (v) => v?.toUpperCase() : (v) => v?.toLowerCase(),
+                        builder: (context, info, child) => Text('sel=${info.value}'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => setState(() => upper = !upper),
+                        child: const Text('toggle'),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pump();
 
       // Toggle select only (fieldId unchanged) -> hits the select-only branch.
@@ -115,18 +117,20 @@ void main() {
       addTearDown(c.dispose);
 
       var calls = 0;
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Formix(
-            controller: c,
-            child: FormixListener(
-              select: (state) => state.values['a'],
-              listener: (context, state) => calls++,
-              child: const SizedBox.shrink(),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              controller: c,
+              child: FormixListener(
+                select: (state) => state.values['a'],
+                listener: (context, state) => calls++,
+                child: const SizedBox.shrink(),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pump(); // post-frame subscribe
 
       c.setValue(a, 'x');
@@ -142,13 +146,15 @@ void main() {
 
     testWidgets('external formKey that is missing shows config error', (tester) async {
       final key = GlobalKey<FormixState>();
-      await tester.pumpWidget(MaterialApp(
-        home: FormixListener(
-          formKey: key,
-          listener: (_, __) {},
-          child: const SizedBox.shrink(),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: FormixListener(
+            formKey: key,
+            listener: (_, __) {},
+            child: const SizedBox.shrink(),
+          ),
         ),
-      ));
+      );
       await tester.pump();
       await tester.pump();
       expect(find.byType(FormixConfigurationErrorWidget), findsOneWidget);
@@ -160,33 +166,35 @@ void main() {
       var useMissing = true;
       late StateSetter setOuter;
 
-      await tester.pumpWidget(MaterialApp(
-        home: StatefulBuilder(
-          builder: (context, setState) {
-            setOuter = setState;
-            return Column(
-              children: [
-                // A real Formix mounted under realKey elsewhere in the tree.
-                Formix(
-                  key: realKey,
-                  fields: const [
-                    FormixFieldConfig<String>(
-                      id: FormixFieldID<String>('a'),
-                      initialValue: '',
-                    ),
-                  ],
-                  child: const SizedBox.shrink(),
-                ),
-                FormixListener(
-                  formKey: useMissing ? missingKey : realKey,
-                  listener: (_, __) {},
-                  child: const SizedBox.shrink(),
-                ),
-              ],
-            );
-          },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StatefulBuilder(
+            builder: (context, setState) {
+              setOuter = setState;
+              return Column(
+                children: [
+                  // A real Formix mounted under realKey elsewhere in the tree.
+                  Formix(
+                    key: realKey,
+                    fields: const [
+                      FormixFieldConfig<String>(
+                        id: FormixFieldID<String>('a'),
+                        initialValue: '',
+                      ),
+                    ],
+                    child: const SizedBox.shrink(),
+                  ),
+                  FormixListener(
+                    formKey: useMissing ? missingKey : realKey,
+                    listener: (_, __) {},
+                    child: const SizedBox.shrink(),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
-      ));
+      );
       await tester.pump();
       await tester.pump(); // post-frame subscribe -> error set (missing key)
       expect(find.byType(FormixConfigurationErrorWidget), findsOneWidget);
@@ -221,38 +229,40 @@ void main() {
       // which disposes the prior effect (line 218).
       var swapped = false;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Formix(
-            controller: c,
-            child: StatefulBuilder(
-              builder: (context, setState) {
-                return Column(
-                  children: [
-                    FormixFieldDerivations(
-                      derivations: [
-                        FieldDerivationConfig(
-                          dependencies: const [src],
-                          targetField: swapped ? dst2 : dst,
-                          derive: (values) {
-                            final v = values[src] as String?;
-                            if (v == 'boom') throw StateError('derive-boom');
-                            return '$v!';
-                          },
-                        ),
-                      ],
-                    ),
-                    ElevatedButton(
-                      onPressed: () => setState(() => swapped = true),
-                      child: const Text('swap'),
-                    ),
-                  ],
-                );
-              },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              controller: c,
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    children: [
+                      FormixFieldDerivations(
+                        derivations: [
+                          FieldDerivationConfig(
+                            dependencies: const [src],
+                            targetField: swapped ? dst2 : dst,
+                            derive: (values) {
+                              final v = values[src] as String?;
+                              if (v == 'boom') throw StateError('derive-boom');
+                              return '$v!';
+                            },
+                          ),
+                        ],
+                      ),
+                      ElevatedButton(
+                        onPressed: () => setState(() => swapped = true),
+                        child: const Text('swap'),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pump();
       await tester.pump();
       c.setValue(src, 'b');
@@ -286,23 +296,25 @@ void main() {
 
       var fetches = 0;
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Formix(
-            controller: c,
-            child: FormixDependentAsyncField<List<String>, String>(
-              fieldId: field,
-              dependency: dep,
-              future: (country) async {
-                fetches++;
-                return ['$country-city'];
-              },
-              builder: (context, state) => Text('data=${state.asyncState.value}'),
-              loadingBuilder: (context) => const Text('loading'),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              controller: c,
+              child: FormixDependentAsyncField<List<String>, String>(
+                fieldId: field,
+                dependency: dep,
+                future: (country) async {
+                  fetches++;
+                  return ['$country-city'];
+                },
+                builder: (context, state) => Text('data=${state.asyncState.value}'),
+                loadingBuilder: (context) => const Text('loading'),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pump();
       await tester.pumpAndSettle();
       final initialFetches = fetches;
@@ -323,31 +335,32 @@ void main() {
 
       AsyncState<String> state = AsyncState.data('one');
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Formix(
-            controller: c,
-            child: StatefulBuilder(
-              builder: (context, setState) {
-                return Column(
-                  children: [
-                    FormixAsyncField<String>(
-                      fieldId: field,
-                      asyncValue: state,
-                      builder: (context, s) => Text('a=${s.asyncState.value}'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () =>
-                          setState(() => state = AsyncState.data('two')),
-                      child: const Text('change'),
-                    ),
-                  ],
-                );
-              },
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              controller: c,
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    children: [
+                      FormixAsyncField<String>(
+                        fieldId: field,
+                        asyncValue: state,
+                        builder: (context, s) => Text('a=${s.asyncState.value}'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => setState(() => state = AsyncState.data('two')),
+                        child: const Text('change'),
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pump();
       await tester.pumpAndSettle();
       expect(find.text('a=one'), findsOneWidget);
@@ -363,26 +376,31 @@ void main() {
   group('SliverFormixArray', () {
     testWidgets('renders items inside a CustomScrollView', (tester) async {
       const arr = FormixArrayID<String>('items');
-      final c = FormixController(initialValue: const {'items': <String>['x', 'y']});
+      final c = FormixController(
+        initialValue: const {
+          'items': <String>['x', 'y'],
+        },
+      );
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Formix(
-            controller: c,
-            child: CustomScrollView(
-              slivers: [
-                SliverFormixArray<String>(
-                  id: arr,
-                  itemBuilder: (context, index, itemId, scope) =>
-                      Text('item $index'),
-                  emptyBuilder: (context, scope) => const Text('empty'),
-                ),
-              ],
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              controller: c,
+              child: CustomScrollView(
+                slivers: [
+                  SliverFormixArray<String>(
+                    id: arr,
+                    itemBuilder: (context, index, itemId, scope) => Text('item $index'),
+                    emptyBuilder: (context, scope) => const Text('empty'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pump();
       expect(find.text('item 0'), findsOneWidget);
 
@@ -394,18 +412,20 @@ void main() {
 
     testWidgets('shows config error outside Formix', (tester) async {
       const arr = FormixArrayID<String>('items');
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: CustomScrollView(
-            slivers: [
-              SliverFormixArray<String>(
-                id: arr,
-                itemBuilder: (context, index, itemId, scope) => const Text('x'),
-              ),
-            ],
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CustomScrollView(
+              slivers: [
+                SliverFormixArray<String>(
+                  id: arr,
+                  itemBuilder: (context, index, itemId, scope) => const Text('x'),
+                ),
+              ],
+            ),
           ),
         ),
-      ));
+      );
       await tester.pump();
       expect(find.byType(FormixConfigurationErrorWidget), findsOneWidget);
     });
@@ -417,33 +437,37 @@ void main() {
       final c = FormixController();
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Formix(
-            controller: c,
-            child: const FormixSection(
-              fields: [
-                FormixFieldConfig<String>(id: a, initialValue: 'seeded'),
-              ],
-              child: FormixTextFormField(fieldId: a),
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              controller: c,
+              child: const FormixSection(
+                fields: [
+                  FormixFieldConfig<String>(id: a, initialValue: 'seeded'),
+                ],
+                child: FormixTextFormField(fieldId: a),
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pump();
       expect(c.isFieldRegistered(a), isTrue);
     });
 
     testWidgets('shows config error when used outside a Formix', (tester) async {
       const a = FormixFieldID<String>('x');
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(
-          body: FormixSection(
-            fields: [FormixFieldConfig<String>(id: a, initialValue: '')],
-            child: SizedBox.shrink(),
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: FormixSection(
+              fields: [FormixFieldConfig<String>(id: a, initialValue: '')],
+              child: SizedBox.shrink(),
+            ),
           ),
         ),
-      ));
+      );
       await tester.pump();
       expect(find.byType(FormixConfigurationErrorWidget), findsOneWidget);
     });
@@ -464,26 +488,28 @@ void main() {
       addTearDown(c2.dispose);
 
       var useFirst = true;
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: StatefulBuilder(
-            builder: (context, setState) => Column(
-              children: [
-                // Explicit controller -> no Formix ancestor needed.
-                FormixFieldSelector<String>(
-                  controller: useFirst ? c1 : c2,
-                  fieldId: a,
-                  builder: (context, info, child) => Text('v=${info.value}'),
-                ),
-                ElevatedButton(
-                  onPressed: () => setState(() => useFirst = false),
-                  child: const Text('swap-ctrl'),
-                ),
-              ],
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: StatefulBuilder(
+              builder: (context, setState) => Column(
+                children: [
+                  // Explicit controller -> no Formix ancestor needed.
+                  FormixFieldSelector<String>(
+                    controller: useFirst ? c1 : c2,
+                    fieldId: a,
+                    builder: (context, info, child) => Text('v=${info.value}'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => setState(() => useFirst = false),
+                    child: const Text('swap-ctrl'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pump();
       expect(find.text('v=one'), findsOneWidget);
 
@@ -503,28 +529,29 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      await tester.pumpWidget(MaterialApp(
-        home: Scaffold(
-          body: Formix(
-            controller: c,
-            // Non-const so the const constructors run at runtime.
-            // ignore: prefer_const_constructors
-            child: Column(
-              children: [
-                // ignore: prefer_const_constructors
-                FormixAdaptiveTextFormField(fieldId: a),
-                _RuntimeFormixWidget(),
-              ],
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Formix(
+              controller: c,
+              // Non-const so the const constructors run at runtime.
+              // ignore: prefer_const_constructors
+              child: Column(
+                children: [
+                  // ignore: prefer_const_constructors
+                  FormixAdaptiveTextFormField(fieldId: a),
+                  _RuntimeFormixWidget(),
+                ],
+              ),
             ),
           ),
         ),
-      ));
+      );
       await tester.pump();
       expect(find.byType(FormixAdaptiveTextFormField), findsOneWidget);
       expect(find.text('from-widget'), findsOneWidget);
     });
   });
-
 }
 
 /// A minimal [FormixWidget] subclass instantiated non-const so its const
@@ -533,6 +560,5 @@ class _RuntimeFormixWidget extends FormixWidget {
   // ignore: prefer_const_constructors_in_immutables
   _RuntimeFormixWidget();
   @override
-  Widget buildForm(BuildContext context, FormixScope scope) =>
-      const Text('from-widget');
+  Widget buildForm(BuildContext context, FormixScope scope) => const Text('from-widget');
 }
