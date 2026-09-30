@@ -60,13 +60,8 @@ app.*.map.json
 **/android/app/debug
 **/android/app/profile
 **/android/app/release
-example/test/goldens/*
-**/test/goldens/
-
-goldens/*.png
-**/goldens/*.png
-goldens/*
-
+# Golden baselines are committed (test/goldens/, goldens/) so CI can compare
+# against them. Only the transient failure artifacts are ignored.
 # Golden-test failure artifacts (transient diff/master/test images)
 failures/
 **/failures/
