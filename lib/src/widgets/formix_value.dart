@@ -115,9 +115,7 @@ class FormixSubmitButton extends StatelessWidget {
         return ElevatedButton(
           style: style,
           onPressed: disabled ? null : submit,
-          child: submitting
-              ? (loadingIndicator ?? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)))
-              : child!,
+          child: submitting ? (loadingIndicator ?? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))) : child!,
         );
       },
     );

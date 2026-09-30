@@ -60,7 +60,11 @@ void main() {
       testWidgets('$name page builds cleanly', (tester) async {
         await tester.pumpWidget(MaterialApp(home: build()));
         await _pumpSettleShort(tester);
-        expect(tester.takeException(), isNull, reason: '$name threw during build');
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: '$name threw during build',
+        );
       });
     });
 
@@ -68,7 +72,11 @@ void main() {
       testWidgets('$name content builds cleanly', (tester) async {
         await tester.pumpWidget(MaterialApp(home: Scaffold(body: build())));
         await _pumpSettleShort(tester);
-        expect(tester.takeException(), isNull, reason: '$name threw during build');
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: '$name threw during build',
+        );
       });
     });
   });
@@ -85,11 +93,15 @@ void main() {
   }, skip: true); // semantics merge assertion on this page — see comment above
 
   group('overflow regression (the two pages fixed after on-device QA)', () {
-    testWidgets('Control button row does not overflow on a narrow screen', (tester) async {
+    testWidgets('Control button row does not overflow on a narrow screen', (
+      tester,
+    ) async {
       await tester.binding.setSurfaceSize(const Size(320, 640)); // narrow phone
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(const MaterialApp(home: ProgrammaticControlPage()));
+      await tester.pumpWidget(
+        const MaterialApp(home: ProgrammaticControlPage()),
+      );
       await tester.pump();
 
       // Wrap (not Row) means the 3 buttons flow to a new line instead of overflowing.
@@ -98,17 +110,20 @@ void main() {
       expect(find.text('Focus Error'), findsOneWidget);
     });
 
-    testWidgets('Sync cards do not overflow when height is constrained (keyboard)', (tester) async {
-      // Short height simulates the viewport shrinking when the keyboard opens.
-      await tester.binding.setSurfaceSize(const Size(390, 420));
-      addTearDown(() => tester.binding.setSurfaceSize(null));
+    testWidgets(
+      'Sync cards do not overflow when height is constrained (keyboard)',
+      (tester) async {
+        // Short height simulates the viewport shrinking when the keyboard opens.
+        await tester.binding.setSurfaceSize(const Size(390, 420));
+        addTearDown(() => tester.binding.setSurfaceSize(null));
 
-      await tester.pumpWidget(const MaterialApp(home: MultiFormSyncPage()));
-      await tester.pump();
+        await tester.pumpWidget(const MaterialApp(home: MultiFormSyncPage()));
+        await tester.pump();
 
-      // SingleChildScrollView inside each card scrolls instead of overflowing.
-      expect(tester.takeException(), isNull);
-      expect(find.text('Sync Active'), findsOneWidget);
-    });
+        // SingleChildScrollView inside each card scrolls instead of overflowing.
+        expect(tester.takeException(), isNull);
+        expect(find.text('Sync Active'), findsOneWidget);
+      },
+    );
   });
 }

@@ -21,7 +21,7 @@ dependencies:
     sdk: flutter
   signals_flutter: ^7.1.0
 
-  meta: ^1.17.0
+  meta: ^1.16.0
   stream_transform: ^2.1.1
   # Powers the optional `package:formix/formix_test.dart` test helpers. It is a
   # separate entry point (not exported by the main library), so it is tree-shaken

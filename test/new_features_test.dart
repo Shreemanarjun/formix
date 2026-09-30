@@ -50,14 +50,22 @@ void main() {
     testWidgets('a field widget re-typed at runtime rebinds without error', (tester) async {
       // First render the key as a String text field, then as an int number field.
       await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: Formix(child: FormixTextFormField(fieldId: FormixFieldID<String>('dyn'))))),
+        const MaterialApp(
+          home: Scaffold(
+            body: Formix(child: FormixTextFormField(fieldId: FormixFieldID<String>('dyn'))),
+          ),
+        ),
       );
       await tester.pump();
       await tester.enterText(find.byType(TextField), 'text');
       await tester.pump();
 
       await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: Formix(child: FormixNumberFormField(fieldId: FormixFieldID<int>('dyn'))))),
+        const MaterialApp(
+          home: Scaffold(
+            body: Formix(child: FormixNumberFormField(fieldId: FormixFieldID<int>('dyn'))),
+          ),
+        ),
       );
       await tester.pump();
       // No exception thrown; the widget rebuilt bound to the int type.

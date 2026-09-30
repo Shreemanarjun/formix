@@ -13,8 +13,14 @@ void main() {
       // Empty names → placeholder from the display builder.
       expect(find.text('Enter names above'), findsOneWidget);
 
-      await tester.enterText(find.widgetWithText(TextFormField, 'First Name'), 'Ada');
-      await tester.enterText(find.widgetWithText(TextFormField, 'Last Name'), 'Lovelace');
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'First Name'),
+        'Ada',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Last Name'),
+        'Lovelace',
+      );
       await tester.pumpAndSettle();
 
       // Derivation ran (via gated effect, not a build-time write).
@@ -31,7 +37,10 @@ void main() {
       // price 100.0 * quantity 1 = 100.00 on mount.
       expect(find.text('\$100.00'), findsWidgets);
 
-      await tester.enterText(find.widgetWithText(TextFormField, 'Quantity'), '3');
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Quantity'),
+        '3',
+      );
       await tester.pumpAndSettle();
 
       // 100.0 * 3 = 300.00 (subtotal, and finalTotal with 0% discount).

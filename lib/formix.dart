@@ -5,17 +5,7 @@ library;
 // `import 'package:formix/formix.dart'` is all you need to read reactive slices
 // (e.g. `SignalBuilder`, `controller.valueSignal(id)`). Same declarations as
 // signals_flutter, so importing both packages does not conflict.
-export 'package:signals_flutter/signals_flutter.dart'
-    show
-        SignalBuilder,
-        Signal,
-        ReadonlySignal,
-        Computed,
-        signal,
-        computed,
-        effect,
-        batch,
-        untracked;
+export 'package:signals_flutter/signals_flutter.dart' show SignalBuilder, Signal, ReadonlySignal, Computed, signal, computed, effect, batch, untracked;
 
 // Core classes
 export 'src/controllers/field_id.dart';

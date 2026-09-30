@@ -22,19 +22,9 @@ class _Api {
 final _api = _Api();
 
 // --- Fluent API (README "Fluent API" section) ---
-final _vNum = FormixValidators.number<int>()
-    .required()
-    .positive()
-    .min(18, 'Must be an adult')
-    .max(99)
-    .between(1, 100)
-    .build();
+final _vNum = FormixValidators.number<int>().required().positive().min(18, 'Must be an adult').max(99).between(1, 100).build();
 
-final _vDate = FormixValidators.date()
-    .after(DateTime(2000))
-    .before(DateTime.now())
-    .between(DateTime(2000), DateTime.now())
-    .build();
+final _vDate = FormixValidators.date().after(DateTime(2000)).before(DateTime.now()).between(DateTime(2000), DateTime.now()).build();
 
 final _vRole = FormixValidators.any<Role>().oneOf([Role.admin, Role.user]).build();
 
@@ -103,9 +93,11 @@ class _SnippetWidgetState extends State<_SnippetWidget> {
   void _onPrefill() {
     final c = context.formix;
     c[nameId] = 'Ada'; // subscript write
-    c.batchUpdate((b) => b
-      ..set(nameId, 'Ada')
-      ..set(ageId, 36));
+    c.batchUpdate(
+      (b) => b
+        ..set(nameId, 'Ada')
+        ..set(ageId, 36),
+    );
     c.setGroup2(emailId, passwordId, ('a@b.c', 'secret'));
   }
 
@@ -128,20 +120,24 @@ class _SnippetWidgetState extends State<_SnippetWidget> {
         ),
 
         // Read several typed fields as one destructurable record.
-        SignalBuilder(builder: (context) {
-          final (email, password) = controller.group2(emailId, passwordId).value;
-          return Text('$email / $password');
-        }),
+        SignalBuilder(
+          builder: (context) {
+            final (email, password) = controller.group2(emailId, passwordId).value;
+            return Text('$email / $password');
+          },
+        ),
 
         // Sealed submission state, exhaustively switched.
-        SignalBuilder(builder: (context) {
-          return switch (controller.submissionSignal.value) {
-            FormixSubmissionIdle() => const Text('Ready'),
-            FormixSubmissionSubmitting() => const CircularProgressIndicator(),
-            FormixSubmissionSuccess() => const Text('Saved!'),
-            FormixSubmissionError(:final error) => Text('Failed: $error'),
-          };
-        }),
+        SignalBuilder(
+          builder: (context) {
+            return switch (controller.submissionSignal.value) {
+              FormixSubmissionIdle() => const Text('Ready'),
+              FormixSubmissionSubmitting() => const CircularProgressIndicator(),
+              FormixSubmissionSuccess() => const Text('Saved!'),
+              FormixSubmissionError(:final error) => Text('Failed: $error'),
+            };
+          },
+        ),
       ],
     );
   }

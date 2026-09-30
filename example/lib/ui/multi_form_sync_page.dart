@@ -34,7 +34,11 @@ class _MultiFormSyncPageState extends State<MultiFormSyncPage> {
     super.initState();
     // Wire the one-way sync once, up front — both controllers already exist.
     _formB.bindField(_titleId, sourceController: _formA, sourceField: _titleId);
-    _formB.bindField(_categoryId, sourceController: _formA, sourceField: _categoryId);
+    _formB.bindField(
+      _categoryId,
+      sourceController: _formA,
+      sourceField: _categoryId,
+    );
   }
 
   @override
@@ -79,17 +83,30 @@ class _MultiFormSyncPageState extends State<MultiFormSyncPage> {
                             Divider(),
                             FormixTextFormField(
                               fieldId: _titleId,
-                              decoration: InputDecoration(labelText: 'Project Title'),
+                              decoration: InputDecoration(
+                                labelText: 'Project Title',
+                              ),
                             ),
                             SizedBox(height: 16),
                             FormixDropdownFormField(
                               fieldId: _categoryId,
                               items: [
-                                DropdownMenuItem(value: 'Work', child: Text('Work')),
-                                DropdownMenuItem(value: 'Personal', child: Text('Personal')),
-                                DropdownMenuItem(value: 'Hobby', child: Text('Hobby')),
+                                DropdownMenuItem(
+                                  value: 'Work',
+                                  child: Text('Work'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Personal',
+                                  child: Text('Personal'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Hobby',
+                                  child: Text('Hobby'),
+                                ),
                               ],
-                              decoration: InputDecoration(labelText: 'Category'),
+                              decoration: InputDecoration(
+                                labelText: 'Category',
+                              ),
                             ),
                           ],
                         ),
@@ -125,9 +142,18 @@ class _MultiFormSyncPageState extends State<MultiFormSyncPage> {
                             FormixDropdownFormField(
                               fieldId: _categoryId,
                               items: [
-                                DropdownMenuItem(value: 'Work', child: Text('Work')),
-                                DropdownMenuItem(value: 'Personal', child: Text('Personal')),
-                                DropdownMenuItem(value: 'Hobby', child: Text('Hobby')),
+                                DropdownMenuItem(
+                                  value: 'Work',
+                                  child: Text('Work'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Personal',
+                                  child: Text('Personal'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'Hobby',
+                                  child: Text('Hobby'),
+                                ),
                               ],
                               decoration: InputDecoration(
                                 labelText: 'Synced Category',
@@ -147,7 +173,10 @@ class _MultiFormSyncPageState extends State<MultiFormSyncPage> {
             padding: EdgeInsets.only(bottom: 20),
             child: Text(
               'Sync Active',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
             ),
           ),
         ],

@@ -9,14 +9,14 @@ void main() {
   const name = FormixFieldID<String>('name');
 
   Widget host(Widget child) => MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
-        home: Scaffold(
-          body: Center(
-            child: Padding(padding: const EdgeInsets.all(20), child: child),
-          ),
-        ),
-      );
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+    home: Scaffold(
+      body: Center(
+        child: Padding(padding: const EdgeInsets.all(20), child: child),
+      ),
+    ),
+  );
 
   testWidgets('FormixValue renders the field value', (tester) async {
     await tester.pumpWidget(

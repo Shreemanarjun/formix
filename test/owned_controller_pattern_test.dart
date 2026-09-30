@@ -16,9 +16,11 @@ void main() {
         ],
       );
       addTearDown(form.dispose);
-      form.batchUpdate((b) => b
-        ..set(emailId, 'a@b.c')
-        ..set(ageId, 18));
+      form.batchUpdate(
+        (b) => b
+          ..set(emailId, 'a@b.c')
+          ..set(ageId, 18),
+      );
 
       // No Formix ancestor — the field gets the controller explicitly.
       await tester.pumpWidget(
@@ -134,7 +136,9 @@ void main() {
   group('bindField (multi-form sync example mechanism)', () {
     test('one-way sync propagates source changes to the target controller', () {
       const titleId = FormixFieldID<String>('title');
-      final a = FormixController(fields: const [FormixFieldConfig<String>(id: titleId, initialValue: 'X')]);
+      final a = FormixController(
+        fields: const [FormixFieldConfig<String>(id: titleId, initialValue: 'X')],
+      );
       final b = FormixController(fields: const [FormixFieldConfig<String>(id: titleId)]);
       addTearDown(a.dispose);
       addTearDown(b.dispose);

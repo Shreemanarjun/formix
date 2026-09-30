@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:example/ui/multi_form_sync_page.dart';
 
 void main() {
-  testWidgets('editing Form A syncs into Form B (owned controllers + bindField)', (tester) async {
+  testWidgets('editing Form A syncs into Form B (owned controllers + bindField)', (
+    tester,
+  ) async {
     await tester.pumpWidget(const MaterialApp(home: MultiFormSyncPage()));
     await tester.pumpAndSettle();
 

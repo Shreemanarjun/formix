@@ -53,10 +53,7 @@ void main() {
       expect(v('c'), isNotNull);
       expect(v(null), isNull);
 
-      final chain = FormixValidators.string()
-          .custom((s) => s == 'bad' ? 'no' : null)
-          .async((s) async => s == 'taken' ? 'taken!' : null)
-          .debounce(const Duration(milliseconds: 10));
+      final chain = FormixValidators.string().custom((s) => s == 'bad' ? 'no' : null).async((s) async => s == 'taken' ? 'taken!' : null).debounce(const Duration(milliseconds: 10));
       expect(chain.debounceDuration, const Duration(milliseconds: 10));
       final sync = chain.build();
       expect(sync('bad'), 'no');
@@ -94,11 +91,11 @@ void main() {
 
     test('exhaustive switch', () {
       String label(FormixSubmission s) => switch (s) {
-            FormixSubmissionIdle() => 'idle',
-            FormixSubmissionSubmitting() => 'submitting',
-            FormixSubmissionSuccess() => 'success',
-            FormixSubmissionError() => 'error',
-          };
+        FormixSubmissionIdle() => 'idle',
+        FormixSubmissionSubmitting() => 'submitting',
+        FormixSubmissionSuccess() => 'success',
+        FormixSubmissionError() => 'error',
+      };
       expect(label(const FormixSubmission.idle()), 'idle');
       expect(label(const FormixSubmission.submitting()), 'submitting');
       expect(label(const FormixSubmission.success()), 'success');

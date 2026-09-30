@@ -29,9 +29,11 @@ void main() {
       var notifications = 0;
       c.addListener((_) => notifications++, fireImmediately: false);
 
-      c.batchUpdate((b) => b
-        ..set(name, 'Ada')
-        ..set(age, 36));
+      c.batchUpdate(
+        (b) => b
+          ..set(name, 'Ada')
+          ..set(age, 36),
+      );
 
       expect(c.getValue(name), 'Ada');
       expect(c.getValue(age), 36);
@@ -91,11 +93,13 @@ void main() {
       final c = await pumpFormix(
         tester,
         initialValue: const {'name': ''},
-        child: Builder(builder: (context) {
-          fromExt = context.formix;
-          maybe = context.maybeFormix;
-          return const SizedBox();
-        }),
+        child: Builder(
+          builder: (context) {
+            fromExt = context.formix;
+            maybe = context.maybeFormix;
+            return const SizedBox();
+          },
+        ),
       );
 
       expect(identical(fromExt, c), isTrue);
@@ -106,10 +110,12 @@ void main() {
       FormixController? maybe = FormixController(); // non-null sentinel
       await tester.pumpWidget(
         MaterialApp(
-          home: Builder(builder: (context) {
-            maybe = context.maybeFormix;
-            return const SizedBox();
-          }),
+          home: Builder(
+            builder: (context) {
+              maybe = context.maybeFormix;
+              return const SizedBox();
+            },
+          ),
         ),
       );
       expect(maybe, isNull);

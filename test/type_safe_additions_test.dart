@@ -90,19 +90,23 @@ void main() {
       const a = FormixFieldID<String>('dup');
       const b = FormixFieldID<int>('dup');
       expect(
-        () => FormixController(fields: const [
-          FormixFieldConfig<String>(id: a),
-          FormixFieldConfig<int>(id: b),
-        ]),
+        () => FormixController(
+          fields: const [
+            FormixFieldConfig<String>(id: a),
+            FormixFieldConfig<int>(id: b),
+          ],
+        ),
         throwsA(isA<FlutterError>()),
       );
     });
 
     test('unique keys register fine', () {
-      final c = FormixController(fields: const [
-        FormixFieldConfig<String>(id: FormixFieldID<String>('a')),
-        FormixFieldConfig<int>(id: FormixFieldID<int>('b')),
-      ]);
+      final c = FormixController(
+        fields: const [
+          FormixFieldConfig<String>(id: FormixFieldID<String>('a')),
+          FormixFieldConfig<int>(id: FormixFieldID<int>('b')),
+        ],
+      );
       addTearDown(c.dispose);
       expect(c.getValue(const FormixFieldID<String>('a')), isNull);
     });
@@ -112,14 +116,14 @@ void main() {
     const sname = FormixFieldID<String>('name');
 
     FormixController makeForm() => FormixController(
-          fields: [
-            FormixFieldConfig<String>(
-              id: sname,
-              validationMode: FormixAutovalidateMode.always,
-              validator: (v) => (v == null || v.isEmpty) ? 'required' : null,
-            ),
-          ],
-        );
+      fields: [
+        FormixFieldConfig<String>(
+          id: sname,
+          validationMode: FormixAutovalidateMode.always,
+          validator: (v) => (v == null || v.isEmpty) ? 'required' : null,
+        ),
+      ],
+    );
 
     test('idle → submitting → success on a valid submit', () async {
       final c = makeForm();
@@ -160,11 +164,11 @@ void main() {
 
     test('states are exhaustively switchable', () {
       String label(FormixSubmission s) => switch (s) {
-            FormixSubmissionIdle() => 'idle',
-            FormixSubmissionSubmitting() => 'submitting',
-            FormixSubmissionSuccess() => 'success',
-            FormixSubmissionError() => 'error',
-          };
+        FormixSubmissionIdle() => 'idle',
+        FormixSubmissionSubmitting() => 'submitting',
+        FormixSubmissionSuccess() => 'success',
+        FormixSubmissionError() => 'error',
+      };
       expect(label(const FormixSubmission.idle()), 'idle');
       expect(label(const FormixSubmission.error('x')), 'error');
     });

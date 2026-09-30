@@ -125,17 +125,19 @@ class FormixController extends FormixBaseController {
   /// ```
   ReadonlySignal<(A?, B?)> group2<A, B>(FormixFieldID<A> a, FormixFieldID<B> b) {
     return _recordGroupSignals.putIfAbsent('2:${a.key}<$A>|${b.key}<$B>', () {
-      final sa = valueSignal(a), sb = valueSignal(b);
-      return computed<(A?, B?)>(() => (sa.value, sb.value));
-    }) as ReadonlySignal<(A?, B?)>;
+          final sa = valueSignal(a), sb = valueSignal(b);
+          return computed<(A?, B?)>(() => (sa.value, sb.value));
+        })
+        as ReadonlySignal<(A?, B?)>;
   }
 
   /// Three typed fields as a reactive `(A?, B?, C?)` record.
   ReadonlySignal<(A?, B?, C?)> group3<A, B, C>(FormixFieldID<A> a, FormixFieldID<B> b, FormixFieldID<C> c) {
     return _recordGroupSignals.putIfAbsent('3:${a.key}<$A>|${b.key}<$B>|${c.key}<$C>', () {
-      final sa = valueSignal(a), sb = valueSignal(b), sc = valueSignal(c);
-      return computed<(A?, B?, C?)>(() => (sa.value, sb.value, sc.value));
-    }) as ReadonlySignal<(A?, B?, C?)>;
+          final sa = valueSignal(a), sb = valueSignal(b), sc = valueSignal(c);
+          return computed<(A?, B?, C?)>(() => (sa.value, sb.value, sc.value));
+        })
+        as ReadonlySignal<(A?, B?, C?)>;
   }
 
   /// Four typed fields as a reactive `(A?, B?, C?, D?)` record.
@@ -143,9 +145,10 @@ class FormixController extends FormixBaseController {
   // compose a `derived((s) => (...))` reading each field.
   ReadonlySignal<(A?, B?, C?, D?)> group4<A, B, C, D>(FormixFieldID<A> a, FormixFieldID<B> b, FormixFieldID<C> c, FormixFieldID<D> d) {
     return _recordGroupSignals.putIfAbsent('4:${a.key}<$A>|${b.key}<$B>|${c.key}<$C>|${d.key}<$D>', () {
-      final sa = valueSignal(a), sb = valueSignal(b), sc = valueSignal(c), sd = valueSignal(d);
-      return computed<(A?, B?, C?, D?)>(() => (sa.value, sb.value, sc.value, sd.value));
-    }) as ReadonlySignal<(A?, B?, C?, D?)>;
+          final sa = valueSignal(a), sb = valueSignal(b), sc = valueSignal(c), sd = valueSignal(d);
+          return computed<(A?, B?, C?, D?)>(() => (sa.value, sb.value, sc.value, sd.value));
+        })
+        as ReadonlySignal<(A?, B?, C?, D?)>;
   }
 
   /// Write two typed fields from a record in one batch (symmetric to [group2]).

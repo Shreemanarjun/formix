@@ -325,8 +325,14 @@ class _DerivedFieldsExampleContentState
               ],
               targetField: const FormixFieldID<String>('fullName'),
               derive: (values) {
-                final first = values[const FormixFieldID<String>('firstName')] as String? ?? '';
-                final last = values[const FormixFieldID<String>('lastName')] as String? ?? '';
+                final first =
+                    values[const FormixFieldID<String>('firstName')]
+                        as String? ??
+                    '';
+                final last =
+                    values[const FormixFieldID<String>('lastName')]
+                        as String? ??
+                    '';
                 return '$first $last'.trim();
               },
             ),
@@ -338,8 +344,12 @@ class _DerivedFieldsExampleContentState
               ],
               targetField: const FormixFieldID<int>('age'),
               derive: (values) {
-                final birthYear = values[const FormixFieldID<int>('birthYear')] as int? ?? 2000;
-                final currentYear = values[const FormixFieldID<int>('currentYear')] as int? ?? DateTime.now().year;
+                final birthYear =
+                    values[const FormixFieldID<int>('birthYear')] as int? ??
+                    2000;
+                final currentYear =
+                    values[const FormixFieldID<int>('currentYear')] as int? ??
+                    DateTime.now().year;
                 return currentYear - birthYear;
               },
             ),
@@ -351,8 +361,11 @@ class _DerivedFieldsExampleContentState
               ],
               targetField: const FormixFieldID<double>('total'),
               derive: (values) {
-                final price = values[const FormixFieldID<double>('price')] as double? ?? 0.0;
-                final quantity = values[const FormixFieldID<int>('quantity')] as int? ?? 1;
+                final price =
+                    values[const FormixFieldID<double>('price')] as double? ??
+                    0.0;
+                final quantity =
+                    values[const FormixFieldID<int>('quantity')] as int? ?? 1;
                 return price * quantity;
               },
             ),
@@ -364,8 +377,13 @@ class _DerivedFieldsExampleContentState
               ],
               targetField: const FormixFieldID<double>('finalTotal'),
               derive: (values) {
-                final total = values[const FormixFieldID<double>('total')] as double? ?? 0.0;
-                final discountPercent = values[const FormixFieldID<double>('discountPercent')] as double? ?? 0.0;
+                final total =
+                    values[const FormixFieldID<double>('total')] as double? ??
+                    0.0;
+                final discountPercent =
+                    values[const FormixFieldID<double>('discountPercent')]
+                        as double? ??
+                    0.0;
                 return total - (total * (discountPercent / 100));
               },
             ),
