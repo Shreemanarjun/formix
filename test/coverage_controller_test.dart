@@ -45,12 +45,12 @@ FormixController _make({
 void main() {
   // ---- Undo / Redo ----
   group('undo / redo', () {
-    final name = FormixFieldID<String>('name');
+    const name = FormixFieldID<String>('name');
 
     test('records history, undo/redo walk the stack, canUndo/canRedo gate', () {
       final c = _make(
         initialValue: {'name': ''},
-        fields: [FormixField<String>(id: name, initialValue: '')],
+        fields: [const FormixField<String>(id: name, initialValue: '')],
       );
       addTearDown(c.dispose);
 
@@ -86,7 +86,7 @@ void main() {
     test('history is capped at 50 entries', () {
       final c = _make(
         initialValue: {'name': ''},
-        fields: [FormixField<String>(id: name, initialValue: '')],
+        fields: [const FormixField<String>(id: name, initialValue: '')],
       );
       addTearDown(c.dispose);
 
@@ -107,12 +107,12 @@ void main() {
 
   // ---- Optimistic update ----
   group('optimisticUpdate', () {
-    final email = FormixFieldID<String>('email');
+    const email = FormixFieldID<String>('email');
 
     test('success keeps the new value and clears pending', () async {
       final c = _make(
         initialValue: {'email': 'old'},
-        fields: [FormixField<String>(id: email, initialValue: 'old')],
+        fields: [const FormixField<String>(id: email, initialValue: 'old')],
       );
       addTearDown(c.dispose);
 
@@ -129,7 +129,7 @@ void main() {
     test('revertOnError restores the previous value on failure', () async {
       final c = _make(
         initialValue: {'email': 'old'},
-        fields: [FormixField<String>(id: email, initialValue: 'old')],
+        fields: [const FormixField<String>(id: email, initialValue: 'old')],
       );
       addTearDown(c.dispose);
 
@@ -148,7 +148,7 @@ void main() {
     test('revertOnError=false keeps optimistic value after failure', () async {
       final c = _make(
         initialValue: {'email': 'old'},
-        fields: [FormixField<String>(id: email, initialValue: 'old')],
+        fields: [const FormixField<String>(id: email, initialValue: 'old')],
       );
       addTearDown(c.dispose);
 
@@ -167,17 +167,17 @@ void main() {
 
   // ---- bindField ----
   group('bindField', () {
-    final src = FormixFieldID<String>('a');
-    final dst = FormixFieldID<String>('b');
+    const src = FormixFieldID<String>('a');
+    const dst = FormixFieldID<String>('b');
 
     test('one-way binding propagates source -> target', () async {
       final source = _make(
         initialValue: {'a': ''},
-        fields: [FormixField<String>(id: src, initialValue: '')],
+        fields: [const FormixField<String>(id: src, initialValue: '')],
       );
       final target = _make(
         initialValue: {'b': ''},
-        fields: [FormixField<String>(id: dst, initialValue: '')],
+        fields: [const FormixField<String>(id: dst, initialValue: '')],
       );
       addTearDown(source.dispose);
       addTearDown(target.dispose);
@@ -201,11 +201,11 @@ void main() {
     test('twoWay binding propagates target -> source and unbinds both', () async {
       final source = _make(
         initialValue: {'a': ''},
-        fields: [FormixField<String>(id: src, initialValue: '')],
+        fields: [const FormixField<String>(id: src, initialValue: '')],
       );
       final target = _make(
         initialValue: {'b': ''},
-        fields: [FormixField<String>(id: dst, initialValue: '')],
+        fields: [const FormixField<String>(id: dst, initialValue: '')],
       );
       addTearDown(source.dispose);
       addTearDown(target.dispose);
@@ -231,16 +231,16 @@ void main() {
   // ---- debug helpers ----
   group('debug helpers', () {
     test('debugFillDummyData fills per initial type', () {
-      final s = FormixFieldID<String>('s');
-      final i = FormixFieldID<int>('i');
-      final d = FormixFieldID<double>('d');
-      final b = FormixFieldID<bool>('b');
-      final dt = FormixFieldID<DateTime>('dt');
+      const s = FormixFieldID<String>('s');
+      const i = FormixFieldID<int>('i');
+      const d = FormixFieldID<double>('d');
+      const b = FormixFieldID<bool>('b');
+      const dt = FormixFieldID<DateTime>('dt');
       final c = _make(fields: [
-        FormixField<String>(id: s, initialValue: ''),
-        FormixField<int>(id: i, initialValue: 0),
-        FormixField<double>(id: d, initialValue: 0.0),
-        FormixField<bool>(id: b, initialValue: false),
+        const FormixField<String>(id: s, initialValue: ''),
+        const FormixField<int>(id: i, initialValue: 0),
+        const FormixField<double>(id: d, initialValue: 0.0),
+        const FormixField<bool>(id: b, initialValue: false),
         FormixField<DateTime>(id: dt, initialValue: DateTime(2020)),
       ]);
       addTearDown(c.dispose);
@@ -254,7 +254,7 @@ void main() {
     });
 
     test('debugForceSubmit bypasses validation and toggles isSubmitting', () async {
-      final name = FormixFieldID<String>('name');
+      const name = FormixFieldID<String>('name');
       final c = _make(
         fields: [
           FormixField<String>(
@@ -278,10 +278,10 @@ void main() {
 
   // ---- manual state setters ----
   group('manual setters', () {
-    final f = FormixFieldID<String>('f');
+    const f = FormixFieldID<String>('f');
 
     test('setFieldError sets and clears a manual error and error count', () {
-      final c = _make(fields: [FormixField<String>(id: f, initialValue: '')]);
+      final c = _make(fields: [const FormixField<String>(id: f, initialValue: '')]);
       addTearDown(c.dispose);
 
       c.setFieldError(f, 'backend error');
@@ -295,7 +295,7 @@ void main() {
     });
 
     test('setFieldValidating toggles validating & pending count', () {
-      final c = _make(fields: [FormixField<String>(id: f, initialValue: '')]);
+      final c = _make(fields: [const FormixField<String>(id: f, initialValue: '')]);
       addTearDown(c.dispose);
 
       c.setFieldValidating(f);
@@ -308,7 +308,7 @@ void main() {
     });
 
     test('setPending increments and decrements the pending count', () {
-      final c = _make(fields: [FormixField<String>(id: f, initialValue: '')]);
+      final c = _make(fields: [const FormixField<String>(id: f, initialValue: '')]);
       addTearDown(c.dispose);
 
       c.setPending(f, true);
@@ -320,7 +320,7 @@ void main() {
     });
 
     test('markAsTouched marks a registered field and is a no-op otherwise', () {
-      final c = _make(fields: [FormixField<String>(id: f, initialValue: '')]);
+      final c = _make(fields: [const FormixField<String>(id: f, initialValue: '')]);
       addTearDown(c.dispose);
 
       c.markAsTouched(f);
@@ -329,11 +329,11 @@ void main() {
       c.markAsTouched(f);
       expect(c.isFieldTouched(f), isTrue);
       // unregistered field is ignored
-      c.markAsTouched(FormixFieldID<String>('ghost'));
+      c.markAsTouched(const FormixFieldID<String>('ghost'));
     });
 
     test('manual setters are no-ops after dispose', () {
-      final c = _make(fields: [FormixField<String>(id: f, initialValue: '')]);
+      final c = _make(fields: [const FormixField<String>(id: f, initialValue: '')]);
       c.dispose();
       expect(c.mounted, isFalse);
       // These early-return on !mounted
@@ -345,17 +345,17 @@ void main() {
 
   // ---- requireValue ----
   group('requireValue', () {
-    final f = FormixFieldID<String>('f');
+    const f = FormixFieldID<String>('f');
 
     test('returns the value when present, throws StateError when null', () {
       final c = _make(fields: [
-        FormixField<String>(id: f, initialValue: 'here'),
+        const FormixField<String>(id: f, initialValue: 'here'),
       ]);
       addTearDown(c.dispose);
       expect(c.requireValue(f), 'here');
 
-      final nf = FormixFieldID<String>('nf');
-      final c2 = _make(fields: [FormixField<String>(id: nf, initialValue: null)]);
+      const nf = FormixFieldID<String>('nf');
+      final c2 = _make(fields: [const FormixField<String>(id: nf, initialValue: null)]);
       addTearDown(c2.dispose);
       expect(() => c2.requireValue(nf), throwsStateError);
     });
@@ -363,13 +363,13 @@ void main() {
 
   // ---- reset variants ----
   group('reset variants', () {
-    final f = FormixFieldID<String>('f');
-    final g = FormixFieldID<String>('g');
+    const f = FormixFieldID<String>('f');
+    const g = FormixFieldID<String>('g');
 
     test('resetToValues sets new initial values and clears dirty', () {
       final c = _make(
         initialValue: {'f': 'a'},
-        fields: [FormixField<String>(id: f, initialValue: 'a')],
+        fields: [const FormixField<String>(id: f, initialValue: 'a')],
       );
       addTearDown(c.dispose);
       c.setValue(f, 'changed');
@@ -398,7 +398,7 @@ void main() {
 
     test('resetFields with clear strategy uses empty default', () {
       final c = _make(fields: [
-        FormixField<String>(id: f, initialValue: 'x'),
+        const FormixField<String>(id: f, initialValue: 'x'),
       ]);
       addTearDown(c.dispose);
       c.setValue(f, 'y');
@@ -408,7 +408,7 @@ void main() {
 
     test('resetFields re-validates dependents', () {
       final c = _make(fields: [
-        FormixField<String>(id: f, initialValue: 'a'),
+        const FormixField<String>(id: f, initialValue: 'a'),
         FormixField<String>(
           id: g,
           initialValue: 'b',
@@ -426,21 +426,21 @@ void main() {
 
     test('reset with clear strategy on whole form', () {
       final c = _make(fields: [
-        FormixField<int>(id: FormixFieldID<int>('n'), initialValue: 5),
+        const FormixField<int>(id: FormixFieldID<int>('n'), initialValue: 5),
       ]);
       addTearDown(c.dispose);
       c.reset(strategy: ResetStrategy.clear);
-      expect(c.getValue(FormixFieldID<int>('n')), 0);
+      expect(c.getValue(const FormixFieldID<int>('n')), 0);
     });
   });
 
   // ---- unregister ----
   group('unregister', () {
-    final f = FormixFieldID<String>('f');
-    final g = FormixFieldID<String>('g');
+    const f = FormixFieldID<String>('f');
+    const g = FormixFieldID<String>('g');
 
     test('unregisterField removes state unless preserveState', () {
-      final c = _make(fields: [FormixField<String>(id: f, initialValue: 'a')]);
+      final c = _make(fields: [const FormixField<String>(id: f, initialValue: 'a')]);
       addTearDown(c.dispose);
       c.setValue(f, 'b');
 
@@ -450,7 +450,7 @@ void main() {
     });
 
     test('unregisterField preserveState keeps the value', () {
-      final c = _make(fields: [FormixField<String>(id: f, initialValue: 'a')]);
+      final c = _make(fields: [const FormixField<String>(id: f, initialValue: 'a')]);
       addTearDown(c.dispose);
       c.setValue(f, 'b');
 
@@ -461,8 +461,8 @@ void main() {
 
     test('unregisterFields (bulk) with dependents cleans the graph', () {
       final c = _make(fields: [
-        FormixField<String>(id: f, initialValue: 'a'),
-        FormixField<String>(id: g, initialValue: 'b', dependsOn: [f]),
+        const FormixField<String>(id: f, initialValue: 'a'),
+        const FormixField<String>(id: g, initialValue: 'b', dependsOn: [f]),
       ]);
       addTearDown(c.dispose);
       c.unregisterFields([f, g]);
@@ -471,7 +471,7 @@ void main() {
     });
 
     test('unregisterFields with empty list is a no-op', () {
-      final c = _make(fields: [FormixField<String>(id: f, initialValue: 'a')]);
+      final c = _make(fields: [const FormixField<String>(id: f, initialValue: 'a')]);
       addTearDown(c.dispose);
       c.unregisterFields([]);
       expect(c.isFieldRegistered(f), isTrue);
@@ -480,15 +480,15 @@ void main() {
 
   // ---- array ops ----
   group('array ops', () {
-    final list = FormixArrayID<String>('items');
+    const list = FormixArrayID<String>('items');
 
     FormixController arrayController() {
       final c = _make(
         initialValue: {'items': <String>[]},
         fields: [
-          FormixField<List<String>>(
+          const FormixField<List<String>>(
             id: list,
-            initialValue: const <String>[],
+            initialValue: <String>[],
           ),
         ],
       );
@@ -529,13 +529,13 @@ void main() {
 
   // ---- updateFromMap / getChangedValues ----
   group('updateFromMap / getChangedValues', () {
-    final a = FormixFieldID<String>('a');
-    final b = FormixFieldID<String>('b');
+    const a = FormixFieldID<String>('a');
+    const b = FormixFieldID<String>('b');
 
     test('updateFromMap only touches registered fields', () {
       final c = _make(fields: [
-        FormixField<String>(id: a, initialValue: ''),
-        FormixField<String>(id: b, initialValue: ''),
+        const FormixField<String>(id: a, initialValue: ''),
+        const FormixField<String>(id: b, initialValue: ''),
       ]);
       addTearDown(c.dispose);
 
@@ -547,8 +547,8 @@ void main() {
 
     test('getChangedValues returns only dirty fields', () {
       final c = _make(fields: [
-        FormixField<String>(id: a, initialValue: 'a0'),
-        FormixField<String>(id: b, initialValue: 'b0'),
+        const FormixField<String>(id: a, initialValue: 'a0'),
+        const FormixField<String>(id: b, initialValue: 'b0'),
       ]);
       addTearDown(c.dispose);
       c.setValue(a, 'a1');
@@ -559,7 +559,7 @@ void main() {
 
   // ---- submit throttle/debounce/optimistic ----
   group('submit', () {
-    final f = FormixFieldID<String>('f');
+    const f = FormixFieldID<String>('f');
 
     FormixController valid() {
       final c = _make(fields: [
@@ -648,7 +648,7 @@ void main() {
 
   // ---- validation modes ----
   group('validation modes', () {
-    final f = FormixFieldID<String>('f');
+    const f = FormixFieldID<String>('f');
 
     FormixField<String> reqField(FormixAutovalidateMode mode) => FormixField<String>(
           id: f,
@@ -699,7 +699,7 @@ void main() {
 
   // ---- multi-step ----
   group('multi-step navigation', () {
-    final step1 = FormixFieldID<String>('s1');
+    const step1 = FormixFieldID<String>('s1');
 
     test('goToStep / nextStep / previousStep / validateStep', () {
       final c = _make(fields: [
@@ -743,8 +743,8 @@ void main() {
 
   // ---- persistence load path ----
   group('persistence load', () {
-    final f = FormixFieldID<String>('f');
-    final ghost = 'ghost';
+    const f = FormixFieldID<String>('f');
+    const ghost = 'ghost';
 
     test('loads saved state and marks fields dirty vs initial', () async {
       final persistence = _FakePersistence({'f': 'loaded', ghost: 'extra'});
@@ -753,7 +753,7 @@ void main() {
         initialValue: const {'f': 'initial'},
         persistence: persistence,
         fields: [
-          FormixField<String>(id: f, initialValue: 'initial').toConfig(),
+          const FormixField<String>(id: f, initialValue: 'initial').toConfig(),
         ],
       ));
       addTearDown(c.dispose);
@@ -773,7 +773,7 @@ void main() {
         initialValue: const {'f': 'initial'},
         persistence: persistence,
         fields: [
-          FormixField<String>(id: f, initialValue: 'initial').toConfig(),
+          const FormixField<String>(id: f, initialValue: 'initial').toConfig(),
         ],
       ));
       addTearDown(c.dispose);
@@ -785,7 +785,7 @@ void main() {
   // ---- updateMessages ----
   group('updateMessages', () {
     test('re-validates and updates error strings; global signal drives it', () {
-      final f = FormixFieldID<String>('f');
+      const f = FormixFieldID<String>('f');
       final c = _make(fields: [
         FormixField<String>(
           id: f,

@@ -101,7 +101,7 @@ void main() {
       const fieldId = FormixFieldID<String>('typing_field');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(child: FormixTextFormField(fieldId: fieldId)),
           ),

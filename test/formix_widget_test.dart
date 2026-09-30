@@ -130,7 +130,7 @@ void main() {
       const fieldB = FormixFieldID<String>('field');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [

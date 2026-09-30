@@ -3,10 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:formix/formix.dart';
 
 // Field ids reused across tests.
-final _a = FormixFieldID<String>('a');
-final _b = FormixFieldID<String>('b');
-final _upper = FormixFieldID<String>('upper');
-final _derived = FormixFieldID<String>('derived');
+const _a = FormixFieldID<String>('a');
+const _b = FormixFieldID<String>('b');
+const _upper = FormixFieldID<String>('upper');
+const _derived = FormixFieldID<String>('derived');
 
 Widget _inFormix(Widget child, {FormixController? controller, List<FormixFieldConfig> fields = const []}) {
   return MaterialApp(
@@ -25,7 +25,7 @@ void main() {
     testWidgets('FormixFieldDerivation shows config error', (tester) async {
       await tester.pumpWidget(MaterialApp(
         home: FormixFieldDerivation(
-          dependencies: [_a],
+          dependencies: const [_a],
           targetField: _derived,
           derive: (_) => 'x',
         ),
@@ -63,12 +63,12 @@ void main() {
     });
 
     testWidgets('FormixFieldRegistry shows config error', (tester) async {
-      await tester.pumpWidget(MaterialApp(
+      await tester.pumpWidget(const MaterialApp(
         home: FormixFieldRegistry(
           fields: [
             FormixFieldConfig<String>(id: _a, initialValue: ''),
           ],
-          child: const SizedBox(),
+          child: SizedBox(),
         ),
       ));
       await tester.pump();
@@ -81,14 +81,14 @@ void main() {
         (tester) async {
       await tester.pumpWidget(_inFormix(
         FormixFieldDerivation(
-          dependencies: [_a],
+          dependencies: const [_a],
           targetField: _derived,
           selectors: {_a: (v) => (v as String?)?.length},
           derive: (values) => 'len=${(values[_a] as String? ?? '').length}',
         ),
         fields: [
-          FormixFieldConfig<String>(id: _a, initialValue: ''),
-          FormixFieldConfig<String>(id: _derived, initialValue: ''),
+          const FormixFieldConfig<String>(id: _a, initialValue: ''),
+          const FormixFieldConfig<String>(id: _derived, initialValue: ''),
         ],
       ));
       await tester.pump(); // register + first derive
@@ -107,13 +107,13 @@ void main() {
     testWidgets('derive throwing is swallowed (no crash)', (tester) async {
       await tester.pumpWidget(_inFormix(
         FormixFieldDerivation(
-          dependencies: [_a],
+          dependencies: const [_a],
           targetField: _derived,
           derive: (_) => throw StateError('bad derive'),
         ),
         fields: [
-          FormixFieldConfig<String>(id: _a, initialValue: ''),
-          FormixFieldConfig<String>(id: _derived, initialValue: ''),
+          const FormixFieldConfig<String>(id: _a, initialValue: ''),
+          const FormixFieldConfig<String>(id: _derived, initialValue: ''),
         ],
       ));
       await tester.pump();
@@ -124,10 +124,10 @@ void main() {
 
   group('FormixFieldDerivations (multi)', () {
     testWidgets('runs multiple derivations independently', (tester) async {
-      final c1 = FormixFieldID<String>('c1');
-      final c2 = FormixFieldID<String>('c2');
-      final out1 = FormixFieldID<String>('out1');
-      final out2 = FormixFieldID<String>('out2');
+      const c1 = FormixFieldID<String>('c1');
+      const c2 = FormixFieldID<String>('c2');
+      const out1 = FormixFieldID<String>('out1');
+      const out2 = FormixFieldID<String>('out2');
       await tester.pumpWidget(_inFormix(
         FormixFieldDerivations(
           derivations: [
@@ -145,10 +145,10 @@ void main() {
           ],
         ),
         fields: [
-          FormixFieldConfig<String>(id: c1, initialValue: '1'),
-          FormixFieldConfig<String>(id: c2, initialValue: '2'),
-          FormixFieldConfig<String>(id: out1, initialValue: ''),
-          FormixFieldConfig<String>(id: out2, initialValue: ''),
+          const FormixFieldConfig<String>(id: c1, initialValue: '1'),
+          const FormixFieldConfig<String>(id: c2, initialValue: '2'),
+          const FormixFieldConfig<String>(id: out1, initialValue: ''),
+          const FormixFieldConfig<String>(id: out2, initialValue: ''),
         ],
       ));
       await tester.pump();
@@ -171,8 +171,8 @@ void main() {
           transform: (v) => (v ?? '').toUpperCase(),
         ),
         fields: [
-          FormixFieldConfig<String>(id: _a, initialValue: 'hi'),
-          FormixFieldConfig<String>(id: _upper, initialValue: ''),
+          const FormixFieldConfig<String>(id: _a, initialValue: 'hi'),
+          const FormixFieldConfig<String>(id: _upper, initialValue: ''),
         ],
       ));
       await tester.pump();
@@ -191,7 +191,7 @@ void main() {
     testWidgets('rebuilds when the watched field changes and honors select',
         (tester) async {
       final controller = FormixController(
-        fields: [FormixField<String>(id: _a, initialValue: 'x')],
+        fields: [const FormixField<String>(id: _a, initialValue: 'x')],
       );
       addTearDown(controller.dispose);
 
@@ -223,8 +223,8 @@ void main() {
 
     testWidgets('didUpdateWidget rewires when fieldId changes', (tester) async {
       final controller = FormixController(fields: [
-        FormixField<String>(id: _a, initialValue: 'aaa'),
-        FormixField<String>(id: _b, initialValue: 'bbb'),
+        const FormixField<String>(id: _a, initialValue: 'aaa'),
+        const FormixField<String>(id: _b, initialValue: 'bbb'),
       ]);
       addTearDown(controller.dispose);
 
@@ -259,12 +259,12 @@ void main() {
               children: [
                 Formix(
                   key: key1,
-                  fields: [FormixFieldConfig<String>(id: _a, initialValue: '')],
+                  fields: const [FormixFieldConfig<String>(id: _a, initialValue: '')],
                   child: const SizedBox(),
                 ),
                 Formix(
                   key: key2,
-                  fields: [FormixFieldConfig<String>(id: _b, initialValue: '')],
+                  fields: const [FormixFieldConfig<String>(id: _b, initialValue: '')],
                   child: const SizedBox(),
                 ),
                 FormixListener(
@@ -313,8 +313,8 @@ void main() {
         (tester) async {
       final controller = FormixController();
       addTearDown(controller.dispose);
-      final f1 = FormixFieldConfig<String>(id: _a, initialValue: '');
-      final f2 = FormixFieldConfig<String>(id: _b, initialValue: '');
+      const f1 = FormixFieldConfig<String>(id: _a, initialValue: '');
+      const f2 = FormixFieldConfig<String>(id: _b, initialValue: '');
 
       Widget build(List<FormixFieldConfig<dynamic>> fields) => MaterialApp(
             home: Formix(
@@ -342,10 +342,10 @@ void main() {
   group('Formix.didUpdateWidget', () {
     testWidgets('keepAlive toggle and external controller swap', (tester) async {
       final c1 = FormixController(fields: [
-        FormixField<String>(id: _a, initialValue: 'one'),
+        const FormixField<String>(id: _a, initialValue: 'one'),
       ]);
       final c2 = FormixController(fields: [
-        FormixField<String>(id: _a, initialValue: 'two'),
+        const FormixField<String>(id: _a, initialValue: 'two'),
       ]);
       addTearDown(c1.dispose);
       addTearDown(c2.dispose);

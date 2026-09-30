@@ -8,7 +8,7 @@ void main() {
       const nameField = FormixFieldID<String>('name');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               initialValue: {'name': 'John'},
@@ -29,7 +29,7 @@ void main() {
       const nameField = FormixFieldID<String>('name');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               initialValue: {'name': ''},
@@ -86,7 +86,7 @@ void main() {
       const ageField = FormixFieldID<num>('age');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               initialValue: {'age': 25},
@@ -107,7 +107,7 @@ void main() {
       const ageField = FormixFieldID<num>('age');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               initialValue: {'age': 0},
@@ -130,7 +130,7 @@ void main() {
       const ageField = FormixFieldID<num>('age');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               initialValue: {'age': 25},
@@ -161,7 +161,7 @@ void main() {
       const newsletterField = FormixFieldID<bool>('newsletter');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               initialValue: {'newsletter': true},
@@ -247,7 +247,7 @@ void main() {
       const priorityField = FormixFieldID<String>('priority');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               initialValue: {'priority': 'medium'},
@@ -273,7 +273,7 @@ void main() {
       const priorityField = FormixFieldID<String>('priority');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               initialValue: {'priority': 'medium'},
@@ -302,7 +302,7 @@ void main() {
   group('FormixFormStatus', () {
     testWidgets('should show form status', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               initialValue: {'name': 'John'},
@@ -323,7 +323,7 @@ void main() {
       const nameField = FormixFieldID<String>('name');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               initialValue: {'name': 'John'},

@@ -9,7 +9,7 @@ void main() {
       final handle = tester.ensureSemantics();
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(child: SizedBox(height: 100, width: 100)),
           ),

@@ -6,7 +6,7 @@ void main() {
   group('FormFieldSchema.validate branches', () {
     test('async validator error is captured', () async {
       final schema = TextFieldSchema(
-        id: FormixFieldID<String>('t'),
+        id: const FormixFieldID<String>('t'),
         initialValue: '',
         asyncValidator: (v) async => 'async says no',
       );
@@ -16,7 +16,7 @@ void main() {
 
     test('async validator throwing is wrapped in validationFailed', () async {
       final schema = TextFieldSchema(
-        id: FormixFieldID<String>('t'),
+        id: const FormixFieldID<String>('t'),
         initialValue: '',
         asyncValidator: (v) async => throw Exception('kaboom'),
       );
@@ -25,11 +25,11 @@ void main() {
     });
 
     test('required empty iterable is treated as empty', () async {
-      final schema = SelectionFieldSchema<List<String>>(
+      const schema = SelectionFieldSchema<List<String>>(
         id: FormixFieldID<List<String>>('sel'),
-        initialValue: const <String>[],
+        initialValue: <String>[],
         isRequired: true,
-        options: const [<String>[]],
+        options: [<String>[]],
       );
       final errors = await schema.validate(const <String>[], const {});
       // empty iterable + required -> required error
@@ -38,7 +38,7 @@ void main() {
 
     test('DateFieldSchema flags minDate/maxDate violations', () async {
       final schema = DateFieldSchema(
-        id: FormixFieldID<DateTime>('d'),
+        id: const FormixFieldID<DateTime>('d'),
         initialValue: DateTime(2020),
         minDate: DateTime(2020, 1, 1),
         maxDate: DateTime(2020, 12, 31),
@@ -55,7 +55,7 @@ void main() {
     });
 
     test('NumberFieldSchema flags min and max', () async {
-      final schema = NumberFieldSchema(
+      const schema = NumberFieldSchema(
         id: FormixFieldID<num>('n'),
         initialValue: 0,
         min: 1,
@@ -82,7 +82,7 @@ void main() {
       var submitted = false;
       final schema = FormSchema(
         fields: [
-          TextFieldSchema(
+          const TextFieldSchema(
             id: FormixFieldID<String>('t'),
             initialValue: '',
           ),
@@ -95,7 +95,7 @@ void main() {
     });
 
     test('success returns data when no onSubmit handler', () async {
-      final schema = FormSchema(
+      const schema = FormSchema(
         fields: [
           TextFieldSchema(id: FormixFieldID<String>('t'), initialValue: ''),
         ],
@@ -106,7 +106,7 @@ void main() {
     });
 
     test('validation failure short-circuits submit', () async {
-      final schema = FormSchema(
+      const schema = FormSchema(
         fields: [
           TextFieldSchema(
             id: FormixFieldID<String>('t'),
@@ -123,7 +123,7 @@ void main() {
     test('onSubmit throwing returns failure', () async {
       final schema = FormSchema(
         fields: [
-          TextFieldSchema(id: FormixFieldID<String>('t'), initialValue: ''),
+          const TextFieldSchema(id: FormixFieldID<String>('t'), initialValue: ''),
         ],
         onSubmit: (_) async => throw Exception('server error'),
       );
@@ -137,12 +137,12 @@ void main() {
     FormSchema buildSchema({bool required = true}) => FormSchema(
           fields: [
             TextFieldSchema(
-              id: FormixFieldID<String>('name'),
+              id: const FormixFieldID<String>('name'),
               initialValue: '',
               isRequired: required,
             ),
             ConditionalFieldSchema<String>(
-              id: FormixFieldID<String>('extra'),
+              id: const FormixFieldID<String>('extra'),
               initialValue: '',
               visibilityCondition: (state) => state['name'] == 'show',
             ),
@@ -160,7 +160,7 @@ void main() {
       final result = await controller.validateForm();
       expect(result.isValid, isFalse);
       final notifier = controller
-          .fieldValidationNotifier<dynamic>(FormixFieldID<String>('name'));
+          .fieldValidationNotifier<dynamic>(const FormixFieldID<String>('name'));
       expect(notifier.value.isValid, isFalse);
     });
 
@@ -177,7 +177,7 @@ void main() {
       var called = false;
       final schema = FormSchema(
         fields: [
-          TextFieldSchema(id: FormixFieldID<String>('name'), initialValue: ''),
+          const TextFieldSchema(id: FormixFieldID<String>('name'), initialValue: ''),
         ],
         onSubmit: (_) async => called = true,
       );
@@ -192,7 +192,7 @@ void main() {
     test('visibleFields, isFormDirty, isFieldModified, resetForm', () {
       final controller = SchemaBasedFormController(schema: buildSchema());
       addTearDown(controller.dispose);
-      final name = FormixFieldID<String>('name');
+      const name = FormixFieldID<String>('name');
 
       expect(controller.isFormDirty, isFalse);
       // conditional field 'extra' hidden until name == 'show'
@@ -244,9 +244,9 @@ void main() {
 
     test('requireValue returns value or throws for null/missing', () {
       final s = valid();
-      expect(s.requireValue(FormixFieldID<int>('a')), 1);
+      expect(s.requireValue(const FormixFieldID<int>('a')), 1);
       expect(
-        () => s.requireValue(FormixFieldID<String>('nope')),
+        () => s.requireValue(const FormixFieldID<String>('nope')),
         throwsStateError,
       );
     });

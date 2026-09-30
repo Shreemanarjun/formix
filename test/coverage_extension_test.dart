@@ -491,7 +491,7 @@ void main() {
       const nameField = FormixFieldID<String>('name');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               initialValue: {'name': 'Initial', 'age': 20},
@@ -525,7 +525,7 @@ void main() {
       const textField = FormixFieldID<String>('desc');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               initialValue: {'count': 10, 'desc': 'Hello'},
@@ -558,7 +558,7 @@ void main() {
       const fieldId = FormixFieldID<String>('manual');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               child: MyCustomField(fieldId: fieldId, initialValue: 'Initial'),

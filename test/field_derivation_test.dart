@@ -379,7 +379,7 @@ void main() {
       const widget = FormixFieldDerivations(derivations: []);
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Formix(initialValue: {}, fields: [], child: widget),
         ),
       );

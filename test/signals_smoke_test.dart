@@ -5,8 +5,8 @@ import 'package:formix/formix.dart';
 /// Smoke test for the signals-based core: proves the public API works WITHOUT
 /// a ProviderScope and that SignalBuilder-backed widgets rebuild correctly.
 void main() {
-  final name = FormixFieldID<String>('name');
-  final age = FormixFieldID<int>('age');
+  const name = FormixFieldID<String>('name');
+  const age = FormixFieldID<int>('age');
 
   testWidgets('field renders, updates, validates and rebuilds reactively', (tester) async {
     final formKey = GlobalKey<FormixState>();
@@ -73,11 +73,11 @@ void main() {
             children: [
               Formix(
                 key: keyA,
-                child: FormixTextFormField(fieldId: name),
+                child: const FormixTextFormField(fieldId: name),
               ),
               Formix(
                 key: keyB,
-                child: FormixTextFormField(fieldId: name),
+                child: const FormixTextFormField(fieldId: name),
               ),
             ],
           ),

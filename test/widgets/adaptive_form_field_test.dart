@@ -12,7 +12,7 @@ void main() {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               fields: [
@@ -37,7 +37,7 @@ void main() {
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               fields: [
@@ -63,7 +63,7 @@ void main() {
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               fields: [
@@ -95,7 +95,7 @@ void main() {
     testWidgets('value synchronization works on Android', (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               fields: [
@@ -118,7 +118,7 @@ void main() {
     testWidgets('value synchronization works on iOS', (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
       await tester.pumpWidget(
-        CupertinoApp(
+        const CupertinoApp(
           home: CupertinoPageScaffold(
             child: Padding(
               padding: EdgeInsets.all(20),

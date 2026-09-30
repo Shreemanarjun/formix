@@ -4,7 +4,7 @@ import 'package:formix/formix.dart';
 void main() {
   group('FormixFieldID', () {
     test('withPrefix, parentKey, localName', () {
-      final id = FormixFieldID<String>('name');
+      const id = FormixFieldID<String>('name');
       final prefixed = id.withPrefix('user');
       expect(prefixed.key, 'user.name');
       expect(prefixed.parentKey, 'user');
@@ -16,34 +16,34 @@ void main() {
     });
 
     test('isTypeValid & isNullableType for nullable and non-nullable', () {
-      final nonNull = FormixFieldID<int>('n');
+      const nonNull = FormixFieldID<int>('n');
       expect(nonNull.isTypeValid(1), isTrue);
       expect(nonNull.isTypeValid('s'), isFalse);
       expect(nonNull.isNullableType, isFalse);
 
-      final nullable = FormixFieldID<int?>('n2');
+      const nullable = FormixFieldID<int?>('n2');
       expect(nullable.isNullableType, isTrue);
       expect(nullable.isTypeValid(null), isTrue);
     });
 
     test('equality and hashCode key on the string key', () {
-      expect(FormixFieldID<String>('a'), FormixFieldID<int>('a'));
+      expect(const FormixFieldID<String>('a'), const FormixFieldID<int>('a'));
       expect(
-        FormixFieldID<String>('a').hashCode,
-        FormixFieldID<String>('a').hashCode,
+        const FormixFieldID<String>('a').hashCode,
+        const FormixFieldID<String>('a').hashCode,
       );
     });
   });
 
   group('FormixArrayID', () {
     test('item indexes into the array key', () {
-      final arr = FormixArrayID<String>('tags');
+      const arr = FormixArrayID<String>('tags');
       expect(arr.item(2).key, 'tags[2]');
       expect(arr.item(0).type, String);
     });
 
     test('withPrefix returns an array id', () {
-      final arr = FormixArrayID<String>('tags').withPrefix('post');
+      final arr = const FormixArrayID<String>('tags').withPrefix('post');
       expect(arr, isA<FormixArrayID<String>>());
       expect(arr.key, 'post.tags');
     });
@@ -52,13 +52,13 @@ void main() {
   group('FormixField', () {
     test('wrappedTransformer wraps and null returns null', () {
       final withT = FormixField<int>(
-        id: FormixFieldID<int>('n'),
+        id: const FormixFieldID<int>('n'),
         initialValue: 0,
         transformer: (dynamic v) => int.parse(v.toString()),
       );
       expect(withT.wrappedTransformer!('42'), 42);
 
-      final withoutT = FormixField<int>(
+      const withoutT = FormixField<int>(
         id: FormixFieldID<int>('n'),
         initialValue: 0,
       );
@@ -66,7 +66,7 @@ void main() {
     });
 
     test('isTypeValid and isNullableType', () {
-      final f = FormixField<int>(id: FormixFieldID<int>('n'), initialValue: 0);
+      const f = FormixField<int>(id: FormixFieldID<int>('n'), initialValue: 0);
       expect(f.isTypeValid(1), isTrue);
       expect(f.isTypeValid('x'), isFalse);
       expect(f.isNullableType, isFalse);
@@ -75,7 +75,7 @@ void main() {
 
     test('toConfig preserves the wrapped validator', () {
       final f = FormixField<String>(
-        id: FormixFieldID<String>('s'),
+        id: const FormixFieldID<String>('s'),
         initialValue: '',
         validator: (v) => (v == null || v.isEmpty) ? 'req' : null,
       );
@@ -88,7 +88,7 @@ void main() {
   group('FormixFieldConfig.chain', () {
     test('builds sync validator from a chain', () {
       final cfg = FormixFieldConfig<String>.chain(
-        id: FormixFieldID<String>('s'),
+        id: const FormixFieldID<String>('s'),
         rules: FormixValidators.string().required().minLength(3),
       );
       // Invoke the wrapped validator to exercise the chain closures.

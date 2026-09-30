@@ -24,7 +24,7 @@ void main() {
       const id = FormixFieldID<String>('test');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               theme: FormixThemeData(
@@ -53,7 +53,7 @@ void main() {
       const id = FormixFieldID<String>('test');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               theme: FormixThemeData(
@@ -85,7 +85,7 @@ void main() {
       const dropId = FormixFieldID<String>('drop');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               theme: FormixThemeData(
@@ -133,7 +133,7 @@ void main() {
       const id2 = FormixFieldID<String>('f2');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               theme: FormixThemeData(
@@ -240,7 +240,7 @@ void main() {
       const id = FormixFieldID<String>('test');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               theme: FormixThemeData(

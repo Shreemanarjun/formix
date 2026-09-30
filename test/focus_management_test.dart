@@ -10,7 +10,7 @@ void main() {
 
     testWidgets('Enter-to-Next focuses next field', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               fields: [

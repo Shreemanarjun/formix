@@ -10,7 +10,7 @@ void main() {
       const nameField = FormixFieldID<String>('name');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Column(
               children: [
@@ -224,7 +224,7 @@ void main() {
 
     testWidgets('Dynamic form replacement works seamlessly', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(home: Scaffold(body: _DynamicFormSwitcher())),
+        const MaterialApp(home: Scaffold(body: _DynamicFormSwitcher())),
       );
 
       expect(find.text('A'), findsOneWidget);

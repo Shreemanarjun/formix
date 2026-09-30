@@ -19,22 +19,22 @@ void main() {
       final c = FormixController(
         formId: 'devtools_form_a',
         initialValue: const {'x': 1},
-        fields: [FormixField<int>(id: FormixFieldID<int>('x'), initialValue: 1)],
+        fields: [const FormixField<int>(id: FormixFieldID<int>('x'), initialValue: 1)],
       );
       addTearDown(c.dispose);
       // No public getter; the fact it constructs and disposes cleanly (which
       // calls unregisterController) is the assertion here.
-      expect(c.getValue(FormixFieldID<int>('x')), 1);
+      expect(c.getValue(const FormixFieldID<int>('x')), 1);
     });
 
     test('registering a second controller then disposing the latest reassigns latest', () {
       final a = FormixController(
         formId: 'devtools_form_1',
-        fields: [FormixField<int>(id: FormixFieldID<int>('x'), initialValue: 1)],
+        fields: [const FormixField<int>(id: FormixFieldID<int>('x'), initialValue: 1)],
       );
       final b = FormixController(
         formId: 'devtools_form_2',
-        fields: [FormixField<int>(id: FormixFieldID<int>('y'), initialValue: 2)],
+        fields: [const FormixField<int>(id: FormixFieldID<int>('y'), initialValue: 2)],
       );
       // Disposing b (the latest) hits the `_latestActiveId == id` branch that
       // reassigns _latestActiveId to the last remaining active controller.
@@ -45,10 +45,10 @@ void main() {
       // Re-register something afterwards to prove the service is still usable.
       final c = FormixController(
         formId: 'devtools_form_3',
-        fields: [FormixField<int>(id: FormixFieldID<int>('z'), initialValue: 3)],
+        fields: [const FormixField<int>(id: FormixFieldID<int>('z'), initialValue: 3)],
       );
       addTearDown(c.dispose);
-      expect(c.getValue(FormixFieldID<int>('z')), 3);
+      expect(c.getValue(const FormixFieldID<int>('z')), 3);
     });
 
     test('direct registerController / unregisterController with a namespace controller', () {
@@ -56,7 +56,7 @@ void main() {
       // namespace via _registeredDevToolsId = formId ?? namespace.
       final c = FormixController(
         namespace: 'ns_devtools',
-        fields: [FormixField<String>(id: FormixFieldID<String>('n'), initialValue: 'v')],
+        fields: [const FormixField<String>(id: FormixFieldID<String>('n'), initialValue: 'v')],
       );
       // Also exercise the static API directly for good measure.
       FormixDevToolsService.registerController('manual_id', c);
@@ -64,7 +64,7 @@ void main() {
       // Unregistering an id that isn't the latest active is a safe no-op path.
       FormixDevToolsService.unregisterController('never_registered');
       addTearDown(c.dispose);
-      expect(c.getValue(FormixFieldID<String>('n')), 'v');
+      expect(c.getValue(const FormixFieldID<String>('n')), 'v');
     });
   });
 }

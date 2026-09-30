@@ -2,9 +2,9 @@ import 'package:flutter/material.dart' hide FormState;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:formix/formix.dart';
 
-final _src = FormixFieldID<String>('src');
-final _src2 = FormixFieldID<String>('src2');
-final _dst = FormixFieldID<String>('dst');
+const _src = FormixFieldID<String>('src');
+const _src2 = FormixFieldID<String>('src2');
+const _dst = FormixFieldID<String>('dst');
 
 void main() {
   testWidgets('shows config error when used outside Formix', (tester) async {
@@ -21,8 +21,8 @@ void main() {
 
   testWidgets('retransformOnSubmit re-runs transform on submit', (tester) async {
     final controller = FormixController(fields: [
-      FormixField<String>(id: _src, initialValue: 'a'),
-      FormixField<String>(id: _dst, initialValue: ''),
+      const FormixField<String>(id: _src, initialValue: 'a'),
+      const FormixField<String>(id: _dst, initialValue: ''),
     ]);
     addTearDown(controller.dispose);
 
@@ -55,9 +55,9 @@ void main() {
   testWidgets('didUpdateWidget: debounce, retransform toggle, source change',
       (tester) async {
     final controller = FormixController(fields: [
-      FormixField<String>(id: _src, initialValue: 'a'),
-      FormixField<String>(id: _src2, initialValue: 'b'),
-      FormixField<String>(id: _dst, initialValue: ''),
+      const FormixField<String>(id: _src, initialValue: 'a'),
+      const FormixField<String>(id: _src2, initialValue: 'b'),
+      const FormixField<String>(id: _dst, initialValue: ''),
     ]);
     addTearDown(controller.dispose);
 
@@ -108,8 +108,8 @@ void main() {
 
   testWidgets('disposal clears pending on the target field', (tester) async {
     final controller = FormixController(fields: [
-      FormixField<String>(id: _src, initialValue: 'a'),
-      FormixField<String>(id: _dst, initialValue: ''),
+      const FormixField<String>(id: _src, initialValue: 'a'),
+      const FormixField<String>(id: _dst, initialValue: ''),
     ]);
     addTearDown(controller.dispose);
 

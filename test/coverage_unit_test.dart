@@ -84,7 +84,7 @@ void main() {
     test('builder collects typed updates', () {
       final batch = FormixBatch()
         ..set(a, 'x')
-        ..setField(FormixField<int>(id: b, initialValue: 0), 2);
+        ..setField(const FormixField<int>(id: b, initialValue: 0), 2);
       batch.setValue(a).to('y');
       batch.addAll({'c': true});
       expect(batch.isEmpty, isFalse);

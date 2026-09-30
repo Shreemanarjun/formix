@@ -211,7 +211,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               initialValue: {'fallback_field': 'fallback_value'},
@@ -281,7 +281,7 @@ void main() {
       const field2 = FormixFieldID<String>('field2');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               fields: [
@@ -375,7 +375,7 @@ void main() {
       const field2 = FormixFieldID<String>('field2');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               initialValue: {'field1': 'value1', 'field2': 'value2'},
@@ -396,7 +396,7 @@ void main() {
 
       // Update widget with different field
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               initialValue: {'field1': 'value1', 'field2': 'value2'},

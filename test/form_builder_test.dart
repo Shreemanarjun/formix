@@ -62,7 +62,7 @@ void main() {
     const field1 = FormixFieldID<String>('field1');
 
     await tester.pumpWidget(
-      MaterialApp(
+      const MaterialApp(
         home: Scaffold(
           body: Formix(
             initialValue: {'field1': 'initial'},
@@ -507,7 +507,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(home: Scaffold(body: CustomStatusDisplay())),
+      const MaterialApp(home: Scaffold(body: CustomStatusDisplay())),
     );
 
     expect(find.byType(FormixConfigurationErrorWidget), findsOneWidget);

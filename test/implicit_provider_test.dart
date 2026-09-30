@@ -8,7 +8,7 @@ void main() {
       const fieldId = FormixFieldID<String>('test_field');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               child: FormixTextFormField(
@@ -191,7 +191,7 @@ void main() {
       const fieldId = FormixFieldID<String>('section_field');
 
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               child: FormixSection(

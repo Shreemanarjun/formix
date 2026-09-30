@@ -11,7 +11,7 @@ void main() {
 
     testWidgets('Focus moves from Text -> Dropdown -> Text via Next action', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: Formix(
               fields: [
