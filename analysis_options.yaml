@@ -15,4 +15,8 @@ formatter:
 analyzer:
   exclude:
     - build/**
+    # Separate apps with their own pubspec/analysis — not part of the package's
+    # analyze gate (their deps aren't resolved in the root context on CI).
+    - devtools_extension/**
+    - example/**
 
