@@ -315,93 +315,58 @@ class _DerivedFieldsExampleContentState
 
             const SizedBox(height: 24),
 
-            // Custom Field Derivation Implementation
-            // This demonstrates how to implement field derivation without circular dependencies
-            FormixBuilder(
-              builder: (context, scope) {
-                final firstName =
-                    scope.watchValue(FormixFieldID<String>('firstName')) ?? '';
-                final lastName =
-                    scope.watchValue(FormixFieldID<String>('lastName')) ?? '';
-                final fullName = '$firstName $lastName'.trim();
-
-                // Update the derived field value
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  final controller = Formix.controllerOf(context);
-                  if (controller != null) {
-                    controller.setValue(
-                      FormixFieldID<String>('fullName'),
-                      fullName,
-                    );
-                  }
-                });
-
-                return const SizedBox.shrink();
+            // Field derivation, the right way: FormixFieldDerivation watches its
+            // dependencies and writes the target through a gated effect — no
+            // build-time writes, no per-frame post-frame callbacks, no loops.
+            FormixFieldDerivation(
+              dependencies: const <FormixFieldID<dynamic>>[
+                FormixFieldID<String>('firstName'),
+                FormixFieldID<String>('lastName'),
+              ],
+              targetField: const FormixFieldID<String>('fullName'),
+              derive: (values) {
+                final first = values[const FormixFieldID<String>('firstName')] as String? ?? '';
+                final last = values[const FormixFieldID<String>('lastName')] as String? ?? '';
+                return '$first $last'.trim();
               },
             ),
 
-            FormixBuilder(
-              builder: (context, scope) {
-                final birthYear =
-                    scope.watchValue(FormixFieldID<int>('birthYear')) ?? 2000;
-                final currentYear =
-                    scope.watchValue(FormixFieldID<int>('currentYear')) ??
-                    DateTime.now().year;
-                final age = currentYear - birthYear;
-
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  final controller = Formix.controllerOf(context);
-                  if (controller != null) {
-                    controller.setValue(FormixFieldID<int>('age'), age);
-                  }
-                });
-
-                return const SizedBox.shrink();
+            FormixFieldDerivation(
+              dependencies: const <FormixFieldID<dynamic>>[
+                FormixFieldID<int>('birthYear'),
+                FormixFieldID<int>('currentYear'),
+              ],
+              targetField: const FormixFieldID<int>('age'),
+              derive: (values) {
+                final birthYear = values[const FormixFieldID<int>('birthYear')] as int? ?? 2000;
+                final currentYear = values[const FormixFieldID<int>('currentYear')] as int? ?? DateTime.now().year;
+                return currentYear - birthYear;
               },
             ),
 
-            FormixBuilder(
-              builder: (context, scope) {
-                final price =
-                    scope.watchValue(FormixFieldID<double>('price')) ?? 0.0;
-                final quantity =
-                    scope.watchValue(FormixFieldID<int>('quantity')) ?? 1;
-                final total = price * quantity;
-
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  final controller = Formix.controllerOf(context);
-                  if (controller != null) {
-                    controller.setValue(FormixFieldID<double>('total'), total);
-                  }
-                });
-
-                return const SizedBox.shrink();
+            FormixFieldDerivation(
+              dependencies: const <FormixFieldID<dynamic>>[
+                FormixFieldID<double>('price'),
+                FormixFieldID<int>('quantity'),
+              ],
+              targetField: const FormixFieldID<double>('total'),
+              derive: (values) {
+                final price = values[const FormixFieldID<double>('price')] as double? ?? 0.0;
+                final quantity = values[const FormixFieldID<int>('quantity')] as int? ?? 1;
+                return price * quantity;
               },
             ),
 
-            FormixBuilder(
-              builder: (context, scope) {
-                final total =
-                    scope.watchValue(FormixFieldID<double>('total')) ?? 0.0;
-                final discountPercent =
-                    scope.watchValue(
-                      FormixFieldID<double>('discountPercent'),
-                    ) ??
-                    0.0;
-                final discountAmount = total * (discountPercent / 100);
-                final finalTotal = total - discountAmount;
-
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  final controller = Formix.controllerOf(context);
-                  if (controller != null) {
-                    controller.setValue(
-                      FormixFieldID<double>('finalTotal'),
-                      finalTotal,
-                    );
-                  }
-                });
-
-                return const SizedBox.shrink();
+            FormixFieldDerivation(
+              dependencies: const <FormixFieldID<dynamic>>[
+                FormixFieldID<double>('total'),
+                FormixFieldID<double>('discountPercent'),
+              ],
+              targetField: const FormixFieldID<double>('finalTotal'),
+              derive: (values) {
+                final total = values[const FormixFieldID<double>('total')] as double? ?? 0.0;
+                final discountPercent = values[const FormixFieldID<double>('discountPercent')] as double? ?? 0.0;
+                return total - (total * (discountPercent / 100));
               },
             ),
 

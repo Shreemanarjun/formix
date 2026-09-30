@@ -1,5 +1,4 @@
 import 'package:flutter/widgets.dart';
-import 'package:signals_flutter/signals_flutter.dart';
 
 import '../../formix.dart';
 

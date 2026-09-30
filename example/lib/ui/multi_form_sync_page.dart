@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:formix/formix.dart';
 
+const _titleId = FormixFieldID<String>('title');
+const _categoryId = FormixFieldID<String>('category');
+
 class MultiFormSyncPage extends StatefulWidget {
   const MultiFormSyncPage({super.key});
 
@@ -9,11 +12,37 @@ class MultiFormSyncPage extends StatefulWidget {
 }
 
 class _MultiFormSyncPageState extends State<MultiFormSyncPage> {
-  // We need reference to controllers to setup bindings
-  FormixController? _formA;
-  FormixController? _formB;
+  // Own both controllers directly — no InheritedWidget lookups, no build-time
+  // side-effects. Each is just a bag of signals we hold and dispose.
+  final _formA = FormixController(
+    formId: 'formA',
+    fields: const [
+      FormixFieldConfig<String>(id: _titleId, initialValue: 'My Project'),
+      FormixFieldConfig<String>(id: _categoryId, initialValue: 'Work'),
+    ],
+  );
+  final _formB = FormixController(
+    formId: 'formB',
+    fields: const [
+      FormixFieldConfig<String>(id: _titleId),
+      FormixFieldConfig<String>(id: _categoryId),
+    ],
+  );
 
-  bool _bindingsSetup = false;
+  @override
+  void initState() {
+    super.initState();
+    // Wire the one-way sync once, up front — both controllers already exist.
+    _formB.bindField(_titleId, sourceController: _formA, sourceField: _titleId);
+    _formB.bindField(_categoryId, sourceController: _formA, sourceField: _categoryId);
+  }
+
+  @override
+  void dispose() {
+    _formA.dispose();
+    _formB.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,59 +61,35 @@ class _MultiFormSyncPageState extends State<MultiFormSyncPage> {
           Expanded(
             child: Row(
               children: [
-                // FORM A: The Editor
+                // FORM A: The Editor — provides the controller we own.
                 Expanded(
                   child: Card(
                     margin: const EdgeInsets.all(8),
                     elevation: 4,
                     child: Formix(
-                      formId: 'formA',
-                      initialValue: const {
-                        'title': 'My Project',
-                        'category': 'Work',
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+                      controller: _formA,
+                      child: const Padding(
+                        padding: EdgeInsets.all(16.0),
                         child: Column(
                           children: [
-                            const Text(
+                            Text(
                               'Form A (Source)',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            const Divider(),
-                            FormixBuilder(
-                              builder: (context, scope) {
-                                // Capture controller
-                                _formA = scope.controller;
-                                return const SizedBox();
-                              },
-                            ),
+                            Divider(),
                             FormixTextFormField(
-                              fieldId: FormixFieldID('title'),
-                              decoration: const InputDecoration(
-                                labelText: 'Project Title',
-                              ),
+                              fieldId: _titleId,
+                              decoration: InputDecoration(labelText: 'Project Title'),
                             ),
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16),
                             FormixDropdownFormField(
-                              fieldId: FormixFieldID('category'),
-                              items: const [
-                                DropdownMenuItem(
-                                  value: 'Work',
-                                  child: Text('Work'),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'Personal',
-                                  child: Text('Personal'),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'Hobby',
-                                  child: Text('Hobby'),
-                                ),
+                              fieldId: _categoryId,
+                              items: [
+                                DropdownMenuItem(value: 'Work', child: Text('Work')),
+                                DropdownMenuItem(value: 'Personal', child: Text('Personal')),
+                                DropdownMenuItem(value: 'Hobby', child: Text('Hobby')),
                               ],
-                              decoration: const InputDecoration(
-                                labelText: 'Category',
-                              ),
+                              decoration: InputDecoration(labelText: 'Category'),
                             ),
                           ],
                         ),
@@ -92,83 +97,42 @@ class _MultiFormSyncPageState extends State<MultiFormSyncPage> {
                     ),
                   ),
                 ),
-                // FORM B: The Preview (Synced)
+                // FORM B: The Preview — synced target, also owned by us.
                 Expanded(
                   child: Card(
                     margin: const EdgeInsets.all(8),
                     color: Colors.grey[50],
                     child: Formix(
-                      formId: 'formB',
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+                      controller: _formB,
+                      child: const Padding(
+                        padding: EdgeInsets.all(16.0),
                         child: Column(
                           children: [
-                            const Text(
+                            Text(
                               'Form B (Synced Clone)',
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
-                            const Divider(),
-                            FormixBuilder(
-                              builder: (context, scope) {
-                                _formB = scope.controller;
-
-                                // One-time setup of bindings when both are ready
-                                // In a real app, this might be done in an initState or dedicated binder widget
-                                WidgetsBinding.instance.addPostFrameCallback((
-                                  _,
-                                ) {
-                                  if (_formA != null &&
-                                      _formB != null &&
-                                      !_bindingsSetup) {
-                                    _formB!.bindField(
-                                      FormixFieldID('title'),
-                                      sourceController: _formA!,
-                                      sourceField: FormixFieldID('title'),
-                                    );
-                                    _formB!.bindField(
-                                      FormixFieldID('category'),
-                                      sourceController: _formA!,
-                                      sourceField: FormixFieldID('category'),
-                                    );
-                                    _bindingsSetup = true;
-                                    setState(() {}); // refresh to show bound
-                                  }
-                                });
-
-                                return const SizedBox();
-                              },
-                            ),
-                            // Fields in Form B need to be registered to receive values
+                            Divider(),
                             FormixTextFormField(
-                              fieldId: FormixFieldID('title'),
-                              readOnly: true, // It's a sync target
-                              decoration: const InputDecoration(
+                              fieldId: _titleId,
+                              readOnly: true,
+                              decoration: InputDecoration(
                                 labelText: 'Synced Title',
                                 filled: true,
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            SizedBox(height: 16),
                             FormixDropdownFormField(
-                              fieldId: FormixFieldID('category'),
-                              items: const [
-                                DropdownMenuItem(
-                                  value: 'Work',
-                                  child: Text('Work'),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'Personal',
-                                  child: Text('Personal'),
-                                ),
-                                DropdownMenuItem(
-                                  value: 'Hobby',
-                                  child: Text('Hobby'),
-                                ),
+                              fieldId: _categoryId,
+                              items: [
+                                DropdownMenuItem(value: 'Work', child: Text('Work')),
+                                DropdownMenuItem(value: 'Personal', child: Text('Personal')),
+                                DropdownMenuItem(value: 'Hobby', child: Text('Hobby')),
                               ],
-                              decoration: const InputDecoration(
+                              decoration: InputDecoration(
                                 labelText: 'Synced Category',
                                 filled: true,
                               ),
-                              // Note: readOnly for dropdowns isn't always standard, often disabled
                             ),
                           ],
                         ),
@@ -179,17 +143,13 @@ class _MultiFormSyncPageState extends State<MultiFormSyncPage> {
               ],
             ),
           ),
-          if (_bindingsSetup)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 20),
-              child: Text(
-                'Sync Active',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                ),
-              ),
+          const Padding(
+            padding: EdgeInsets.only(bottom: 20),
+            child: Text(
+              'Sync Active',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
             ),
+          ),
         ],
       ),
     );

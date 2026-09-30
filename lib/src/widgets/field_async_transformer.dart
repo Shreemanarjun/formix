@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'package:signals_flutter/signals_flutter.dart';
 import 'package:stream_transform/stream_transform.dart';
 
 import '../../formix.dart';

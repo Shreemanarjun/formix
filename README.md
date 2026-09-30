@@ -547,6 +547,43 @@ SignalBuilder(builder: (context) => Text('${controller.isValidSignal.value}'));
 controller.reset();
 ```
 
+#### 4. Own the controller (context-free, signals-native) — recommended for imperative seeding
+`Formix.of`/`context.formix` read an `InheritedWidget`, so they can't be used in
+`initState`. If you need to touch the controller in `initState` (or want zero context
+lookups), just **own it** — it's a plain object holding signals. Create it in your
+`State`, read its signals directly, pass it to fields explicitly, and dispose it yourself.
+No `Formix` ancestor required.
+
+```dart
+class _LoginState extends State<Login> {
+  late final form = FormixController(
+    fields: const [FormixFieldConfig<String>(id: emailId), FormixFieldConfig<int>(id: ageId)],
+    initialValue: const {'email': ''},          // declarative seed
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    form.batchUpdate((b) => b..set(ageId, 18));  // imperative seed — safe, you own it
+  }
+
+  @override
+  void dispose() { form.dispose(); super.dispose(); }  // you own it → you dispose it
+
+  @override
+  Widget build(BuildContext context) => Column(children: [
+    FormixTextFormField(fieldId: emailId, controller: form),          // pass explicitly
+    SignalBuilder(builder: (_) =>                                     // read signals directly
+      Text(form.isValidSignal.value ? 'Ready' : 'Fill it in')),
+    FormixSubmitButton(controller: form, onValid: save, child: const Text('Save')),
+  ]);
+}
+```
+
+Every field and ergonomic widget accepts an explicit `controller:`, so the whole form
+works without a `Formix` ancestor. (Wrap in `Formix(controller: form, child: ...)` only if
+you'd rather descendants resolve it from context.)
+
 > **Reaching the controller:** `Formix.of(context)` returns a **non-null** controller
 > (throws a `FlutterError` if there is no `Formix` ancestor). Use `Formix.maybeOf(context)`
 > — or the `context.maybeFormix` extension — when a form may be absent, and
@@ -565,12 +602,16 @@ FormixSubmitButton(
   child: const Text('Save'),
 );
 
-// Terse get/set + one-shot batch:
-final name = context.formix[nameId];        // subscript read
-context.formix[nameId] = 'Ada';              // subscript write
-context.formix.batchUpdate((b) => b          // one state transition
-  ..set(nameId, 'Ada')
-  ..set(ageId, 36));
+// Terse get/set + one-shot batch.
+// Reads are fine in build(); WRITES belong in event handlers / async callbacks
+// (never build(), which reruns). For seeding, use Formix(initialValue: {...}).
+final name = context.formix[nameId];        // subscript read (ok in build)
+void onSave() {
+  context.formix[nameId] = 'Ada';            // subscript write (in a handler)
+  context.formix.batchUpdate((b) => b        // one state transition
+    ..set(nameId, 'Ada')
+    ..set(ageId, 36));
+}
 
 // Read several typed fields as one destructurable record:
 SignalBuilder(builder: (context) {
@@ -1289,30 +1330,9 @@ Formix integrates deep into Flutter DevTools.
 
 ## ⚡ Performance
 
-Formix is engineered for massive scale with continuous performance optimizations.
-
-### Core Performance Features
-- **Granular Rebuilds**: Uses `select` to only rebuild exact widgets that change.
-- **O(1) Updates**: Field updates are constant time, regardless of form size.
-- **Scalability**: Tested with **5000+ active fields** maintaining 60fps interaction.
-- **Lazy Evaluation**: Validation and dependency chains are optimized to run only when necessary.
-
-### Recent Optimizations (v0.1.0)
-
-#### 1. Cached InputDecoration
-- **What**: Intelligent caching of `InputDecoration` to avoid redundant theme resolution
-- **Impact**: Decoration only rebuilds when widget properties or theme actually changes
-- **Applied to**: `FormixTextFormField` and `FormixNumberFormField`
-
-#### 2. Combined Field State Notifier
-- **What**: Consolidated 4 separate `ValueNotifier`s into a single combined notifier
-- **Impact**: Reduces `AnimatedBuilder` overhead from 4 listenables to 1
-- **Benefit**: Significantly faster rebuild performance for rapid state changes
-
-#### 3. Optimized Controller Subscription
-- **What**: Early return optimization for explicit controllers
-- **Impact**: Surgical signal-driven rebuilds — a field change only rebuilds widgets that read that field
-- **Benefit**: Cleaner, more efficient code path for common use cases
+The signals core gives **surgical rebuilds**: changing a field only rebuilds the widgets
+that read *that* field — aggregates (`isValid`, counts) are memoized `Computed`s, and
+per-keystroke updates are O(changed), not O(fields). No `ProviderScope`, no setup cost.
 
 ### Benchmark Results — Riverpod (0.1.x) vs Signals (0.2.0)
 
@@ -1325,26 +1345,14 @@ See [`BENCHMARKS.md`](BENCHMARKS.md) for the full methodology and comparison.
 | **Pure Formix mount/unmount** | 0.054ms | **0.049ms** | −9.3% |
 | **Full widget passive rebuild** | 9.548ms | **9.392ms** | −1.6% |
 | **Field mount/unmount cycle** | 1.584ms | **1.189ms** | −24.9% |
-| **Bulk update 1000 fields** | ~1000ms | **286ms** | ~3.5× faster |
+| **Bulk-update 1000 fields (one batch)** | ~1000ms | **286ms** | ~3.5× |
+| **100,000-field dependency chain** | — | **~196ms** | — |
 
-**Surgical rebuilds:** updating one field among 1000 rebuilds exactly one widget
-(verified in `test/benchmark_surgical_rebuild_test.dart`).
+Pure Formix overhead is ~0.1ms/rebuild vs Flutter's own `TextFormField` at ~12ms — negligible.
 
-### Performance Improvements
-
-| Test | Before | After | Improvement |
-|------|--------|-------|-------------|
-| **100 Widget Rebuilds** | 1388ms | 847ms | **39% faster** 🔥 |
-| **Passive Rebuild** | 7.20ms | 5.87ms | **18.5% faster** |
-| **50 Keystrokes** | 401ms | 395ms | **1.5% faster** |
-
-### Stress Test Results (M1 Pro)
-- **1000 Fields Mount**: <10ms
-- **Bulk Updates**: ~50ms for 1000 fields. Single frame execution for `setValues`.
-- **Dependency Scale**: **~160ms** for 100,000 dependents. Ultra-fast traversal for deep chains.
-- **Memory Efficient**: Uses **lazy-cloning** and **shared validation contexts** to minimize GC pressure and O(N) overhead during validation.
-
-> **Note**: All benchmarks run with 200 warmup iterations and 3000 total samples (3 runs × 1000 iterations) for statistical accuracy.
+**Surgical guarantee:** updating one field among 1000 rebuilds exactly one widget
+(verified in `test/benchmark_surgical_rebuild_test.dart`). Numbers vary by machine;
+run with 200 warmup + 3000 samples.
 
 
 ---

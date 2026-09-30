@@ -79,3 +79,5 @@ coverage_json/
 .agent/
 skills-lock.json
 SKILLS.md
+# Widget Preview related
+.widget_preview/
