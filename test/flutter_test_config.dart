@@ -8,7 +8,10 @@ Future<void> testExecutable(FutureOr<void> Function() testMain) async {
     final comparator = goldenFileComparator as LocalFileComparator;
     goldenFileComparator = _TolerantComparator(
       comparator.basedir,
-      0.01, // 1% tolerance
+      // 3% tolerance: absorbs cross-platform anti-aliasing (baselines are
+      // generated locally on macOS but CI compares on Linux; observed max diff
+      // ~1.7%). Still large enough to catch real visual regressions.
+      0.03,
     );
   }
   await testMain();
