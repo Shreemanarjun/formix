@@ -68,7 +68,7 @@ class _MultiFormSyncPageState extends State<MultiFormSyncPage> {
                     elevation: 4,
                     child: Formix(
                       controller: _formA,
-                      child: const Padding(
+                      child: const SingleChildScrollView(
                         padding: EdgeInsets.all(16.0),
                         child: Column(
                           children: [
@@ -104,7 +104,7 @@ class _MultiFormSyncPageState extends State<MultiFormSyncPage> {
                     color: Colors.grey[50],
                     child: Formix(
                       controller: _formB,
-                      child: const Padding(
+                      child: const SingleChildScrollView(
                         padding: EdgeInsets.all(16.0),
                         child: Column(
                           children: [
