@@ -21,6 +21,15 @@ class FormixValidationKeys {
   /// Error key for a numeric value that is too large.
   static const String max = 'formix_key_max';
 
+  /// Error key for a date that is before the allowed minimum.
+  static const String minDate = 'formix_key_min_date';
+
+  /// Error key for a date that is after the allowed maximum.
+  static const String maxDate = 'formix_key_max_date';
+
+  /// Error key for a value that is not one of the allowed options.
+  static const String invalidSelection = 'formix_key_invalid_selection';
+
   // Helper to encode params into the key string if needed,
   // though simple string concatenation with separator might suffice.
   /// Encodes a parameter into a validation key string.

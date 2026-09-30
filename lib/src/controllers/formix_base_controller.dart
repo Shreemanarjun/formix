@@ -10,6 +10,7 @@ import 'validation.dart';
 import 'form_state.dart';
 import 'field_config.dart';
 import 'formix_controller.dart';
+import 'submission.dart';
 import '../analytics/form_analytics.dart';
 import '../i18n.dart';
 import '../validators/validation_keys.dart';
@@ -60,6 +61,12 @@ class FormixBaseController {
   /// The reactive source of truth for the entire form state.
   late final Signal<FormixData> _stateSignal;
 
+  /// Reactive submission lifecycle. Idle until [submit] runs.
+  final Signal<FormixSubmission> _submission = signal(const FormixSubmission.idle());
+
+  /// Reactive submission lifecycle state (idle/submitting/success/error).
+  ReadonlySignal<FormixSubmission> get submissionSignal => _submission;
+
   /// Disposes the global-message subscription (language changes).
   VoidCallback? _messagesEffectDispose;
 
@@ -70,6 +77,9 @@ class FormixBaseController {
   @protected
   final Map<String, dynamic> initialValueMap = {};
   final Map<String, Timer> _debouncers = {};
+  // Per-field async-validation generation; a resolved run with a stale
+  // generation is discarded (a newer input has superseded it).
+  final Map<String, int> _asyncGeneration = {};
   Timer? _submitDebounceTimer;
   DateTime? _lastSubmitTime;
   DateTime? _startTime;
@@ -317,6 +327,7 @@ class FormixBaseController {
     initialValueMap.addAll(parameter.initialValue);
 
     final fields = parameter.fields.map((f) => f.toField()).toList();
+    _assertUniqueKeys(fields);
     final initialState = parameter.initialData ?? _createInitialState(parameter.initialValue, fields, parameter.autovalidateMode);
 
     // Initial Definitions setup
@@ -555,6 +566,7 @@ class FormixBaseController {
     _stateController.close();
     formListeners.clear();
     _stateSignal.dispose();
+    _submission.dispose();
   }
 
   /// Retrieves the current value of a field in a type-safe way.
@@ -1037,6 +1049,18 @@ class FormixBaseController {
             return messages.maxValue(label, num.tryParse(param) ?? 0);
           }
           break;
+        case FormixValidationKeys.minDate:
+          if (param != null) {
+            return messages.minDate(label, DateTime.fromMillisecondsSinceEpoch(int.tryParse(param) ?? 0));
+          }
+          break;
+        case FormixValidationKeys.maxDate:
+          if (param != null) {
+            return messages.maxDate(label, DateTime.fromMillisecondsSinceEpoch(int.tryParse(param) ?? 0));
+          }
+          break;
+        case FormixValidationKeys.invalidSelection:
+          return messages.invalidSelection(label);
       }
     }
     return messages.format(error, params);
@@ -1051,6 +1075,12 @@ class FormixBaseController {
 
     _debouncers[key]?.cancel();
 
+    // Perf/correctness: each scheduled run bumps the field's generation. A run
+    // whose generation is stale by the time it resolves (a newer input arrived)
+    // drops its result instead of overwriting the newer validation state.
+    final generation = (_asyncGeneration[key] ?? 0) + 1;
+    _asyncGeneration[key] = generation;
+
     _debouncers[key] = Timer(
       fieldDef.debounceDuration ?? const Duration(milliseconds: 300),
       () async {
@@ -1063,7 +1093,7 @@ class FormixBaseController {
             _validationDurations[key] = sw.elapsed;
           }
 
-          if (!mounted) return;
+          if (!mounted || _asyncGeneration[key] != generation) return;
 
           final latestValidations = Map<String, ValidationResult>.from(
             state.validations,
@@ -1098,7 +1128,7 @@ class FormixBaseController {
             _validationDurations[key] = sw.elapsed;
           }
 
-          if (!mounted) return;
+          if (!mounted || _asyncGeneration[key] != generation) return;
           final latestValidations = Map<String, ValidationResult>.from(
             state.validations,
           );
@@ -1187,9 +1217,28 @@ class FormixBaseController {
     return count;
   }
 
+  /// Asserts (debug-only) that [fields] contains no duplicate keys — the
+  /// copy-paste mistake of two fields sharing a `FormixFieldID` string key.
+  static void _assertUniqueKeys(List<FormixField> fields) {
+    assert(() {
+      final keys = fields.map((f) => f.id.key).toList();
+      final dupes = keys.where((k) => keys.where((o) => o == k).length > 1).toSet();
+      if (dupes.isNotEmpty) {
+        throw FlutterError(
+          'Duplicate field key(s) in a single Formix registration: ${dupes.join(', ')}.\n'
+          'Each field must have a unique FormixFieldID key. Declare them as static '
+          'consts on a form-holder class to avoid accidental duplicates:\n'
+          '  class LoginForm { static const email = FormixFieldID<String>("email"); }',
+        );
+      }
+      return true;
+    }());
+  }
+
   /// Register multiple fields at once
   void registerFields(List<FormixField> fields) {
     if (fields.isEmpty) return;
+    _assertUniqueKeys(fields);
     _transitiveDependentsCache.clear();
     final isNewMap = <String, bool>{};
 
@@ -1860,6 +1909,7 @@ class FormixBaseController {
 
     if (validate()) {
       setSubmitting(true);
+      _submission.value = const FormixSubmission.submitting();
 
       // Wait for any pending async validations or fields
       while (state.isPending) {
@@ -1871,6 +1921,7 @@ class FormixBaseController {
       // Re-validate after async completions
       if (!state.isValid) {
         setSubmitting(false);
+        _submission.value = const FormixSubmission.idle();
         if (onError != null) {
           onError(state.validations);
         }
@@ -1893,8 +1944,10 @@ class FormixBaseController {
       try {
         await onValid(state.values);
         _hasSubmittedSuccessfully = true;
+        _submission.value = const FormixSubmission.success();
         analytics?.onSubmitSuccess(formId);
-      } catch (e) {
+      } catch (e, st) {
+        _submission.value = FormixSubmission.error(e, st);
         if (optimistic && previousInitialValues != null && previousState != null) {
           // Revert optimistic changes
           initialValueMap.clear();
@@ -1906,6 +1959,7 @@ class FormixBaseController {
         setSubmitting(false);
       }
     } else {
+      _submission.value = const FormixSubmission.idle();
       if (onError != null) {
         onError(state.validations);
       }

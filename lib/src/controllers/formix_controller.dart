@@ -148,6 +148,25 @@ class FormixController extends FormixBaseController {
     }) as ReadonlySignal<(A?, B?, C?, D?)>;
   }
 
+  /// Write two typed fields from a record in one batch (symmetric to [group2]).
+  ///
+  /// ```dart
+  /// c.setGroup2(emailId, passwordId, ('a@b.c', 'secret'));
+  /// ```
+  FormixBatchResult setGroup2<A, B>(FormixFieldID<A> a, FormixFieldID<B> b, (A?, B?) values) {
+    return setValues({a: values.$1, b: values.$2});
+  }
+
+  /// Write three typed fields from a record in one batch (symmetric to [group3]).
+  FormixBatchResult setGroup3<A, B, C>(FormixFieldID<A> a, FormixFieldID<B> b, FormixFieldID<C> c, (A?, B?, C?) values) {
+    return setValues({a: values.$1, b: values.$2, c: values.$3});
+  }
+
+  /// Write four typed fields from a record in one batch (symmetric to [group4]).
+  FormixBatchResult setGroup4<A, B, C, D>(FormixFieldID<A> a, FormixFieldID<B> b, FormixFieldID<C> c, FormixFieldID<D> d, (A?, B?, C?, D?) values) {
+    return setValues({a: values.$1, b: values.$2, c: values.$3, d: values.$4});
+  }
+
   /// Reactive form validity.
   ReadonlySignal<bool> get isValidSignal => _isValidSignal ??= computed(() => state.isValid);
 

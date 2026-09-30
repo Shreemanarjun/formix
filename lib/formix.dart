@@ -10,6 +10,7 @@ export 'src/controllers/form_state.dart';
 export 'src/controllers/formix_controller.dart';
 export 'src/controllers/formix_base_controller.dart';
 export 'src/controllers/batch.dart';
+export 'src/controllers/submission.dart';
 export 'src/utils/type_utils.dart';
 export 'src/enums.dart';
 export 'src/form_schema.dart';

@@ -70,3 +70,12 @@ extension/devtools/build/*
 .agents/skills/*
 .claude/*
 .gitignore
+
+# Dart-VM coverage artifacts (tool/ coverage runs)
+coverage_json/
+*.lcov
+
+# Agent tooling (not package content)
+.agent/
+skills-lock.json
+SKILLS.md

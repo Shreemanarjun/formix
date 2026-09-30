@@ -43,4 +43,22 @@ This is a like-for-like comparison of the **same benchmark suite** (`test/formix
 
 `test/benchmark_surgical_rebuild_test.dart` asserts the key behavioural win: with
 1000 fields each rendered by its own reactive builder, updating **one** field
-triggers exactly **one** widget rebuild — the other 999 do not rebuild.
+triggers exactly **one** widget rebuild — the other 999 do not rebuild. A single
+`batchUpdate` of all 1000 fields completes in ~6 ms.
+
+## 0.2.x correctness/perf guards
+
+- **No-op write guard:** re-setting a field to its current value allocates nothing and
+  fires no notification (the write pipeline's apply-guard skips unchanged state). Verified
+  in `test/type_safe_additions_test.dart`.
+- **Async generation guard:** each scheduled async validation carries a generation token; a
+  superseded, still-in-flight result is dropped instead of overwriting newer state. This is
+  a *correctness* fix (prevents stale-write races on fast typing), not a throughput change —
+  its cost is one map lookup + int compare per async completion.
+- **Already-optimal, verified:** transitive-dependents are memoized (`_transitiveDependentsCache`),
+  and a multi-field batch produces a single `FormixData` snapshot (not one per field).
+
+> Identified but deferred: migrating `FormixData`'s five maps to structural-sharing `IMap`
+> would drop the per-write `{...values}` copy from O(n) to O(log n). The payoff is material
+> only on very large (1000+ field) forms — pure per-rebuild overhead is already ~0.1 ms vs
+> Flutter's own `TextFormField` at ~12 ms — so it is left as a separately-benchmarked change.

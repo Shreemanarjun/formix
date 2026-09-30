@@ -315,6 +315,8 @@ Formix includes high-performance widgets out of the box:
 - **`FormixFieldRegistry`**: Lazily registers fields (vital for PageViews/Tabs).
 
 ### Reactive & Transformers
+- **`FormixValue<T>`**: One-field reactive builder — `(context, value) => ...`, rebuilds only when that field changes.
+- **`FormixSubmitButton`**: Submit button that auto-disables while invalid/submitting and shows a spinner.
 - **`FormixBuilder`**: Access `FormixScope` for reactive UI (isSubmitting, isValid).
 - **`FormixListener`**: Execute side effects (navigation, snackbars) on state change.
 - **`FormixFormStatus`**: Debug dashboard showing dirty/error counts.
@@ -473,8 +475,23 @@ FormixValidators.number<int>()
   .positive()
   .min(18, 'Must be an adult')
   .max(99)
+  .between(1, 100)
   .build()
+
+// Date Validation
+FormixValidators.date()
+  .after(DateTime(2000))
+  .before(DateTime.now())
+  .between(DateTime(2000), DateTime.now())
+  .build()
+
+// One-of (enums, allow-lists)
+FormixValidators.any<Role>().oneOf([Role.admin, Role.user]).build()
 ```
+
+> **Correct-by-construction:** the chains are type-scoped, so the compiler stops mistakes —
+> `FormixValidators.number().minLength(3)` and `FormixValidators.string().before(...)` won't
+> compile. No codegen involved.
 
 ### Async Validation
 Async validators are debounced automatically to optimize server performance.
@@ -528,6 +545,73 @@ SignalBuilder(builder: (context) => Text('${controller.isValidSignal.value}'));
 
 // Executing actions
 controller.reset();
+```
+
+> **Reaching the controller:** `Formix.of(context)` returns a **non-null** controller
+> (throws a `FlutterError` if there is no `Formix` ancestor). Use `Formix.maybeOf(context)`
+> — or the `context.maybeFormix` extension — when a form may be absent, and
+> `context.formix` as a shorthand for `Formix.of(context)`.
+
+### ✨ Ergonomic shortcuts
+Common patterns without the `FormixBuilder`/`SignalBuilder` boilerplate:
+
+```dart
+// React to ONE field (rebuilds only when it changes):
+FormixValue<String>(emailId, builder: (context, value) => Text(value ?? ''));
+
+// A submit button that disables while invalid/submitting and shows a spinner:
+FormixSubmitButton(
+  onValid: (values) => api.save(values),
+  child: const Text('Save'),
+);
+
+// Terse get/set + one-shot batch:
+final name = context.formix[nameId];        // subscript read
+context.formix[nameId] = 'Ada';              // subscript write
+context.formix.batchUpdate((b) => b          // one state transition
+  ..set(nameId, 'Ada')
+  ..set(ageId, 36));
+
+// Read several typed fields as one destructurable record:
+SignalBuilder(builder: (context) {
+  final (email, password) = controller.group2(emailId, passwordId).value;
+  return Text('$email / $password');
+});
+
+// ...and write them back symmetrically, in one batch:
+controller.setGroup2(emailId, passwordId, ('a@b.c', 'secret'));
+```
+
+`Formix(fields: [...])` and `FormixController(fields: [...])` accept either `FormixField`
+or `FormixFieldConfig` (both implement `FormixFieldDefinition`). A field's nullability
+follows its ID's type: `FormixFieldID<String>` rejects `null`, `FormixFieldID<String?>`
+accepts `null` as a cleared value.
+
+### 🚦 Submission state (sealed)
+The submit lifecycle is a sealed `FormixSubmission` — `switch` over it exhaustively instead
+of juggling `isSubmitting`/`hasError`/`isSuccess` flags:
+
+```dart
+SignalBuilder(builder: (context) {
+  return switch (controller.submissionSignal.value) {
+    FormixSubmissionIdle()       => const Text('Ready'),
+    FormixSubmissionSubmitting() => const CircularProgressIndicator(),
+    FormixSubmissionSuccess()    => const Text('Saved!'),
+    FormixSubmissionError(:final error) => Text('Failed: $error'),
+  };
+});
+```
+
+### 🧩 Typed form model (no codegen)
+Want a single typed model instead of loose field reads? Compose one with `derived` — it's a
+memoized, reactive view; no build step:
+
+```dart
+final user = controller.derived((s) => (
+  name: s.getValue(nameId),
+  age: s.getValue(ageId),
+));
+// user.value is a typed record: (name: String?, age: int?)
 ```
 
 ### 🎮 Controller API Reference
