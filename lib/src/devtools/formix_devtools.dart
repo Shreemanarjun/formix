@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:developer' as dev;
 import 'package:flutter/foundation.dart';
 import 'package:collection/collection.dart'; // Added for lastOrNull
-import '../controllers/riverpod_controller.dart';
+import '../controllers/formix_base_controller.dart';
 import '../controllers/field_id.dart';
 
 /// Service for interacting with DevTools extension.

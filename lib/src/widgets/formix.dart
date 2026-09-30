@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import '../analytics/form_analytics.dart';
-import '../controllers/riverpod_controller.dart';
+import '../controllers/formix_base_controller.dart';
 import '../persistence/form_persistence.dart';
 import '../enums.dart';
 import '../i18n.dart';

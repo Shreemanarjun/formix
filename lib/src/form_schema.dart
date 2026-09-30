@@ -4,7 +4,7 @@ import 'enums.dart';
 
 import 'package:flutter/material.dart';
 
-import 'controllers/riverpod_controller.dart';
+import 'controllers/formix_base_controller.dart';
 import 'controllers/field_id.dart';
 import 'controllers/field.dart';
 import 'controllers/validation.dart';

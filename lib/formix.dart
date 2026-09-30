@@ -8,7 +8,7 @@ export 'src/controllers/field_config.dart';
 export 'src/controllers/validation.dart';
 export 'src/controllers/form_state.dart';
 export 'src/controllers/formix_controller.dart';
-export 'src/controllers/riverpod_controller.dart';
+export 'src/controllers/formix_base_controller.dart';
 export 'src/controllers/batch.dart';
 export 'src/utils/type_utils.dart';
 export 'src/enums.dart';

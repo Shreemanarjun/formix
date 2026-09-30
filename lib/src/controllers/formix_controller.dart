@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/semantics.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'riverpod_controller.dart';
+import 'formix_base_controller.dart';
 import 'field_id.dart';
 import 'field.dart';
 import 'validation.dart';
@@ -55,9 +55,9 @@ class FormixController extends FormixBaseController {
   FormixController.fromParameter(super.parameter);
 
   // --- Reactive slices (surgical rebuilds) ---
-  // Each is a memoized `computed` over the state signal, so a widget reading one
-  // inside a `SignalBuilder` only rebuilds when THAT slice's value changes.
-
+  // A widget reading a slice inside a `SignalBuilder` only rebuilds when THAT
+  // slice's value changes.
+  //
   // Per-field slices are plain [Signal]s kept in sync via the `changedFields`
   // delta in [onStateChanged], so a single field update only touches that field's
   // signals — O(changed) — instead of re-evaluating every mounted watcher.
